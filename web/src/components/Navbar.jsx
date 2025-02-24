@@ -67,6 +67,17 @@ const Navbar = () => {
 						</li>
 						<li>
 							<Link
+								to="/handle-template"
+								className={`${
+									theme === 'dark'
+										? 'hover:text-gray-400'
+										: 'hover:text-gray-600'
+								}`}>
+								templ
+							</Link>
+						</li>
+						<li>
+							<Link
 								to="/handle-shifts"
 								className={`${
 									theme === 'dark'

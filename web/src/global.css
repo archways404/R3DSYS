@@ -139,3 +139,22 @@ button:focus-visible {
   display: none !important;
 }
 */
+
+
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+
+.fc .fc-list-sticky .fc-list-day > * {
+  background: transparent !important;
+  position: sticky;
+  top: 0px;
+}
+

@@ -36,9 +36,7 @@ function Layout({ children }) {
 					{/* Main Content */}
 					<div className="flex flex-col flex-1 min-h-screen relative z-10">
 						{/* Navbar */}
-						<div className="h-16 flex items-center">
-							<Navbar />
-						</div>
+						<div className="h-16 flex items-center">{/*<Navbar />*/}</div>
 
 						{/* Scrollable Main Content */}
 						<main className="flex-1 overflow-auto">{children}</main>

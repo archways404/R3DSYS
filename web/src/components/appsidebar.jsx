@@ -44,21 +44,82 @@ import {
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+
+import { GrSchedule } from 'react-icons/gr';
+import { TbReport } from 'react-icons/tb';
+import { HiTemplate } from 'react-icons/hi';
+import { GrSchedules } from 'react-icons/gr';
+import { LuMailPlus } from 'react-icons/lu';
+import { FaUsers } from 'react-icons/fa';
+import { SiGooglecalendar } from 'react-icons/si';
+import { FaRegCalendarPlus } from 'react-icons/fa6';
+import { GrServerCluster } from 'react-icons/gr';
 
 // Sidebar menu items
 const items = [
-	{ title: 'Home', url: '/', icon: Home },
-	{ title: 'Inbox', url: '/inbox', icon: Inbox },
-	{ title: 'Calendar', url: '/calendar', icon: Calendar },
-	{ title: 'Search', url: '/search', icon: Search },
-	{ title: 'Settings', url: '/settings', icon: Settings },
+	{ title: 'Home', url: '/welcome', icon: Home }, // Everyone
+	{ title: 'Schedule', url: '/schedule', icon: GrSchedule }, // Everyone
+	{ title: 'Calendar Link', url: '/calendarlink', icon: SiGooglecalendar }, // Everyone
+	{
+		title: 'Report',
+		url: '/apply-unassigned',
+		icon: TbReport,
+		roles: ['worker'],
+		disabled: true,
+		showBadge: false,
+	},
+	{
+		title: 'Template',
+		url: '/handle-template',
+		icon: HiTemplate,
+		roles: ['admin'],
+	},
+	{
+		title: 'Shifts',
+		url: '/handle-shifts',
+		icon: GrSchedules,
+		roles: ['admin', 'maintainer'],
+	},
+	{
+		title: 'Reports',
+		url: '/assign-shifts',
+		icon: TbReport,
+		roles: ['admin'],
+	},
+	{
+		title: 'Invite',
+		url: '/invite',
+		icon: LuMailPlus,
+		roles: ['admin', 'maintainer'],
+	},
+	{
+		title: 'Accounts',
+		url: '/manage-users',
+		icon: FaUsers,
+		roles: ['admin', 'maintainer'],
+	},
+	{
+		title: 'Create',
+		url: '/create-schedule',
+		icon: FaRegCalendarPlus,
+		roles: ['admin'],
+	},
+	{
+		title: 'Server',
+		url: '/serverinfo',
+		icon: GrServerCluster,
+		roles: ['admin', 'maintainer'],
+	},
+	{ title: 'Settings', url: '/settings', icon: Settings }, // Everyone
 ];
 
 export function AppSidebar({ user, consent }) {
 	if (!user) {
 		return null;
 	}
+
+	const location = useLocation();
 
 	// Format the user's name
 	const formattedFirstName =
@@ -74,6 +135,11 @@ export function AppSidebar({ user, consent }) {
 		return acc;
 	}, {});
 
+	// Filter the menu items based on the user's role
+	const filteredItems = items.filter((item) => {
+		return !item.roles || item.roles.includes(user.role);
+	});
+
 	console.log('permissions obj', permissionsObject);
 
 	return (
@@ -87,30 +153,57 @@ export function AppSidebar({ user, consent }) {
 					className="h-full bg-transparent">
 					<SidebarContent className="h-full flex flex-col">
 						<SidebarGroup className="flex-1">
-							<SidebarGroupLabel className="mt-4 pl-4 text-white">
-								Application
+							{/* Centering the RƎDSYS logo */}
+							<SidebarGroupLabel className="mt-4 mb-12 flex justify-center">
+								<h1 className="text-4xl lg:text-4xl font-extrabold text-white tracking-wider drop-shadow-xl text-center">
+									<span className="text-red-600">RƎD</span>SYS
+								</h1>
 							</SidebarGroupLabel>
-							<SidebarGroupContent>
+
+							{/* Sidebar Items Centered */}
+							<SidebarGroupContent className="flex flex-col justify-center space-y-4">
 								<SidebarMenu>
-									{items.map((item) => (
-										<SidebarMenuItem key={item.title}>
-											<SidebarMenuButton asChild>
-												<Link
-													to={item.url}
-													className="flex items-center gap-3 p-2 rounded-md text-white hover:bg-gray-800 transition-all">
-													<item.icon className="w-5 h-5" />
-													<span>{item.title}</span>
-												</Link>
-											</SidebarMenuButton>
-											<SidebarMenuBadge>
-												<Badge
-													variant="outline"
-													className="border-green-500 text-green-500 text-[10px] font-light px-1.5 py-0.5 h-auto rounded-xl">
-													NEW
-												</Badge>
-											</SidebarMenuBadge>
-										</SidebarMenuItem>
-									))}
+									{filteredItems.map((item) => {
+										const isActive = location.pathname === item.url;
+
+										return (
+											<SidebarMenuItem key={item.title}>
+												<SidebarMenuButton asChild>
+													<Link
+														to={item.url}
+														className={`flex items-center gap-4 px-5 py-4 rounded-md text-xl transition-all ${
+															item.disabled
+																? 'text-gray-500 cursor-not-allowed pointer-events-none'
+																: isActive
+																? 'text-red-500'
+																: 'text-white hover:bg-gray-800'
+														}`}>
+														<item.icon
+															className={`w-6 h-6 ${
+																item.disabled
+																	? 'text-gray-500'
+																	: isActive
+																	? 'text-red-500'
+																	: 'text-white'
+															}`}
+														/>
+														<span>{item.title}</span>
+
+														{/* Show "NEW" badge only if item has showBadge=true and is not disabled */}
+														{!item.disabled && item.showBadge && (
+															<SidebarMenuBadge>
+																<Badge
+																	variant="outline"
+																	className="border-green-500 text-green-500 text-[12px] font-light px-2 py-1 h-auto rounded-xl">
+																	NEW
+																</Badge>
+															</SidebarMenuBadge>
+														)}
+													</Link>
+												</SidebarMenuButton>
+											</SidebarMenuItem>
+										);
+									})}
 								</SidebarMenu>
 							</SidebarGroupContent>
 						</SidebarGroup>
@@ -173,10 +266,15 @@ export function AppSidebar({ user, consent }) {
 									</DropdownMenuTrigger>
 
 									{/* Dropdown Content */}
-									<DropdownMenuContent className="w-56 bg-transparent rounded-lg">
-										<DropdownMenuItem className="p-2 hover:bg-gray-700 rounded-lg flex gap-3 items-center text-red-400">
-											<TbLogout className="w-4 h-4" />
-											<Link to="/logout">Sign out</Link>
+									<DropdownMenuContent className="w-56 bg-[#09090b] rounded-lg">
+										{/* Full-width Sign Out Button */}
+										<DropdownMenuItem className=" hover:bg-gray-700 rounded-lg">
+											<Link
+												to="/logout"
+												className="w-full flex items-center gap-3 py-1 text-red-400 rounded-lg">
+												<TbLogout className="w-5 h-5" />
+												<span className="flex-1 text-left">Sign out</span>
+											</Link>
 										</DropdownMenuItem>
 									</DropdownMenuContent>
 								</DropdownMenu>

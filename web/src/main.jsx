@@ -15,7 +15,12 @@ import Logout from './components/Logout.jsx';
 import NotFound from './views/not-found_page/notFound';
 import Welcome from './views/welcome/welcome_page.jsx';
 import Invite from './views/invite_page/invite';
-import Schedule from './views/display-schedule_page/schedule';
+
+//import Schedule from './views/display-schedule_page/schedule';
+import Schedule from './views/schedule/renderer';
+
+import TemplateRenderer from './views/template/renderer';
+
 import AuthWrapper from './components/AuthWrapper';
 import UnAuthWrapper from './components/UnAuthWrapper';
 
@@ -24,7 +29,10 @@ import ManageUsers from './views/manage-users_page/manageusers';
 import UserDetail from './views/display-user-details_page/userdetail';
 import ServerPanel from './views/server-panel_page/serverpanel';
 import EmailStatus from './views/email-status_page/emailstatus';
-import TestHandleShifts from './views/create-shifttypes_page/testHandleShifts';
+
+//import TestHandleShifts from './views/create-shifttypes_page/testHandleShifts';
+import ShiftRenderer from './views/shift/renderer';
+
 import CreateTemplate from './views/create-template_page/createTemplate';
 import StatusMsg from './views/status-messages_page/statusmsg';
 
@@ -152,7 +160,15 @@ createRoot(document.getElementById('root')).render(
 							path="/handle-shifts"
 							element={
 								<AuthWrapper allowedUserRoles={['admin']}>
-									<TestHandleShifts />
+									<ShiftRenderer />
+								</AuthWrapper>
+							}
+						/>
+						<Route
+							path="/handle-template"
+							element={
+								<AuthWrapper allowedUserRoles={['admin', 'maintainer']}>
+									<TemplateRenderer />
 								</AuthWrapper>
 							}
 						/>
