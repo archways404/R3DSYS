@@ -14,6 +14,9 @@ import {
 } from '@/components/ui/hover-card';
 import { AuthContext } from '../../context/AuthContext';
 
+import { GoDot } from 'react-icons/go';
+import { GoDotFill } from 'react-icons/go';
+
 function CalendarView({ events, onEventSubmit, onDeleteEvent }) {
 	const [isModalOpen, setModalOpen] = useState(false);
 	const [selectedEvent, setSelectedEvent] = useState(null);
@@ -66,6 +69,7 @@ function CalendarView({ events, onEventSubmit, onDeleteEvent }) {
 		const assignedFirstName = extendedProps?.assignedUserFirstName || '';
 		const assignedLastName = extendedProps?.assignedUserLastName || '';
 		const assignedEmail = extendedProps?.assignedUserEmail || '';
+		const assignedTo = extendedProps?.assignedTo;
 
 		// Format the date (YYYY-MM-DD)
 		const eventDate = new Date(start).toISOString().split('T')[0];
@@ -80,20 +84,43 @@ function CalendarView({ events, onEventSubmit, onDeleteEvent }) {
 			minute: '2-digit',
 		});
 
+		// Determine how to render the event title based on assignment
+		let titleContent;
+		if (!assignedTo) {
+			// No assigned user: display title in red
+			titleContent = (
+				<span className="text-sm font-medium text-red-500">
+					{eventInfo.event.title}
+				</span>
+			);
+		} else if (assignedTo === user.uuid) {
+			// Assigned to the current user: show green filled dot
+			titleContent = (
+				<span className="flex items-center text-sm font-medium text-gray-800 dark:text-gray-200">
+					<GoDotFill className="text-green-500 mr-1" />
+					{eventInfo.event.title}
+				</span>
+			);
+		} else {
+			// Assigned to someone else: show default dot
+			titleContent = (
+				<span className="flex items-center text-sm font-medium text-gray-800 dark:text-gray-200">
+					<GoDot className="text-white mr-1" />
+					{eventInfo.event.title}
+				</span>
+			);
+		}
+
 		return (
 			<HoverCard>
 				<HoverCardTrigger asChild>
-					<div className="cursor-pointer block p-1 z-10">
-						<span className="text-sm font-medium text-gray-800 dark:text-gray-200">
-							{eventInfo.event.title}
-						</span>
-					</div>
+					<div className="cursor-pointer block p-1 z-10">{titleContent}</div>
 				</HoverCardTrigger>
 				<HoverCardContent
-					side="top" // Ensures the popover renders above the element
-					align="start" // Centers the popover relative to the trigger
-					sideOffset={2} // Provides spacing so it doesn't touch the event title
-					className="p-3 border border-gray-300 bg-white dark:bg-gray-800 shadow-lg rounded-md w-[250px] z-[9999]">
+					side="top" // Renders the popover above the element
+					align="start" // Aligns the popover relative to the trigger
+					sideOffset={2} // Provides spacing so it doesn't touch the title
+					className="p-3 border border-gray-300 shadow-lg rounded-md w-[250px] z-[9999]">
 					{/* Shift Title + Date */}
 					<div className="flex justify-between items-center">
 						<p className="text-sm font-semibold">
@@ -105,12 +132,12 @@ function CalendarView({ events, onEventSubmit, onDeleteEvent }) {
 					</div>
 
 					{/* Time Range */}
-					<p className="text-sm text-gray-700 whitespace-nowrap">
+					<p className="text-sm text-gray-400 whitespace-nowrap">
 						{startTime} - {endTime}
 					</p>
 
 					{/* Assigned User */}
-					{extendedProps?.assignedTo ? (
+					{assignedTo ? (
 						<p className="text-sm text-green-500">
 							{assignedFirstName} {assignedLastName.charAt(0)}{' '}
 							<span className="text-xs text-gray-500">({assignedEmail})</span>
@@ -122,7 +149,7 @@ function CalendarView({ events, onEventSubmit, onDeleteEvent }) {
 					{/* Description */}
 					{extendedProps?.description && (
 						<p className="text-sm text-gray-600 truncate">
-							<span className="font-semibold">Description:</span>{' '}
+							<span className="font-semibold"></span>{' '}
 							{extendedProps.description}
 						</p>
 					)}
