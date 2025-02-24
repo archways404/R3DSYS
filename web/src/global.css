@@ -150,3 +150,11 @@ button:focus-visible {
     @apply bg-background text-foreground;
   }
 }
+
+
+.fc .fc-list-sticky .fc-list-day > * {
+  background: transparent !important;
+  position: sticky;
+  top: 0px;
+}
+
