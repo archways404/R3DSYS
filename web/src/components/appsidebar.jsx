@@ -55,6 +55,7 @@ import { FaUsers } from 'react-icons/fa';
 import { SiGooglecalendar } from 'react-icons/si';
 import { FaRegCalendarPlus } from 'react-icons/fa6';
 import { GrServerCluster } from 'react-icons/gr';
+import { FiDatabase } from 'react-icons/fi';
 
 // Sidebar menu items
 const items = [
@@ -109,6 +110,12 @@ const items = [
 		title: 'Server',
 		url: '/serverinfo',
 		icon: GrServerCluster,
+		roles: ['admin', 'maintainer'],
+	},
+	{
+		title: 'Tables',
+		url: '/tables',
+		icon: FiDatabase,
 		roles: ['admin', 'maintainer'],
 	},
 	{ title: 'Settings', url: '/settings', icon: Settings }, // Everyone

@@ -44,6 +44,8 @@ import ApplyUnassigned from './views/apply-unassigned_page/apply_unassigned';
 
 import AssignShifts from './views/assign_shifts_page/assign_shifts';
 
+import TableRenderer from './views/tables/renderer';
+
 import './global.css';
 
 createRoot(document.getElementById('root')).render(
@@ -105,6 +107,14 @@ createRoot(document.getElementById('root')).render(
 							element={
 								<AuthWrapper allowedUserRoles={['admin', 'worker']}>
 									<Invite />
+								</AuthWrapper>
+							}
+						/>
+						<Route
+							path="/tables"
+							element={
+								<AuthWrapper allowedUserRoles={['admin', 'maintainer']}>
+									<TableRenderer />
 								</AuthWrapper>
 							}
 						/>
