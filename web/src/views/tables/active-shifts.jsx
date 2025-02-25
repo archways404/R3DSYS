@@ -15,13 +15,16 @@ import {
 	TableRow,
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { ArrowUp, ArrowDown } from 'lucide-react'; // Icons for sorting
+import { IoCheckboxOutline } from 'react-icons/io5';
 
 export default function ActiveShifts() {
 	const [data, setData] = useState([]);
 	const [pageSize, setPageSize] = useState(5);
 	const [currentPage, setCurrentPage] = useState(0);
 	const [sorting, setSorting] = useState([]);
+	const [selectedShiftIds, setSelectedShiftIds] = useState([]); // Track selected shift IDs
 
 	useEffect(() => {
 		const fetchData = async () => {
@@ -48,7 +51,30 @@ export default function ActiveShifts() {
 		fetchData();
 	}, []);
 
+	// Function to handle checkbox selection
+	const handleCheckboxChange = (shiftId) => {
+		setSelectedShiftIds(
+			(prevSelected) =>
+				prevSelected.includes(shiftId)
+					? prevSelected.filter((id) => id !== shiftId) // Remove if already selected
+					: [...prevSelected, shiftId] // Add if not selected
+		);
+	};
+
 	const columns = [
+		{
+			id: 'select',
+			header: '',
+			cell: ({ row }) => {
+				const shiftId = row.getValue('shift_id');
+				return (
+					<Checkbox
+						checked={selectedShiftIds.includes(shiftId)}
+						onCheckedChange={() => handleCheckboxChange(shiftId)}
+					/>
+				);
+			},
+		},
 		{ accessorKey: 'shift_id', header: 'Shift ID', enableSorting: true },
 		{ accessorKey: 'start_time', header: 'Start Time', enableSorting: true },
 		{ accessorKey: 'end_time', header: 'End Time', enableSorting: true },
@@ -92,11 +118,13 @@ export default function ActiveShifts() {
 	});
 
 	return (
-		<div className="rounded-md border p-4">
+		<div className="rounded-md border p-4 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
 			<Table>
 				<TableHeader>
 					{table.getHeaderGroups().map((headerGroup) => (
-						<TableRow key={headerGroup.id}>
+						<TableRow
+							key={headerGroup.id}
+							className="border-b dark:border-gray-700">
 							{headerGroup.headers.map((header) => {
 								const isSorted = header.column.getIsSorted();
 								return (
@@ -126,9 +154,17 @@ export default function ActiveShifts() {
 				<TableBody>
 					{table.getRowModel().rows.length ? (
 						table.getRowModel().rows.map((row) => (
-							<TableRow key={row.id}>
+							<TableRow
+								key={row.id}
+								className={`border-b dark:border-gray-700 ${
+									selectedShiftIds.includes(row.getValue('shift_id'))
+										? 'bg-gray-200 dark:bg-gray-800'
+										: ''
+								}`}>
 								{row.getVisibleCells().map((cell) => (
-									<TableCell key={cell.id}>{cell.getValue()}</TableCell>
+									<TableCell key={cell.id}>
+										{flexRender(cell.column.columnDef.cell, cell.getContext())}
+									</TableCell>
 								))}
 							</TableRow>
 						))
@@ -143,6 +179,14 @@ export default function ActiveShifts() {
 					)}
 				</TableBody>
 			</Table>
+
+			{/* Selected Shift IDs Display */}
+			<div className="mt-4">
+				<p className="font-semibold">Selected Shift IDs:</p>
+				<pre className="bg-gray-100 dark:bg-gray-800 p-2 rounded-md">
+					{JSON.stringify(selectedShiftIds, null, 2)}
+				</pre>
+			</div>
 
 			{/* Pagination Controls */}
 			<div className="flex justify-between items-center mt-4">
