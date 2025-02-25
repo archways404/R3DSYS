@@ -54,44 +54,62 @@ async function routes(fastify, options) {
 			const user = await login(client, email, password, ip, deviceId);
 
 			if (!user.error) {
-				const authToken = fastify.jwt.sign(
-					{
-						uuid: user.user_id,
-						email: user.email,
-						role: user.role,
-						first: user.first_name,
-						last: user.last_name,
-						groups: user.userGroups,
-					},
-					{ expiresIn: '15m' }
-				);
+				try {
+					// 🔹 Fetch user groups before generating the token
+					const userGroups = await getUserGroups(client, user.user_id);
 
-				reply.setCookie('authToken', authToken, {
-					httpOnly: true,
-					sameSite: 'None',
-					secure: true,
-					path: '/',
-				});
+					// 🔹 Generate a JWT token with user groups included
+					const authToken = fastify.jwt.sign(
+						{
+							uuid: user.user_id,
+							email: user.email,
+							role: user.role,
+							first: user.first_name,
+							last: user.last_name,
+							groups: userGroups, // ✅ User groups are now included
+						},
+						{ expiresIn: '15m' }
+					);
 
-				await createAuthLog(client, user.user_id, ip, deviceId, true, null);
+					// 🔹 Set the authToken in a cookie
+					reply.setCookie('authToken', authToken, {
+						httpOnly: true,
+						sameSite: 'None',
+						secure: true,
+						path: '/',
+					});
 
-				fetchDataEnd(request);
-				return reply.send({ message: 'Login successful' });
-			} else if (user.error === 'Invalid password') {
-				fetchDataEnd(request);
-				return reply.send({
-					message: 'Account does not exist or invalid password.',
-				});
-			} else if (user.error === 'Account with email does not exist') {
-				fetchDataEnd(request);
-				return reply.send({
-					message: 'Account does not exist or invalid password.',
-				});
+					// 🔹 Log successful authentication
+					await createAuthLog(client, user.user_id, ip, deviceId, true, null);
+
+					fetchDataEnd(request);
+
+					// 🔹 Send back the token and user data (including groups)
+					return reply.send({
+						message: 'Login successful',
+						user: {
+							uuid: user.user_id,
+							email: user.email,
+							role: user.role,
+							first: user.first_name,
+							last: user.last_name,
+							groups: userGroups, // ✅ Sending back user groups for frontend state
+						},
+					});
+				} catch (err) {
+					console.error('Error fetching user groups:', err);
+					return reply.status(500).send({ message: 'Internal Server Error' });
+				}
 			} else {
+				// 🔹 Handle login failures
 				fetchDataEnd(request);
-				return reply.send({
-					message: user.error,
-				});
+				const errorMessage =
+					user.error === 'Invalid password' ||
+					user.error === 'Account with email does not exist'
+						? 'Account does not exist or invalid password.'
+						: user.error;
+
+				return reply.send({ message: errorMessage });
 			}
 		}
 	);
@@ -138,7 +156,6 @@ async function routes(fastify, options) {
 			client.release();
 		}
 	});
-
 
 	// VERIFIES THAT THE SET PASSWORD LINK (TOKEN) IS VALID
 	fastify.get('/setPassword', async (request, reply) => {
@@ -311,7 +328,6 @@ async function routes(fastify, options) {
 			}
 		}
 	);
-
 
 	/*
 	fastify.get(
