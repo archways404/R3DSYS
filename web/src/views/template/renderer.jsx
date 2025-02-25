@@ -14,6 +14,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
+import { FaRegEdit } from 'react-icons/fa';
 
 function TemplateRenderer() {
 	const [viewState, setViewState] = useState('list'); // 'list' or 'edit'
@@ -96,12 +97,12 @@ function TemplateRenderer() {
 				</h2>
 
 				{/* Template List */}
-				<ul className="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-4 space-y-2">
+				<ul className="bg-transparent hover:bg-transparent shadow-sm rounded-lg p-4 space-y-2 w-1/2">
 					{templateMeta.length > 0 ? (
 						templateMeta.map((template) => (
 							<li
 								key={template.template_id}
-								className="border-b border-gray-300 dark:border-gray-700 py-2 last:border-none text-gray-800 dark:text-gray-300 flex justify-between items-center">
+								className="border-b border-gray-300 dark:border-white py-2 last:border-none text-gray-800 dark:text-gray-300 flex justify-between items-center">
 								<div>
 									<span className="font-medium">{template.name}</span>{' '}
 									<span
@@ -114,9 +115,15 @@ function TemplateRenderer() {
 
 								{/* Edit Button */}
 								<Button
-									className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded"
+									className="bg-transparent hover:bg-transparent hover:text-gray-600 text-white px-3 py-1 rounded"
 									onClick={() => handleEdit(template.template_id)}>
-									Edit
+									<FaRegEdit
+										className=""
+										style={{
+											width: '18px',
+											height: '18px',
+										}}
+									/>
 								</Button>
 							</li>
 						))
@@ -139,7 +146,7 @@ function TemplateRenderer() {
 						</DialogTrigger>
 
 						{/* Dialog Content */}
-						<DialogContent className="bg-white dark:bg-gray-900 rounded-lg shadow-lg">
+						<DialogContent className="bg-transparent hover:bg-transparent rounded-lg shadow-lg">
 							<DialogHeader>
 								<DialogTitle className="text-lg font-semibold text-gray-900 dark:text-gray-200">
 									Create New Template
@@ -158,7 +165,7 @@ function TemplateRenderer() {
 									onChange={(e) =>
 										setNewTemplate({ ...newTemplate, name: e.target.value })
 									}
-									className="w-full p-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+									className="w-full p-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-transparent hover:bg-transparent text-gray-900 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
 								/>
 
 								{/* Checkbox for Private/Public */}

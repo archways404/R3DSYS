@@ -82,7 +82,7 @@ const Invite = () => {
 
 	return (
 		<Layout>
-			<div className="invite-form p-6 max-w-lg mx-auto bg-white dark:bg-gray-900 rounded-lg">
+			<div className="invite-form p-6 max-w-lg mx-auto bg-transparent dark:bg-transparent rounded-lg">
 				<h2 className="text-2xl font-semibold mb-6 text-gray-800 dark:text-gray-200">
 					Send an Invite
 				</h2>

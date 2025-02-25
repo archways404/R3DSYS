@@ -204,7 +204,7 @@ function ModifyTemplate({ templateId, onClose }) {
 						{entries.map((entry, index) => (
 							<li
 								key={index}
-								className="p-4 bg-slate-900 rounded">
+								className="p-4 bg-transparent dark:bg-transparent border border-white rounded">
 								<p>
 									<strong>Day:</strong>{' '}
 									{daysOfWeek.find((day) => day.id === entry.weekday)?.name}
@@ -241,18 +241,18 @@ function ModifyTemplate({ templateId, onClose }) {
 	}
 
 	return (
-		<div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-75 z-50">
-			<div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl p-8 w-full max-w-3xl max-h-[80vh] overflow-y-auto">
+		<div className="fixed inset-0 flex items-center justify-center bg-transparent hover:bg-transparent z-50">
+			<div className="bg-transparent hover:bg-transparent rounded-lg p-8 w-full max-w-3xl max-h-[80vh] overflow-y-auto">
 				{/* Modal Header */}
 				<div className="flex justify-between items-center border-b pb-4 mb-6">
-					<h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
-						Modify Template
-					</h2>
 					<button
 						className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors duration-200"
 						onClick={onClose}>
 						← Back
 					</button>
+					<h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
+						Modify Template
+					</h2>
 				</div>
 
 				{/* Current Day */}

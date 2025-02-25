@@ -44,6 +44,8 @@ import ApplyUnassigned from './views/apply-unassigned_page/apply_unassigned';
 
 import AssignShifts from './views/assign_shifts_page/assign_shifts';
 
+import TableRenderer from './views/tables/renderer';
+
 import './global.css';
 
 createRoot(document.getElementById('root')).render(
@@ -95,7 +97,7 @@ createRoot(document.getElementById('root')).render(
 						<Route
 							path="/serverinfo"
 							element={
-								<AuthWrapper allowedUserRoles={['admin', 'worker']}>
+								<AuthWrapper allowedUserRoles={['admin', 'maintainer']}>
 									<ServerInfo />
 								</AuthWrapper>
 							}
@@ -103,15 +105,23 @@ createRoot(document.getElementById('root')).render(
 						<Route
 							path="/invite"
 							element={
-								<AuthWrapper allowedUserRoles={['admin', 'worker']}>
+								<AuthWrapper allowedUserRoles={['admin', 'maintainer']}>
 									<Invite />
+								</AuthWrapper>
+							}
+						/>
+						<Route
+							path="/tables"
+							element={
+								<AuthWrapper allowedUserRoles={['admin', 'maintainer']}>
+									<TableRenderer />
 								</AuthWrapper>
 							}
 						/>
 						<Route
 							path="/manage-users"
 							element={
-								<AuthWrapper allowedUserRoles={['admin']}>
+								<AuthWrapper allowedUserRoles={['admin', 'maintainer']}>
 									<ManageUsers />
 								</AuthWrapper>
 							}
@@ -119,7 +129,7 @@ createRoot(document.getElementById('root')).render(
 						<Route
 							path="/user/:uuid"
 							element={
-								<AuthWrapper allowedUserRoles={['admin']}>
+								<AuthWrapper allowedUserRoles={['admin', 'maintainer']}>
 									<UserDetail />
 								</AuthWrapper>
 							}
@@ -127,7 +137,8 @@ createRoot(document.getElementById('root')).render(
 						<Route
 							path="/schedule"
 							element={
-								<AuthWrapper allowedUserRoles={['admin', 'worker']}>
+								<AuthWrapper
+									allowedUserRoles={['admin', 'worker', 'maintainer']}>
 									<Schedule />
 								</AuthWrapper>
 							}
@@ -135,7 +146,7 @@ createRoot(document.getElementById('root')).render(
 						<Route
 							path="/apply-unassigned"
 							element={
-								<AuthWrapper allowedUserRoles={['admin', 'worker']}>
+								<AuthWrapper allowedUserRoles={['worker']}>
 									<ApplyUnassigned />
 								</AuthWrapper>
 							}
@@ -143,7 +154,7 @@ createRoot(document.getElementById('root')).render(
 						<Route
 							path="/assign-shifts"
 							element={
-								<AuthWrapper allowedUserRoles={['admin']}>
+								<AuthWrapper allowedUserRoles={['admin', 'maintainer']}>
 									<AssignShifts />
 								</AuthWrapper>
 							}
@@ -151,7 +162,7 @@ createRoot(document.getElementById('root')).render(
 						<Route
 							path="/create-schedule"
 							element={
-								<AuthWrapper allowedUserRoles={['admin']}>
+								<AuthWrapper allowedUserRoles={['admin', 'maintainer']}>
 									<CreateSchedule />
 								</AuthWrapper>
 							}
@@ -159,7 +170,7 @@ createRoot(document.getElementById('root')).render(
 						<Route
 							path="/handle-shifts"
 							element={
-								<AuthWrapper allowedUserRoles={['admin']}>
+								<AuthWrapper allowedUserRoles={['admin', 'maintainer']}>
 									<ShiftRenderer />
 								</AuthWrapper>
 							}
@@ -208,8 +219,7 @@ createRoot(document.getElementById('root')).render(
 						<Route
 							path="/handle-status"
 							element={
-								<AuthWrapper
-									allowedUserRoles={['admin', 'worker', 'maintainer']}>
+								<AuthWrapper allowedUserRoles={['admin', 'maintainer']}>
 									<StatusMsg />
 								</AuthWrapper>
 							}
