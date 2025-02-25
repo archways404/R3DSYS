@@ -79,7 +79,7 @@ const ManageUsers = () => {
 			{loading ? (
 				<LoadingScreen /> // Render the LoadingScreen component while loading
 			) : (
-				<div className="manage-users p-6 max-w-2xl mx-auto bg-white dark:bg-gray-900 rounded-lg shadow-lg">
+				<div className="manage-users p-6 max-w-2xl mx-auto bg-transparent dark:bg-transparent rounded-lg shadow-lg">
 					<h2 className="text-3xl font-semibold mb-6 text-gray-900 dark:text-gray-200 text-center">
 						Manage Users
 					</h2>
@@ -133,7 +133,7 @@ const ManageUsers = () => {
 								filteredUsers.map((user) => (
 									<li
 										key={user.user_id}
-										className="bg-gray-100 dark:bg-gray-800 p-6 rounded-lg shadow hover:shadow-lg transition-shadow duration-200">
+										className="bg-transparent dark:bg-transparent border-t border-white p-6 duration-200">
 										<p className="text-lg font-semibold text-gray-900 dark:text-gray-100">
 											{user.first_name} {user.last_name}
 										</p>

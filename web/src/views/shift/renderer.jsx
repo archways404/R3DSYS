@@ -78,7 +78,7 @@ function ShiftRenderer() {
 				</h2>
 
 				{/* Shift List */}
-				<ul className="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-4 space-y-2">
+				<ul className="bg-transparent dark:bg-transparent p-4 space-y-2">
 					{shiftTypes.length > 0 ? (
 						shiftTypes.map((shift) => (
 							<li
@@ -109,7 +109,7 @@ function ShiftRenderer() {
 						</DialogTrigger>
 
 						{/* Dialog Content */}
-						<DialogContent className="bg-white dark:bg-gray-900 rounded-lg shadow-lg">
+						<DialogContent className="bg-transparent dark:bg-transparent rounded-lg shadow-lg">
 							<DialogHeader>
 								<DialogTitle className="text-lg font-semibold text-gray-900 dark:text-gray-200">
 									Create New Shift Type
@@ -131,7 +131,7 @@ function ShiftRenderer() {
 											name_long: e.target.value,
 										})
 									}
-									className="w-full p-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+									className="w-full p-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-transparent dark:bg-transparent text-gray-900 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
 								/>
 								<Input
 									type="text"
@@ -143,7 +143,7 @@ function ShiftRenderer() {
 											name_short: e.target.value,
 										})
 									}
-									className="w-full p-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+									className="w-full p-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-transparent dark:bg-transparent text-gray-900 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
 								/>
 							</div>
 

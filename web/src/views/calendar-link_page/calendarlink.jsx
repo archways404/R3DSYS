@@ -37,7 +37,7 @@ const CalendarLink = () => {
 	return (
 		<Layout>
 			{/* Container to center content */}
-			<div className="flex items-center justify-center mt-10 bg-gray-100 dark:bg-gray-900">
+			<div className="flex items-center justify-center mt-10 bg-transparent dark:bg-transparent">
 				<div className="flex flex-col items-center space-y-6">
 					<h2 className="text-2xl font-semibold text-center text-gray-900 dark:text-white">
 						Google Calendar URL
@@ -49,7 +49,7 @@ const CalendarLink = () => {
 							type="text"
 							value={userLink}
 							readOnly
-							className="px-3 py-2 w-72 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 dark:bg-gray-700 dark:text-white"
+							className="px-3 py-2 w-72 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 bg-transparent dark:bg-transparent dark:text-white"
 						/>
 						<button
 							onClick={handleCopyClick}
