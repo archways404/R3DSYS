@@ -168,7 +168,7 @@ export default function ActiveShifts() {
 	});
 
 	return (
-		<div className="rounded-md border p-4 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+		<div className="rounded-md p-4 ml-5 mr-5 text-gray-900 dark:text-gray-100">
 			{/* Filter Input */}
 			<div className="mb-4 flex items-center gap-2">
 				<Input
@@ -264,7 +264,8 @@ export default function ActiveShifts() {
 			{/* Selected Shift IDs Display */}
 			<div className="mt-4">
 				<p className="font-semibold">Selected Shift IDs:</p>
-				<pre className="bg-gray-100 dark:bg-gray-800 p-2 rounded-md">
+				<pre className="bg-transparent p-2 rounded-md">
+					{/* Selected Shift IDs Display */}
 					{JSON.stringify(selectedShiftIds, null, 2)}
 				</pre>
 			</div>
