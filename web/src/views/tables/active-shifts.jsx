@@ -19,6 +19,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { ArrowUp, ArrowDown } from 'lucide-react'; // Sorting icons
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function ActiveShifts() {
 	const [data, setData] = useState([]);
@@ -27,6 +28,7 @@ export default function ActiveShifts() {
 	const [sorting, setSorting] = useState([]);
 	const [selectedShiftIds, setSelectedShiftIds] = useState([]); // Track selected shift IDs
 	const [globalFilter, setGlobalFilter] = useState(''); // ShadCN filter state
+	const [loading, setShowLoading] = useState(true);
 
 	useEffect(() => {
 		const fetchData = async () => {

@@ -8,23 +8,36 @@ import ActiveShifts from './active-shifts';
 function TableRenderer() {
 	const [renderState, setRenderState] = useState('default');
 
-	/*
 	const { user } = useContext(AuthContext);
 	const { consent } = useContext(ConsentContext);
 
 	if (!user) {
 		return null;
 	}
-  */
 
 	return (
 		<Layout>
-			<Button onClick={() => setRenderState('active-shifts')}>
-				Active Shifts
-			</Button>
+			{/* Button Container */}
+			<div className="flex gap-4 p-4 rounded-md mb-4">
+				{/* If state is "default", show only the "Active Shifts" button */}
+				{renderState === 'default' ? (
+					<Button
+						variant="default"
+						onClick={() => setRenderState('active-shifts')}>
+						Active Shifts
+					</Button>
+				) : (
+					/* If state is anything else, show only the "Back" button */
+					<Button
+						className="text-gray-600 dark:text-gray-300 bg-transparent hover:bg-transparent hover:text-gray-900 dark:hover:text-white transition-colors duration-200"
+						onClick={() => setRenderState('default')}>
+						← Back
+					</Button>
+				)}
+			</div>
 
-			{/* Keep the component in the DOM but hide it if not needed */}
-			{renderState === 'active-shifts' ? <ActiveShifts /> : null}
+			{/* Render ActiveShifts when selected */}
+			{renderState === 'active-shifts' && <ActiveShifts />}
 		</Layout>
 	);
 }
