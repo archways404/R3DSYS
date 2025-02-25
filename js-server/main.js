@@ -2,6 +2,7 @@ const fastify = require('fastify');
 const cors = require('@fastify/cors');
 const cookie = require('@fastify/cookie');
 const jwt = require('@fastify/jwt');
+const csfr = require('@fastify/csrf-protection');
 const fastifyStatic = require('@fastify/static');
 const rateLimit = require('@fastify/rate-limit');
 const metrics = require('fastify-metrics');
@@ -39,6 +40,10 @@ const app = fastify({
 		key,
 		cert,
 	},
+});
+
+app.register(csfr, {
+	cookieOpts: { httpOnly: true, secure: true, sameSite: 'Strict' },
 });
 
 app.register(cookie, {

@@ -271,43 +271,47 @@ async function routes(fastify, options) {
 		{ preValidation: fastify.verifyJWT },
 		async (request, reply) => {
 			const user = request.user;
-			console.log('user: ', user);
 
 			try {
-				// Fetch user groups using imported function
 				const userGroups = await getUserGroups(fastify.pg, user.uuid);
 
-				// Create auth token including groups
-				const authToken = fastify.jwt.sign(
-					{
-						uuid: user.uuid,
-						email: user.email,
-						role: user.role,
-						first: user.first,
-						last: user.last,
-						groups: userGroups, // ✅ Groups included in the authToken
-					},
-					{ expiresIn: '15m' }
-				);
+				// Check if token needs to be refreshed (e.g., expires in < 5 mins)
+				const tokenExpTime = user.exp * 1000 - Date.now();
+				let authToken = null;
 
-				// Set the authToken cookie
-				reply.setCookie('authToken', authToken, {
-					httpOnly: true,
-					sameSite: 'None',
-					secure: true,
-					path: '/',
-				});
+				if (tokenExpTime < 5 * 60 * 1000) {
+					authToken = fastify.jwt.sign(
+						{
+							uuid: user.uuid,
+							email: user.email,
+							role: user.role,
+							first: user.first,
+							last: user.last,
+							groups: userGroups,
+						},
+						{ expiresIn: '45m' }
+					);
+
+					reply.setCookie('authToken', authToken, {
+						httpOnly: true,
+						sameSite: 'None',
+						secure: true,
+						path: '/',
+					});
+				}
 
 				return reply.send({
-					message: 'You are authenticated and token has been refreshed',
-					user: user,
-					groups: userGroups, // Optional: return groups in response for debugging
+					message: 'You are authenticated',
+					user,
+					groups: userGroups,
+					tokenRefreshed: !!authToken,
 				});
 			} catch (err) {
 				return reply.status(500).send({ error: 'Internal Server Error' });
 			}
 		}
 	);
+
 
 	/*
 	fastify.get(
