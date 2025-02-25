@@ -17,7 +17,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ArrowUp, ArrowDown } from 'lucide-react'; // Icons for sorting
-import { IoCheckboxOutline } from 'react-icons/io5';
 
 export default function ActiveShifts() {
 	const [data, setData] = useState([]);
@@ -51,7 +50,7 @@ export default function ActiveShifts() {
 		fetchData();
 	}, []);
 
-	// Function to handle checkbox selection
+	// Function to handle individual checkbox selection
 	const handleCheckboxChange = (shiftId) => {
 		setSelectedShiftIds(
 			(prevSelected) =>
@@ -59,6 +58,27 @@ export default function ActiveShifts() {
 					? prevSelected.filter((id) => id !== shiftId) // Remove if already selected
 					: [...prevSelected, shiftId] // Add if not selected
 		);
+	};
+
+	// Select all visible rows
+	const selectAllVisible = () => {
+		const visibleShiftIds = table
+			.getRowModel()
+			.rows.map((row) => row.getValue('shift_id'));
+		setSelectedShiftIds((prevSelected) => [
+			...new Set([...prevSelected, ...visibleShiftIds]),
+		]);
+	};
+
+	// Select all rows (all entries in the dataset)
+	const selectAllEntries = () => {
+		const allShiftIds = data.map((row) => row.shift_id);
+		setSelectedShiftIds(allShiftIds);
+	};
+
+	// Clear all selections
+	const clearSelection = () => {
+		setSelectedShiftIds([]);
 	};
 
 	const columns = [
@@ -119,6 +139,26 @@ export default function ActiveShifts() {
 
 	return (
 		<div className="rounded-md border p-4 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+			{/* Buttons for Selection */}
+			<div className="flex gap-2 mb-4">
+				<Button
+					onClick={selectAllVisible}
+					variant="outline">
+					Select All Visible
+				</Button>
+				<Button
+					onClick={selectAllEntries}
+					variant="outline">
+					Select All Entries
+				</Button>
+				<Button
+					onClick={clearSelection}
+					variant="destructive">
+					Clear Selection
+				</Button>
+			</div>
+
+			{/* Table */}
 			<Table>
 				<TableHeader>
 					{table.getHeaderGroups().map((headerGroup) => (
