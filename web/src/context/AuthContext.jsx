@@ -15,9 +15,7 @@ export function AuthProvider({ children }) {
 		try {
 			const response = await axios.get(
 				import.meta.env.VITE_BASE_ADDR + '/protected',
-				{
-					withCredentials: true,
-				}
+				{ withCredentials: true }
 			);
 
 			if (response.data && response.data.user) {
@@ -26,7 +24,10 @@ export function AuthProvider({ children }) {
 				setUser(null);
 			}
 		} catch (error) {
-			setUser(null);
+			if (error.response?.status === 401) {
+				console.log('Session expired, redirecting to login');
+				setUser(null);
+			}
 		} finally {
 			setLoading(false);
 		}

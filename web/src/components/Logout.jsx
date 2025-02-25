@@ -11,25 +11,19 @@ function Logout() {
 
 	useEffect(() => {
 		const logoutUser = async () => {
+			const minLoadingTime = new Promise((resolve) => setTimeout(resolve, 500)); // Ensure 500ms min delay
+			const logoutRequest = axios.post(
+				import.meta.env.VITE_BASE_ADDR + '/logout',
+				{},
+				{ withCredentials: true }
+			);
+
 			try {
-				// Correct the axios post request
-				await axios.post(
-					import.meta.env.VITE_BASE_ADDR + '/logout',
-					{},
-					{
-						withCredentials: true, // Ensure cookies are sent
-					}
-				);
-
-				// Clear user context
-				await setUser(null);
-
-				// Navigate to login after logout
+				await Promise.all([logoutRequest, minLoadingTime]); // Wait for both to complete
+				setUser(null);
 				navigate('/login');
 			} catch (error) {
 				console.error('Error logging out:', error);
-
-				// Clear user context and navigate to error page in case of failure
 				setUser(null);
 				navigate('/error');
 			} finally {
@@ -40,7 +34,7 @@ function Logout() {
 		logoutUser();
 	}, [navigate, setUser]);
 
-	// Show a loading screen while logging out
+	// Ensure smooth transition (at least 500ms)
 	if (isLoggingOut) {
 		return <LoadingScreen />;
 	}
