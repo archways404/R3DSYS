@@ -4,6 +4,7 @@ import {
 	getCoreRowModel,
 	getPaginationRowModel,
 	getSortedRowModel,
+	getFilteredRowModel,
 	flexRender,
 } from '@tanstack/react-table';
 import {
@@ -16,7 +17,8 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ArrowUp, ArrowDown } from 'lucide-react'; // Icons for sorting
+import { Input } from '@/components/ui/input';
+import { ArrowUp, ArrowDown } from 'lucide-react'; // Sorting icons
 
 export default function ActiveShifts() {
 	const [data, setData] = useState([]);
@@ -24,6 +26,7 @@ export default function ActiveShifts() {
 	const [currentPage, setCurrentPage] = useState(0);
 	const [sorting, setSorting] = useState([]);
 	const [selectedShiftIds, setSelectedShiftIds] = useState([]); // Track selected shift IDs
+	const [globalFilter, setGlobalFilter] = useState(''); // ShadCN filter state
 
 	useEffect(() => {
 		const fetchData = async () => {
@@ -96,24 +99,46 @@ export default function ActiveShifts() {
 			},
 		},
 		{ accessorKey: 'shift_id', header: 'Shift ID', enableSorting: true },
-		{ accessorKey: 'start_time', header: 'Start Time', enableSorting: true },
-		{ accessorKey: 'end_time', header: 'End Time', enableSorting: true },
-		{ accessorKey: 'date', header: 'Date', enableSorting: true },
-		{ accessorKey: 'description', header: 'Description', enableSorting: true },
+
+		// Format Start Time (HH:MM)
+		{
+			accessorKey: 'start_time',
+			header: 'Start Time',
+			enableSorting: true,
+			cell: ({ getValue }) => <>{getValue()?.slice(0, 5)}</>,
+		},
+
+		// Format End Time (HH:MM)
+		{
+			accessorKey: 'end_time',
+			header: 'End Time',
+			enableSorting: true,
+			cell: ({ getValue }) => <>{getValue()?.slice(0, 5)}</>,
+		},
+
+		// Format Date (YYYY-MM-DD)
+		{
+			accessorKey: 'date',
+			header: 'Date',
+			enableSorting: true,
+			cell: ({ getValue }) => <>{getValue()?.split('T')[0]}</>,
+		},
+
 		{ accessorKey: 'first_name', header: 'First Name', enableSorting: true },
 		{ accessorKey: 'last_name', header: 'Last Name', enableSorting: true },
 		{ accessorKey: 'email', header: 'Email', enableSorting: true },
-		{ accessorKey: 'group_name', header: 'Group', enableSorting: true },
-		{
-			accessorKey: 'name_long',
-			header: 'Shift Type (Long)',
-			enableSorting: true,
-		},
 		{
 			accessorKey: 'name_short',
 			header: 'Shift Type (Short)',
 			enableSorting: true,
 		},
+		{
+			accessorKey: 'name_long',
+			header: 'Shift Type (Long)',
+			enableSorting: true,
+		},
+		{ accessorKey: 'group_name', header: 'Group', enableSorting: true },
+		{ accessorKey: 'description', header: 'Description', enableSorting: true },
 	];
 
 	const table = useReactTable({
@@ -122,23 +147,42 @@ export default function ActiveShifts() {
 		getCoreRowModel: getCoreRowModel(),
 		getPaginationRowModel: getPaginationRowModel(),
 		getSortedRowModel: getSortedRowModel(),
+		getFilteredRowModel: getFilteredRowModel(),
 		state: {
 			pagination: {
 				pageIndex: currentPage,
 				pageSize,
 			},
 			sorting,
+			globalFilter,
 		},
 		onSortingChange: setSorting,
 		onPaginationChange: (updater) => {
 			const newState = typeof updater === 'function' ? updater({}) : updater;
 			setCurrentPage(newState.pageIndex);
 		},
+		onGlobalFilterChange: setGlobalFilter,
 		manualPagination: false,
 	});
 
 	return (
 		<div className="rounded-md border p-4 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+			{/* Filter Input */}
+			<div className="mb-4 flex items-center gap-2">
+				<Input
+					type="text"
+					placeholder="Filter all columns..."
+					value={globalFilter ?? ''}
+					onChange={(e) => setGlobalFilter(e.target.value)}
+					className="w-full"
+				/>
+				<Button
+					onClick={() => setGlobalFilter('')}
+					variant="outline">
+					Clear Filter
+				</Button>
+			</div>
+
 			{/* Buttons for Selection */}
 			<div className="flex gap-2 mb-4">
 				<Button
@@ -196,11 +240,7 @@ export default function ActiveShifts() {
 						table.getRowModel().rows.map((row) => (
 							<TableRow
 								key={row.id}
-								className={`border-b dark:border-gray-700 ${
-									selectedShiftIds.includes(row.getValue('shift_id'))
-										? 'bg-gray-200 dark:bg-gray-800'
-										: ''
-								}`}>
+								className="border-b dark:border-gray-700">
 								{row.getVisibleCells().map((cell) => (
 									<TableCell key={cell.id}>
 										{flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -219,7 +259,6 @@ export default function ActiveShifts() {
 					)}
 				</TableBody>
 			</Table>
-
 			{/* Selected Shift IDs Display */}
 			<div className="mt-4">
 				<p className="font-semibold">Selected Shift IDs:</p>

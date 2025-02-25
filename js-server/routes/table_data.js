@@ -103,7 +103,7 @@ async function routes(fastify, options) {
                     st.name_long,
                     st.name_short
                 FROM active_shifts s
-                JOIN account u ON s.assigned_to = u.user_id
+                LEFT JOIN account u ON s.assigned_to = u.user_id
                 JOIN schedule_groups sg ON s.schedule_group_id = sg.group_id
                 JOIN shift_types st ON s.shift_type_id = st.shift_type_id
                 WHERE s.schedule_group_id = ANY($1)
@@ -126,7 +126,7 @@ async function routes(fastify, options) {
                     st.name_long,
                     st.name_short
                 FROM active_shifts s
-                JOIN account u ON s.assigned_to = u.user_id
+                LEFT JOIN account u ON s.assigned_to = u.user_id
                 JOIN schedule_groups sg ON s.schedule_group_id = sg.group_id
                 JOIN shift_types st ON s.shift_type_id = st.shift_type_id
             `;
