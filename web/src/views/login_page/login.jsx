@@ -52,8 +52,6 @@ function Login() {
 				throw new Error('Invalid email or password');
 			}
 
-			await checkAuth();
-
 			setError('');
 
 			navigate('/welcome');

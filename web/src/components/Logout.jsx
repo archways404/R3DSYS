@@ -21,7 +21,7 @@ function Logout() {
 			try {
 				await Promise.all([logoutRequest, minLoadingTime]); // Wait for both to complete
 				setUser(null);
-				navigate('/login');
+				navigate('/');
 			} catch (error) {
 				console.error('Error logging out:', error);
 				setUser(null);
