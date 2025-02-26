@@ -16,14 +16,15 @@ jobs:
       - name: Install sshpass
         run: sudo apt-get install -y sshpass
 
-      - name: Deploy via SSH (Username & Password)
+     - name: Deploy via SSH (Username & Password)
         run: |
           sshpass -p "${{ secrets.SSH_PASSWORD }}" ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USERNAME }}@ssh.r3dsys.com << 'EOF'
             cd ~/R3DSYS
-            pm2 stop api
+            /home/k14/.nvm/versions/node/v22.14.0/bin/pm2 stop api
             git pull origin main
             cd js-server
             pnpm install
             cd ..
-            pm2 restart api
+            /home/k14/.nvm/versions/node/v22.14.0/bin/pm2 restart api
           EOF
+
