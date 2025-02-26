@@ -13,6 +13,8 @@ const { fetchDataEnd } = require('../functions/processingTime');
 
 const { createAuthLog } = require('../functions/db_logs');
 
+const argon2 = require('argon2');
+
 async function routes(fastify, options) {
 	fastify.addHook('onRequest', (request, reply, done) => {
 		startRequest(request);
@@ -27,7 +29,6 @@ async function routes(fastify, options) {
 		done();
 	});
 
-	// LOGIN ROUTE
 	fastify.post(
 		'/login',
 		{
@@ -48,68 +49,49 @@ async function routes(fastify, options) {
 			}
 
 			const client = await fastify.pg.connect();
-
 			fetchDataStart(request);
 
-			const user = await login(client, email, password, ip, deviceId);
+			try {
+				// 🔹 Call the login function
+				const userData = await login(
+					fastify,
+					client,
+					email,
+					password,
+					ip,
+					deviceId
+				);
 
-			if (!user.error) {
-				try {
-					// 🔹 Fetch user groups before generating the token
-					const userGroups = await getUserGroups(client, user.user_id);
+				console.log('userData', userData);
 
-					// 🔹 Generate a JWT token with user groups included
-					const authToken = fastify.jwt.sign(
-						{
-							uuid: user.user_id,
-							email: user.email,
-							role: user.role,
-							first: user.first_name,
-							last: user.last_name,
-							groups: userGroups, // ✅ User groups are now included
-						},
-						{ expiresIn: '15m' }
-					);
+				// 🔹 Generate JWT Token
+				const authToken = fastify.jwt.sign(userData, { expiresIn: '5m' });
 
-					// 🔹 Set the authToken in a cookie
-					reply.setCookie('authToken', authToken, {
-						httpOnly: true,
-						sameSite: 'None',
-						secure: true,
-						path: '/',
-					});
+				// 🔹 Set authToken in Cookie
+				reply.setCookie('authToken', authToken, {
+					httpOnly: true,
+					sameSite: 'None',
+					secure: true,
+					path: '/',
+				});
 
-					// 🔹 Log successful authentication
-					await createAuthLog(client, user.user_id, ip, deviceId, true, null);
-
-					fetchDataEnd(request);
-
-					// 🔹 Send back the token and user data (including groups)
-					return reply.send({
-						message: 'Login successful',
-						user: {
-							uuid: user.user_id,
-							email: user.email,
-							role: user.role,
-							first: user.first_name,
-							last: user.last_name,
-							groups: userGroups, // ✅ Sending back user groups for frontend state
-						},
-					});
-				} catch (err) {
-					console.error('Error fetching user groups:', err);
-					return reply.status(500).send({ message: 'Internal Server Error' });
-				}
-			} else {
-				// 🔹 Handle login failures
+				// ✅ Fix: Change `userData.user_id` → `userData.uuid`
+				await createAuthLog(client, userData.uuid, ip, deviceId, true, null);
 				fetchDataEnd(request);
-				const errorMessage =
-					user.error === 'Invalid password' ||
-					user.error === 'Account with email does not exist'
-						? 'Account does not exist or invalid password.'
-						: user.error;
 
-				return reply.send({ message: errorMessage });
+				return reply.send({
+					message: 'Login successful',
+					user: userData, // ✅ Sending user profile data
+				});
+			} catch (err) {
+				console.error('Login Error:', err);
+				fetchDataEnd(request);
+
+				return reply
+					.status(500)
+					.send({ message: err.message || 'Internal Server Error' });
+			} finally {
+				client.release();
 			}
 		}
 	);
@@ -288,28 +270,49 @@ async function routes(fastify, options) {
 		{ preValidation: fastify.verifyJWT },
 		async (request, reply) => {
 			const user = request.user;
+			const cacheKey = `${user.uuid}:userinfo`;
 
 			try {
-				const userGroups = await getUserGroups(fastify.pg, user.uuid);
-
-				// Check if token needs to be refreshed (e.g., expires in < 5 mins)
+				// 🔹 Check if JWT token needs to be refreshed first
 				const tokenExpTime = user.exp * 1000 - Date.now();
-				let authToken = null;
+				let newAuthToken = null;
+				let userData = user; // Default to JWT payload
 
 				if (tokenExpTime < 5 * 60 * 1000) {
-					authToken = fastify.jwt.sign(
-						{
+					// 🔹 Token is about to expire, refresh it
+
+					// Try to get user data from Redis first
+					const cachedUserData = await fastify.redis.get(cacheKey);
+
+					if (cachedUserData) {
+						// ✅ Cache hit: Use cached user data
+						userData = JSON.parse(cachedUserData);
+					} else {
+						// ❌ Cache miss: Fetch user data from DB
+						const userGroups = await getUserGroups(fastify.pg, user.uuid);
+						userData = {
 							uuid: user.uuid,
 							email: user.email,
 							role: user.role,
 							first: user.first,
 							last: user.last,
 							groups: userGroups,
-						},
-						{ expiresIn: '45m' }
-					);
+						};
 
-					reply.setCookie('authToken', authToken, {
+						// 🔹 Store the fresh user data in Redis
+						await fastify.redis.set(
+							cacheKey,
+							JSON.stringify(userData),
+							'EX',
+							900
+						);
+					}
+
+					// Generate a fresh token
+					newAuthToken = fastify.jwt.sign(userData, { expiresIn: '45m' });
+
+					// 🔹 Update Cookie with new token
+					reply.setCookie('authToken', newAuthToken, {
 						httpOnly: true,
 						sameSite: 'None',
 						secure: true,
@@ -317,13 +320,14 @@ async function routes(fastify, options) {
 					});
 				}
 
+				// 🔹 Return user info **without hitting Redis or DB unless needed**
 				return reply.send({
 					message: 'You are authenticated',
-					user,
-					groups: userGroups,
-					tokenRefreshed: !!authToken,
+					user: userData,
+					tokenRefreshed: !!newAuthToken,
 				});
 			} catch (err) {
+				console.error('❌ Redis or Database Error:', err);
 				return reply.status(500).send({ error: 'Internal Server Error' });
 			}
 		}

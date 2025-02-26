@@ -2,6 +2,7 @@ import http from 'k6/http';
 import { sleep, check } from 'k6';
 
 export const options = {
+	insecureSkipTLSVerify: true,
 	stages: [
 		{ duration: '10s', target: 50 }, // Ramp-up to 50 users over 10 seconds
 		{ duration: '30s', target: 100 }, // Stay at 100 users for 30 seconds
@@ -10,11 +11,11 @@ export const options = {
 };
 
 export default function () {
-	const url = 'https://api.r3dsys.com/login';
+	const url = 'https://localhost:3000/login';
 	const payload = JSON.stringify({
-		deviceId: '',
-		email: '',
-		password: '',
+		deviceId: '290dd277de470e7f566e7dfee11c3a90',
+		email: 'ak8893@mau.se',
+		password: 'Hnqtdtah123?',
 	});
 
 	const params = {
@@ -32,6 +33,6 @@ export default function () {
 	sleep(1); // Wait 1s before next request
 }
 
-// brew install k6  # macOS
-// choco install k6  # Windows
-// sudo apt install k6  # Linux
+// k6 run stress-test.js
+
+// k6 run stress-test.js --out json=results.json

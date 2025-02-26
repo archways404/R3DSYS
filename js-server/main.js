@@ -9,6 +9,10 @@ const metrics = require('fastify-metrics');
 const fs = require('fs');
 const path = require('path');
 
+const fastifyRedis = require('@fastify/redis');
+const Redis = require('ioredis');
+//import Redis from 'ioredis'; // Required as a peer dependency
+
 const { getAffectedUsers } = require('./functions/ical-creation');
 const { getActiveShiftsForUser } = require('./functions/ical-creation');
 const { generateICSFileForUser } = require('./functions/ical-creation');
@@ -90,6 +94,14 @@ app.addHook('preParsing', async (request, reply, payload) => {
 app.register(rateLimit, {
 	max: 1500000,
 	timeWindow: '1 minute',
+});
+
+// Register the Redis plugin for Fastify
+app.register(fastifyRedis, {
+	host: '127.0.0.1', // Change to your Dragonfly host if needed
+	port: 6379,
+	password: '', // Add if required
+	retryStrategy: (times) => Math.min(times * 50, 2000), // Retry on failure
 });
 
 // DATABASE CONNECTION
@@ -190,6 +202,15 @@ app.listen({ port: PORT, host: HOST }, async function (err, address) {
 	if (err) {
 		app.log.error(err);
 		process.exit(1);
+	}
+});
+
+// Check Redis connection on startup
+app.after(() => {
+	if (!app.redis || typeof app.redis.set !== 'function') {
+		console.error('❌ Fastify Redis is not properly initialized');
+	} else {
+		console.log('✅ Fastify Redis plugin is working!');
 	}
 });
 

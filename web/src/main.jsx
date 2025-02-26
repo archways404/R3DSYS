@@ -46,6 +46,8 @@ import AssignShifts from './views/assign_shifts_page/assign_shifts';
 
 import TableRenderer from './views/tables/renderer';
 
+import OfflineRenderer from './views/offline/renderer';
+
 import './global.css';
 
 createRoot(document.getElementById('root')).render(
@@ -61,6 +63,10 @@ createRoot(document.getElementById('root')).render(
 									<Index />
 								</UnAuthWrapper>
 							}
+						/>
+						<Route
+							path="/offline"
+							element={<OfflineRenderer />}
 						/>
 						<Route
 							path="/login"

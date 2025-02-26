@@ -1,0 +1,39 @@
+
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+
+     execution: local
+        script: stress-test.js
+        output: -
+
+     scenarios: (100.00%) 1 scenario, 100 max VUs, 1m20s max duration (incl. graceful stop):
+              * default: Up to 100 looping VUs for 50s over 3 stages (gracefulRampDown: 30s, gracefulStop: 30s)
+
+
+     ✓ is status 200
+     ✓ is login successful
+
+     checks.........................: 100.00% 6004 out of 6004
+     data_received..................: 3.8 MB  75 kB/s
+     data_sent......................: 806 kB  16 kB/s
+     http_req_blocked...............: avg=82.84µs min=1µs    med=3µs    max=25.09ms  p(90)=9µs     p(95)=24.94µs
+     http_req_connecting............: avg=10.84µs min=0s     med=0s     max=7.97ms   p(90)=0s      p(95)=0s     
+     http_req_duration..............: avg=11.8ms  min=4.21ms med=8.88ms max=144.83ms p(90)=19.07ms p(95)=23.28ms
+       { expected_response:true }...: avg=11.8ms  min=4.21ms med=8.88ms max=144.83ms p(90)=19.07ms p(95)=23.28ms
+     http_req_failed................: 0.00%   0 out of 3002
+     http_req_receiving.............: avg=38.59µs min=8µs    med=28µs   max=4ms      p(90)=69µs    p(95)=88µs   
+     http_req_sending...............: avg=24.91µs min=2µs    med=12µs   max=7.67ms   p(90)=26µs    p(95)=35µs   
+     http_req_tls_handshaking.......: avg=53.33µs min=0s     med=0s     max=14.18ms  p(90)=0s      p(95)=0s     
+     http_req_waiting...............: avg=11.73ms min=4.18ms med=8.84ms max=144.75ms p(90)=18.98ms p(95)=23.13ms
+     http_reqs......................: 3002    59.001316/s
+     iteration_duration.............: avg=1.01s   min=1s     med=1s     max=1.14s    p(90)=1.02s   p(95)=1.02s  
+     iterations.....................: 3002    59.001316/s
+     vus............................: 7       min=5            max=99 
+     vus_max........................: 100     min=100          max=100
+
+
+running (0m50.9s), 000/100 VUs, 3002 complete and 0 interrupted iterations
+default ✓ [======================================] 000/100 VUs  50s

@@ -1,6 +1,6 @@
 import React, { createContext, useState, useEffect } from 'react';
 import axios from 'axios';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 export const AuthContext = createContext();
 
@@ -9,13 +9,35 @@ export function AuthProvider({ children }) {
 	const [loading, setLoading] = useState(true);
 
 	const location = useLocation();
+	const navigate = useNavigate(); // Added navigation hook
+
+	const isServerReachable = async () => {
+		try {
+			await fetch(import.meta.env.VITE_BASE_ADDR, { mode: 'no-cors' });
+			return true;
+		} catch {
+			return false;
+		}
+	};
 
 	const checkAuth = async () => {
 		setLoading(true);
+
+		const reachable = await isServerReachable();
+		if (!reachable) {
+			console.log('Server is unreachable.');
+			navigate('/offline'); // Redirect to offline page
+			setLoading(false);
+			return;
+		}
+
 		try {
 			const response = await axios.get(
 				import.meta.env.VITE_BASE_ADDR + '/protected',
-				{ withCredentials: true }
+				{
+					withCredentials: true,
+					timeout: 3000,
+				}
 			);
 
 			if (response.data && response.data.user) {
@@ -27,6 +49,8 @@ export function AuthProvider({ children }) {
 			if (error.response?.status === 401) {
 				console.log('Session expired, redirecting to login');
 				setUser(null);
+			} else {
+				console.log('Error:', error.message);
 			}
 		} finally {
 			setLoading(false);
@@ -35,6 +59,7 @@ export function AuthProvider({ children }) {
 
 	useEffect(() => {
 		if (window.location.pathname === '/logout') return;
+		if (window.location.pathname === '/offline') return;
 		checkAuth();
 	}, [location]);
 
