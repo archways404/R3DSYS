@@ -1,25 +1,5 @@
 const argon2 = require('argon2');
 
-async function getUserGroups(client, userId) {
-	try {
-		const { rows: groups } = await client.query(
-			`SELECT sg.group_id, sg.name 
-			 FROM account_schedule_groups AS asg
-			 JOIN schedule_groups AS sg ON asg.group_id = sg.group_id
-			 WHERE asg.user_id = $1`,
-			[userId]
-		);
-
-		return groups.map((group) => ({
-			id: group.group_id,
-			name: group.name,
-		}));
-	} catch (err) {
-		console.error('Error fetching user groups:', err);
-		throw new Error('Database query failed');
-	}
-}
-
 async function login(client, email, password, ip, deviceid) {
 	try {
 		const userResult = await client.query(
@@ -125,7 +105,6 @@ async function login(client, email, password, ip, deviceid) {
 		client.release();
 	}
 }
-
 
 async function getUserGroups(client, userId) {
 	try {
