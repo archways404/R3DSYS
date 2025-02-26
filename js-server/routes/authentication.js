@@ -52,85 +52,20 @@ async function routes(fastify, options) {
 			fetchDataStart(request);
 
 			try {
-				// 🔹 Step 1: Check Redis for login details (email, uuid, password hash)
-				const loginCacheKey = `${email}:logindetails`;
-				let loginDetails = await fastify.redis.get(loginCacheKey);
-				let userId, storedHash;
+				// 🔹 Call the login function
+				const userData = await login(
+					fastify,
+					client,
+					email,
+					password,
+					ip,
+					deviceId
+				);
 
-				if (loginDetails) {
-					// ✅ Redis Cache Hit - Use cached login details
-					loginDetails = JSON.parse(loginDetails);
-					userId = loginDetails.uuid;
-					storedHash = loginDetails.password;
-				} else {
-					// ❌ Cache Miss - Fetch from PostgreSQL
-					const userResult = await client.query(
-						'SELECT user_id, password FROM account WHERE email = $1',
-						[email]
-					);
+				console.log('userData', userData);
 
-					if (userResult.rows.length === 0) {
-						throw new Error('Account with email does not exist');
-					}
-
-					userId = userResult.rows[0].user_id;
-					storedHash = userResult.rows[0].password;
-
-					// 🔹 Cache login details for future logins (expires in 15 minutes)
-					await fastify.redis.set(
-						loginCacheKey,
-						JSON.stringify({ uuid: userId, email, password: storedHash }),
-						'EX',
-						900 // 15 minutes expiry
-					);
-				}
-
-				// 🔹 Step 2: Verify Password Hash
-				const isPasswordValid = await argon2.verify(storedHash, password);
-				if (!isPasswordValid) {
-					throw new Error('Invalid password');
-				}
-
-				// 🔹 Step 3: Fetch or Cache User Profile Data
-				const userInfoCacheKey = `${userId}:userinfo`;
-				let userData = await fastify.redis.get(userInfoCacheKey);
-
-				if (userData) {
-					// ✅ User info cache hit
-					userData = JSON.parse(userData);
-				} else {
-					// ❌ User info cache miss - Fetch from DB
-					const userGroups = await getUserGroups(client, userId);
-					const userProfile = await client.query(
-						'SELECT first_name, last_name, role FROM account WHERE user_id = $1',
-						[userId]
-					);
-
-					if (userProfile.rows.length === 0) {
-						throw new Error('User profile not found');
-					}
-
-					// 🔹 Construct user profile data
-					userData = {
-						uuid: userId,
-						email,
-						role: userProfile.rows[0].role,
-						first: userProfile.rows[0].first_name,
-						last: userProfile.rows[0].last_name,
-						groups: userGroups,
-					};
-
-					// 🔹 Store user profile in Redis (expires in 15 minutes)
-					await fastify.redis.set(
-						userInfoCacheKey,
-						JSON.stringify(userData),
-						'EX',
-						900
-					);
-				}
-
-				// 🔹 Step 4: Generate JWT Token
-				const authToken = fastify.jwt.sign(userData, { expiresIn: '15m' });
+				// 🔹 Generate JWT Token
+				const authToken = fastify.jwt.sign(userData, { expiresIn: '5m' });
 
 				// 🔹 Set authToken in Cookie
 				reply.setCookie('authToken', authToken, {
@@ -140,16 +75,18 @@ async function routes(fastify, options) {
 					path: '/',
 				});
 
-				await createAuthLog(client, userId, ip, deviceId, true, null);
+				// ✅ Fix: Change `userData.user_id` → `userData.uuid`
+				await createAuthLog(client, userData.uuid, ip, deviceId, true, null);
 				fetchDataEnd(request);
 
 				return reply.send({
 					message: 'Login successful',
-					user: userData, // ✅ Sending cached user profile data
+					user: userData, // ✅ Sending user profile data
 				});
 			} catch (err) {
 				console.error('Login Error:', err);
 				fetchDataEnd(request);
+
 				return reply
 					.status(500)
 					.send({ message: err.message || 'Internal Server Error' });
