@@ -118,57 +118,68 @@ async function routes(fastify, options) {
 			}
 
 			const client = await fastify.pg.connect();
+
 			fetchDataStart(request);
 
-			try {
-				// 🔹 Call the login function (removed `fastify` from arguments)
-				const userData = await login(client, email, password, ip, deviceId);
+			const user = await login(client, email, password, ip, deviceId);
 
-				console.log('userData', userData);
+			if (!user.error) {
+				try {
+					// 🔹 Fetch user groups before generating the token
+					const userGroups = await getUserGroups(client, user.user_id);
 
-				// 🔹 Generate JWT Token with full `userData`
-				const authToken = fastify.jwt.sign(userData, { expiresIn: '45m' });
+					// 🔹 Generate a JWT token with user groups included
+					const authToken = fastify.jwt.sign(
+						{
+							uuid: user.user_id,
+							email: user.email,
+							role: user.role,
+							first: user.first_name,
+							last: user.last_name,
+							groups: userGroups, // ✅ User groups are now included
+						},
+						{ expiresIn: '15m' }
+					);
 
-				// 🔹 Set authToken in Cookie
-				reply.setCookie('authToken', authToken, {
-					httpOnly: true,
-					sameSite: 'None',
-					secure: true,
-					path: '/',
-				});
+					// 🔹 Set the authToken in a cookie
+					reply.setCookie('authToken', authToken, {
+						httpOnly: true,
+						sameSite: 'None',
+						secure: true,
+						path: '/',
+					});
 
-				// ✅ Fix: Ensure correct user identification (`uuid` or `user_id`)
-				await createAuthLog(
-					client,
-					userData.user_id || userData.uuid,
-					ip,
-					deviceId,
-					true,
-					null
-				);
-				fetchDataEnd(request);
+					// 🔹 Log successful authentication
+					await createAuthLog(client, user.user_id, ip, deviceId, true, null);
 
-				return reply.send({
-					message: 'Login successful',
-					user: userData, // ✅ Full user profile data
-				});
-			} catch (err) {
-				console.error('Login Error:', err);
-				fetchDataEnd(request);
+					fetchDataEnd(request);
 
-				// ✅ Proper error handling
-				if (err.message.includes('Account is locked')) {
-					return reply.status(403).send({ message: err.message });
-				} else if (
-					err.message.includes('Invalid password') ||
-					err.message.includes('Account with email does not exist')
-				) {
-					return reply.status(401).send({ message: err.message });
-				} else {
+					// 🔹 Send back the token and user data (including groups)
+					return reply.send({
+						message: 'Login successful',
+						user: {
+							uuid: user.user_id,
+							email: user.email,
+							role: user.role,
+							first: user.first_name,
+							last: user.last_name,
+							groups: userGroups, // ✅ Sending back user groups for frontend state
+						},
+					});
+				} catch (err) {
+					console.error('Error fetching user groups:', err);
 					return reply.status(500).send({ message: 'Internal Server Error' });
 				}
-			} finally {
-				client.release();
+			} else {
+				// 🔹 Handle login failures
+				fetchDataEnd(request);
+				const errorMessage =
+					user.error === 'Invalid password' ||
+					user.error === 'Account with email does not exist'
+						? 'Account does not exist or invalid password.'
+						: user.error;
+
+				return reply.send({ message: errorMessage });
 			}
 		}
 	);
