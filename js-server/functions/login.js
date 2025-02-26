@@ -133,25 +133,18 @@ async function login(fastify, client, email, password, ip, deviceId) {
 		const loginCacheKey = `${email}:logindetails`;
 
 		// Step 1: Check Redis for cached login details
-
 		let loginDetails = await fastify.redis.get(loginCacheKey);
-
 		let userId, storedHash;
 
 		if (loginDetails) {
 			// ✅ Redis Cache Hit - Use cached login details
-
 			loginDetails = JSON.parse(loginDetails);
-
 			userId = loginDetails.uuid;
-
 			storedHash = loginDetails.password;
 		} else {
 			// ❌ Cache Miss - Fetch from PostgreSQL
-
 			const userResult = await client.query(
 				'SELECT user_id, password FROM account WHERE email = $1',
-
 				[email]
 			);
 
@@ -160,104 +153,68 @@ async function login(fastify, client, email, password, ip, deviceId) {
 			}
 
 			const user = userResult.rows[0];
-
 			userId = user.user_id;
-
 			storedHash = user.password;
 		}
 
 		// Ensure the account lockout entry exists
-
 		await client.query(
 			`INSERT INTO account_lockout (user_id, failed_attempts, locked, unlock_time)
-
-
 			 VALUES ($1, 0, FALSE, NULL)
-
-
 			 ON CONFLICT (user_id) DO NOTHING`,
-
 			[userId]
 		);
 
 		// Check for lockout status
-
 		const lockoutResult = await client.query(
 			`SELECT locked, unlock_time FROM account_lockout WHERE user_id = $1`,
-
 			[userId]
 		);
 
 		const lockout = lockoutResult.rows[0];
-
 		if (lockout && lockout.locked) {
 			const unlockTime = lockout.unlock_time;
-
 			if (unlockTime && unlockTime > new Date()) {
 				throw new Error(`Account is locked until ${unlockTime.toISOString()}`);
 			}
 
 			// Reset lockout if time has passed
-
 			await client.query(
 				`UPDATE account_lockout 
-
-
 				 SET locked = FALSE, failed_attempts = 0, unlock_time = NULL 
-
-
 				 WHERE user_id = $1`,
-
 				[userId]
 			);
 		}
 
 		// Step 2: Verify Password Hash
-
 		const isPasswordValid = await argon2.verify(storedHash, password);
-
 		if (!isPasswordValid) {
 			// 🚨 Failed Login - Remove Cache & Update Lockout Table
-
 			await fastify.redis.del(loginCacheKey);
 
 			await client.query(
 				`UPDATE account_lockout 
-
-
 				 SET failed_attempts = failed_attempts + 1, last_failed_ip = $2, last_failed_time = CURRENT_TIMESTAMP 
-
-
 				 WHERE user_id = $1`,
-
 				[userId, ip]
 			);
 
 			// Check if the account should be locked
-
 			const failedAttemptsResult = await client.query(
 				`SELECT failed_attempts FROM account_lockout WHERE user_id = $1`,
-
 				[userId]
 			);
 
 			const failedAttempts = failedAttemptsResult.rows[0]?.failed_attempts || 0;
-
 			if (failedAttempts >= 5) {
 				const unlockTime = new Date(Date.now() + 15 * 60 * 1000); // 15 min lock
-
 				await client.query(
 					`UPDATE account_lockout 
-
-
 					 SET locked = TRUE, unlock_time = $2 
-
-
 					 WHERE user_id = $1`,
-
 					[userId, unlockTime]
 				);
-
 				throw new Error(
 					`Account locked due to too many failed attempts. Unlock at ${unlockTime.toISOString()}`
 				);
@@ -267,26 +224,17 @@ async function login(fastify, client, email, password, ip, deviceId) {
 		}
 
 		// Step 3: Reset failed attempts on successful login
-
 		await client.query(
 			`UPDATE account_lockout 
-
-
 			 SET failed_attempts = 0, locked = FALSE, unlock_time = NULL 
-
-
 			 WHERE user_id = $1`,
-
 			[userId]
 		);
 
 		// Step 4: Fetch user groups and profile
-
 		const userGroups = await getUserGroups(client, userId);
-
 		const userProfile = await client.query(
 			'SELECT first_name, last_name, role FROM account WHERE user_id = $1',
-
 			[userId]
 		);
 
@@ -295,70 +243,51 @@ async function login(fastify, client, email, password, ip, deviceId) {
 		}
 
 		const firstName = userProfile.rows[0].first_name;
-
 		const lastName = userProfile.rows[0].last_name;
-
 		const role = userProfile.rows[0].role;
 
 		// 🔹 Step 5: Construct full user profile
-
 		const userInfo = {
 			uuid: userId,
-
 			email,
-
 			first: firstName,
-
 			last: lastName,
-
 			role,
-
 			groups: userGroups,
 		};
 
 		// Step 6: Cache **ONLY LOGIN DATA** in `${email}:logindetails`
-
 		await fastify.redis.set(
 			loginCacheKey,
-
 			JSON.stringify({
 				uuid: userId,
-
 				email,
-
 				password: storedHash, // **Only password hash!**
 			}),
-
 			'EX',
-
 			900
 		);
 
 		// Step 7: Cache full user profile for `/protected` route
-
 		const userInfoCacheKey = `${userId}:userinfo`;
-
 		await fastify.redis.set(
 			userInfoCacheKey,
-
 			JSON.stringify(userInfo),
-
 			'EX',
-
 			900
 		);
 
-		// Return user object
+		// ✅ **Fix: DO NOT RELEASE client here**
+		// client.release(); ❌ REMOVE THIS!
 
+		// Return user object
 		return userInfo;
 	} catch (error) {
 		console.error('Login failed:', error.message);
-
 		throw error;
-	} finally {
-		client.release();
 	}
 }
+
 
 module.exports = { login, getUserGroups };
 
