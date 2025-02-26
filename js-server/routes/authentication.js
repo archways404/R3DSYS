@@ -119,22 +119,17 @@ async function routes(fastify, options) {
 
 	fastify.post(
 		'/login',
-
 		{
 			config: {
 				rateLimit: {
 					max: 15000000,
-
 					timeWindow: '15 minutes',
-
 					keyGenerator: (req) => req.body?.deviceId || req.ip,
 				},
 			},
 		},
-
 		async (request, reply) => {
 			const { email, password, deviceId } = request.body;
-
 			const ip = request.ip;
 
 			if (!deviceId) {
@@ -142,34 +137,25 @@ async function routes(fastify, options) {
 			}
 
 			const client = await fastify.pg.connect();
-
 			fetchDataStart(request);
 
 			try {
 				// 🔹 Call the login function
-
 				const userData = await login(
 					fastify,
-
 					client,
-
 					email,
-
 					password,
-
 					ip,
-
 					deviceId
 				);
 
 				console.log('userData', userData);
 
 				// 🔹 Generate JWT Token
-
 				const authToken = fastify.jwt.sign(userData, { expiresIn: '5m' });
 
 				// 🔹 Set authToken in Cookie
-
 				reply.setCookie('authToken', authToken, {
 					httpOnly: true,
 					sameSite: 'None',
@@ -178,28 +164,21 @@ async function routes(fastify, options) {
 				});
 
 				// ✅ Fix: Change `userData.user_id` → `userData.uuid`
-
 				await createAuthLog(client, userData.uuid, ip, deviceId, true, null);
 
 				fetchDataEnd(request);
 
 				return reply.send({
 					message: 'Login successful',
-
 					user: userData, // ✅ Sending user profile data
 				});
 			} catch (err) {
 				console.error('Login Error:', err);
-
 				fetchDataEnd(request);
 
-				return reply.send({ message: errorMessage });
-
 				return reply
-
 					.status(500)
-
-					.send({ message: err.message || 'Internal Server Error' });
+					.send({ message: err.message || 'Internal Server Error' }); // ✅ Fix: Removed undefined `errorMessage`
 			} finally {
 				client.release();
 			}
