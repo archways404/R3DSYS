@@ -23,10 +23,12 @@ jobs:
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"   # Load NVM
             [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion" # Load NVM Bash completion
             
+            export PATH="$HOME/.nvm/versions/node/$(node -v)/bin:$PATH"  # Ensure Node.js global packages are in PATH
+            
             cd ~/R3DSYS
             pm2 stop api
             git pull
             cd ~/R3DSYS/js-server
-            pnpm install
+            pnpm install --update-env  # Ensure pnpm updates environment variables
             pm2 restart api
           EOF
