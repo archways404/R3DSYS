@@ -19,11 +19,15 @@ jobs:
       - name: Deploy via SSH (Username & Password)
         run: |
           sshpass -p "${{ secrets.SSH_PASSWORD }}" ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USERNAME }}@ssh.r3dsys.com << 'EOF'
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"   # Load NVM
+            [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion" # Load NVM Bash completion
+            
             cd ~/R3DSYS
-            /home/k14/.nvm/versions/node/v22.14.0/bin/pm2 stop api
+            pm2 stop api
             git pull origin main
             cd js-server
             pnpm install
             cd ..
-            /home/k14/.nvm/versions/node/v22.14.0/bin/pm2 restart api
+            pm2 restart api
           EOF
