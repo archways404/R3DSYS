@@ -271,7 +271,7 @@ async function login(fastify, client, email, password, ip, deviceId) {
 
 		// Step 7: Cache full user profile for `/protected` route
 		const userInfoCacheKey = `${userId}:userinfo`;
-		await fastify.redis.setnx(
+		await fastify.redis.set(
 			userInfoCacheKey,
 			JSON.stringify(userInfo),
 			'EX',
