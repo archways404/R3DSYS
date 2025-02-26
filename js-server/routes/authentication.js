@@ -131,14 +131,12 @@ async function routes(fastify, options) {
 		async (request, reply) => {
 			const { email, password, deviceId } = request.body;
 			const ip = request.ip;
-
 			if (!deviceId) {
 				return reply.status(400).send({ message: 'Device ID is required' });
 			}
 
 			const client = await fastify.pg.connect();
 			fetchDataStart(request);
-
 			try {
 				// 🔹 Call the login function
 				const userData = await login(
@@ -149,12 +147,9 @@ async function routes(fastify, options) {
 					ip,
 					deviceId
 				);
-
 				console.log('userData', userData);
-
 				// 🔹 Generate JWT Token
-				const authToken = fastify.jwt.sign(userData, { expiresIn: '5m' });
-
+				const authToken = fastify.jwt.sign(userData, { expiresIn: '15m' });
 				// 🔹 Set authToken in Cookie
 				reply.setCookie('authToken', authToken, {
 					httpOnly: true,
@@ -162,12 +157,7 @@ async function routes(fastify, options) {
 					secure: true,
 					path: '/',
 				});
-
-				// ✅ Fix: Change `userData.user_id` → `userData.uuid`
-				await createAuthLog(client, userData.uuid, ip, deviceId, true, null);
-
 				fetchDataEnd(request);
-
 				return reply.send({
 					message: 'Login successful',
 					user: userData, // ✅ Sending user profile data
@@ -175,10 +165,9 @@ async function routes(fastify, options) {
 			} catch (err) {
 				console.error('Login Error:', err);
 				fetchDataEnd(request);
-
 				return reply
 					.status(500)
-					.send({ message: err.message || 'Internal Server Error' }); // ✅ Fix: Removed undefined `errorMessage`
+					.send({ message: err.message || 'Internal Server Error' });
 			} finally {
 				client.release();
 			}
@@ -359,23 +348,24 @@ async function routes(fastify, options) {
 		{ preValidation: fastify.verifyJWT },
 		async (request, reply) => {
 			const user = request.user;
-			const cacheKey = `${user.uuid}:userinfo`;
+			const userInfoCacheKey = `${user.uuid}:userinfo`;
+			let userData = user; // Default to JWT payload
+			let newAuthToken = null;
 
 			try {
-				// 🔹 Check if JWT token needs to be refreshed first
+				// 🔹 Check if JWT token needs to be refreshed
 				const tokenExpTime = user.exp * 1000 - Date.now();
-				let newAuthToken = null;
-				let userData = user; // Default to JWT payload
 
 				if (tokenExpTime < 5 * 60 * 1000) {
-					// 🔹 Token is about to expire, refresh it
+					// ✅ Token is about to expire → refresh it
 
-					// Try to get user data from Redis first
-					const cachedUserData = await fastify.redis.get(cacheKey);
+					// 🔹 Try to get user data from Redis
+					const cachedUserData = await fastify.redis.get(userInfoCacheKey);
 
 					if (cachedUserData) {
-						// ✅ Cache hit: Use cached user data
+						// ✅ Cache hit: Use cached user data & refresh TTL
 						userData = JSON.parse(cachedUserData);
+						await fastify.redis.expire(userInfoCacheKey, 900); // Extend TTL
 					} else {
 						// ❌ Cache miss: Fetch user data from DB
 						const userGroups = await getUserGroups(fastify.pg, user.uuid);
@@ -388,16 +378,17 @@ async function routes(fastify, options) {
 							groups: userGroups,
 						};
 
-						// 🔹 Store the fresh user data in Redis
-						await fastify.redis.set(
-							cacheKey,
-							JSON.stringify(userData),
-							'EX',
-							900
+						// 🔹 Store the fresh user data in Redis only if it doesn't exist
+						const cacheExists = await fastify.redis.setnx(
+							userInfoCacheKey,
+							JSON.stringify(userData)
 						);
+						if (cacheExists) {
+							await fastify.redis.expire(userInfoCacheKey, 900); // 15 min TTL
+						}
 					}
 
-					// Generate a fresh token
+					// 🔹 Always generate a fresh token
 					newAuthToken = fastify.jwt.sign(userData, { expiresIn: '45m' });
 
 					// 🔹 Update Cookie with new token
@@ -409,7 +400,7 @@ async function routes(fastify, options) {
 					});
 				}
 
-				// 🔹 Return user info **without hitting Redis or DB unless needed**
+				// ✅ Return user info (without hitting Redis or DB unless needed)
 				return reply.send({
 					message: 'You are authenticated',
 					user: userData,
@@ -421,6 +412,7 @@ async function routes(fastify, options) {
 			}
 		}
 	);
+
 
 	/*
 	fastify.get(

@@ -257,28 +257,27 @@ async function login(fastify, client, email, password, ip, deviceId) {
 		};
 
 		// Step 6: Cache **ONLY LOGIN DATA** in `${email}:logindetails`
-		await fastify.redis.set(
+		const cacheExists = await fastify.redis.setnx(
 			loginCacheKey,
 			JSON.stringify({
 				uuid: userId,
 				email,
 				password: storedHash, // **Only password hash!**
-			}),
-			'EX',
-			900
+			})
 		);
+		if (cacheExists) {
+			await fastify.redis.expire(loginCacheKey, 900); // 900 seconds = 15 minutes
+		}
 
-		// Step 7: Cache full user profile for `/protected` route
+		// Step 7: Cache full user profile for `/protected` route if it doesn't exist
 		const userInfoCacheKey = `${userId}:userinfo`;
-		await fastify.redis.set(
+		const userInfoExists = await fastify.redis.setnx(
 			userInfoCacheKey,
-			JSON.stringify(userInfo),
-			'EX',
-			900
+			JSON.stringify(userInfo)
 		);
-
-		// ✅ **Fix: DO NOT RELEASE client here**
-		// client.release(); ❌ REMOVE THIS!
+		if (userInfoExists) {
+			await fastify.redis.expire(userInfoCacheKey, 900);
+		}
 
 		// Return user object
 		return userInfo;
@@ -287,7 +286,6 @@ async function login(fastify, client, email, password, ip, deviceId) {
 		throw error;
 	}
 }
-
 
 module.exports = { login, getUserGroups };
 
