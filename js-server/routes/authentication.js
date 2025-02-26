@@ -97,6 +97,7 @@ async function routes(fastify, options) {
 		}
 	);
 	*/
+
 	fastify.post(
 		'/login',
 		{
@@ -120,20 +121,13 @@ async function routes(fastify, options) {
 			fetchDataStart(request);
 
 			try {
-				// 🔹 Call the login function
+				// 🔹 Call the login function (removed `fastify` from arguments)
 				const userData = await login(client, email, password, ip, deviceId);
 
 				console.log('userData', userData);
 
-				// 🔹 Generate JWT Token
-				const authToken = fastify.jwt.sign(
-					{
-						user_id: userData.user_id,
-						email: userData.email,
-						role: userData.role,
-					},
-					{ expiresIn: '45m' }
-				);
+				// 🔹 Generate JWT Token with full `userData`
+				const authToken = fastify.jwt.sign(userData, { expiresIn: '45m' });
 
 				// 🔹 Set authToken in Cookie
 				reply.setCookie('authToken', authToken, {
@@ -143,19 +137,26 @@ async function routes(fastify, options) {
 					path: '/',
 				});
 
-				// ✅ Fix: Pass correct `user_id`
-				await createAuthLog(client, userData.user_id, ip, deviceId, true, null);
+				// ✅ Fix: Ensure correct user identification (`uuid` or `user_id`)
+				await createAuthLog(
+					client,
+					userData.user_id || userData.uuid,
+					ip,
+					deviceId,
+					true,
+					null
+				);
 				fetchDataEnd(request);
 
 				return reply.send({
 					message: 'Login successful',
-					user: userData, // ✅ Sending user profile data
+					user: userData, // ✅ Full user profile data
 				});
 			} catch (err) {
 				console.error('Login Error:', err);
 				fetchDataEnd(request);
 
-				// ✅ Handle specific errors properly
+				// ✅ Proper error handling
 				if (err.message.includes('Account is locked')) {
 					return reply.status(403).send({ message: err.message });
 				} else if (
