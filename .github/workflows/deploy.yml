@@ -26,8 +26,7 @@ jobs:
             cd ~/R3DSYS
             pm2 stop api
             git pull
-            cd js-server
+            cd ~/R3DSYS/js-server
             pnpm install
-            cd ..
             pm2 restart api
           EOF
