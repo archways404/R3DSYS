@@ -29,6 +29,6 @@ jobs:
             pm2 stop api
             git pull
             cd ~/R3DSYS/js-server
-            /home/k14/.local/share/pnpm/pnpm install --update-env
+            /home/k14/.local/share/pnpm/pnpm install
             pm2 restart api
           EOF
