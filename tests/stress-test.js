@@ -13,9 +13,9 @@ export const options = {
 export default function () {
 	const url = 'https://localhost:3000/login';
 	const payload = JSON.stringify({
-		deviceId: '290dd277de470e7f566e7dfee11c3a90',
-		email: 'ak8893@mau.se',
-		password: 'Hnqtdtah123?',
+		deviceId: '',
+		email: '',
+		password: '',
 	});
 
 	const params = {
