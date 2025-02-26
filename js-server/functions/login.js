@@ -116,7 +116,7 @@ async function login(client, email, password, ip, deviceid) {
 			first_name: user.first_name,
 			last_name: user.last_name,
 			role: user.role,
-			groups: userGroups, // Include groups in the response
+			groups: userGroups,
 		};
 	} catch (error) {
 		console.error('Login failed:', error.message);

@@ -13,6 +13,8 @@ const { fetchDataEnd } = require('../functions/processingTime');
 
 const { createAuthLog } = require('../functions/db_logs');
 
+const argon2 = require('argon2');
+
 async function routes(fastify, options) {
 	fastify.addHook('onRequest', (request, reply, done) => {
 		startRequest(request);
@@ -27,7 +29,6 @@ async function routes(fastify, options) {
 		done();
 	});
 
-	// LOGIN ROUTE
 	fastify.post(
 		'/login',
 		{
@@ -48,68 +49,112 @@ async function routes(fastify, options) {
 			}
 
 			const client = await fastify.pg.connect();
-
 			fetchDataStart(request);
 
-			const user = await login(client, email, password, ip, deviceId);
+			try {
+				// 🔹 Step 1: Check Redis for login details (email, uuid, password hash)
+				const loginCacheKey = `${email}:logindetails`;
+				let loginDetails = await fastify.redis.get(loginCacheKey);
+				let userId, storedHash;
 
-			if (!user.error) {
-				try {
-					// 🔹 Fetch user groups before generating the token
-					const userGroups = await getUserGroups(client, user.user_id);
-
-					// 🔹 Generate a JWT token with user groups included
-					const authToken = fastify.jwt.sign(
-						{
-							uuid: user.user_id,
-							email: user.email,
-							role: user.role,
-							first: user.first_name,
-							last: user.last_name,
-							groups: userGroups, // ✅ User groups are now included
-						},
-						{ expiresIn: '15m' }
+				if (loginDetails) {
+					// ✅ Redis Cache Hit - Use cached login details
+					loginDetails = JSON.parse(loginDetails);
+					userId = loginDetails.uuid;
+					storedHash = loginDetails.password;
+				} else {
+					// ❌ Cache Miss - Fetch from PostgreSQL
+					const userResult = await client.query(
+						'SELECT user_id, password FROM account WHERE email = $1',
+						[email]
 					);
 
-					// 🔹 Set the authToken in a cookie
-					reply.setCookie('authToken', authToken, {
-						httpOnly: true,
-						sameSite: 'None',
-						secure: true,
-						path: '/',
-					});
+					if (userResult.rows.length === 0) {
+						throw new Error('Account with email does not exist');
+					}
 
-					// 🔹 Log successful authentication
-					await createAuthLog(client, user.user_id, ip, deviceId, true, null);
+					userId = userResult.rows[0].user_id;
+					storedHash = userResult.rows[0].password;
 
-					fetchDataEnd(request);
-
-					// 🔹 Send back the token and user data (including groups)
-					return reply.send({
-						message: 'Login successful',
-						user: {
-							uuid: user.user_id,
-							email: user.email,
-							role: user.role,
-							first: user.first_name,
-							last: user.last_name,
-							groups: userGroups, // ✅ Sending back user groups for frontend state
-						},
-					});
-				} catch (err) {
-					console.error('Error fetching user groups:', err);
-					return reply.status(500).send({ message: 'Internal Server Error' });
+					// 🔹 Cache login details for future logins (expires in 15 minutes)
+					await fastify.redis.set(
+						loginCacheKey,
+						JSON.stringify({ uuid: userId, email, password: storedHash }),
+						'EX',
+						900 // 15 minutes expiry
+					);
 				}
-			} else {
-				// 🔹 Handle login failures
-				fetchDataEnd(request);
-				const errorMessage =
-					user.error === 'Invalid password' ||
-					user.error === 'Account with email does not exist'
-						? 'Account does not exist or invalid password.'
-						: user.error;
 
-				return reply.send({ message: errorMessage });
+				// 🔹 Step 2: Verify Password Hash
+				const isPasswordValid = await argon2.verify(storedHash, password);
+				if (!isPasswordValid) {
+					throw new Error('Invalid password');
+				}
+
+				// 🔹 Step 3: Fetch or Cache User Profile Data
+				const userInfoCacheKey = `${userId}:userinfo`;
+				let userData = await fastify.redis.get(userInfoCacheKey);
+
+				if (userData) {
+					// ✅ User info cache hit
+					userData = JSON.parse(userData);
+				} else {
+					// ❌ User info cache miss - Fetch from DB
+					const userGroups = await getUserGroups(client, userId);
+					const userProfile = await client.query(
+						'SELECT first_name, last_name, role FROM account WHERE user_id = $1',
+						[userId]
+					);
+
+					if (userProfile.rows.length === 0) {
+						throw new Error('User profile not found');
+					}
+
+					// 🔹 Construct user profile data
+					userData = {
+						uuid: userId,
+						email,
+						role: userProfile.rows[0].role,
+						first: userProfile.rows[0].first_name,
+						last: userProfile.rows[0].last_name,
+						groups: userGroups,
+					};
+
+					// 🔹 Store user profile in Redis (expires in 15 minutes)
+					await fastify.redis.set(
+						userInfoCacheKey,
+						JSON.stringify(userData),
+						'EX',
+						900
+					);
+				}
+
+				// 🔹 Step 4: Generate JWT Token
+				const authToken = fastify.jwt.sign(userData, { expiresIn: '15m' });
+
+				// 🔹 Set authToken in Cookie
+				reply.setCookie('authToken', authToken, {
+					httpOnly: true,
+					sameSite: 'None',
+					secure: true,
+					path: '/',
+				});
+
+				await createAuthLog(client, userId, ip, deviceId, true, null);
+				fetchDataEnd(request);
+
+				return reply.send({
+					message: 'Login successful',
+					user: userData, // ✅ Sending cached user profile data
+				});
+			} catch (err) {
+				console.error('Login Error:', err);
+				fetchDataEnd(request);
+				return reply
+					.status(500)
+					.send({ message: err.message || 'Internal Server Error' });
+			} finally {
+				client.release();
 			}
 		}
 	);
@@ -288,28 +333,49 @@ async function routes(fastify, options) {
 		{ preValidation: fastify.verifyJWT },
 		async (request, reply) => {
 			const user = request.user;
+			const cacheKey = `${user.uuid}:userinfo`;
 
 			try {
-				const userGroups = await getUserGroups(fastify.pg, user.uuid);
-
-				// Check if token needs to be refreshed (e.g., expires in < 5 mins)
+				// 🔹 Check if JWT token needs to be refreshed first
 				const tokenExpTime = user.exp * 1000 - Date.now();
-				let authToken = null;
+				let newAuthToken = null;
+				let userData = user; // Default to JWT payload
 
 				if (tokenExpTime < 5 * 60 * 1000) {
-					authToken = fastify.jwt.sign(
-						{
+					// 🔹 Token is about to expire, refresh it
+
+					// Try to get user data from Redis first
+					const cachedUserData = await fastify.redis.get(cacheKey);
+
+					if (cachedUserData) {
+						// ✅ Cache hit: Use cached user data
+						userData = JSON.parse(cachedUserData);
+					} else {
+						// ❌ Cache miss: Fetch user data from DB
+						const userGroups = await getUserGroups(fastify.pg, user.uuid);
+						userData = {
 							uuid: user.uuid,
 							email: user.email,
 							role: user.role,
 							first: user.first,
 							last: user.last,
 							groups: userGroups,
-						},
-						{ expiresIn: '45m' }
-					);
+						};
 
-					reply.setCookie('authToken', authToken, {
+						// 🔹 Store the fresh user data in Redis
+						await fastify.redis.set(
+							cacheKey,
+							JSON.stringify(userData),
+							'EX',
+							900
+						);
+					}
+
+					// Generate a fresh token
+					newAuthToken = fastify.jwt.sign(userData, { expiresIn: '45m' });
+
+					// 🔹 Update Cookie with new token
+					reply.setCookie('authToken', newAuthToken, {
 						httpOnly: true,
 						sameSite: 'None',
 						secure: true,
@@ -317,13 +383,14 @@ async function routes(fastify, options) {
 					});
 				}
 
+				// 🔹 Return user info **without hitting Redis or DB unless needed**
 				return reply.send({
 					message: 'You are authenticated',
-					user,
-					groups: userGroups,
-					tokenRefreshed: !!authToken,
+					user: userData,
+					tokenRefreshed: !!newAuthToken,
 				});
 			} catch (err) {
+				console.error('❌ Redis or Database Error:', err);
 				return reply.status(500).send({ error: 'Internal Server Error' });
 			}
 		}
