@@ -29,6 +29,7 @@ async function routes(fastify, options) {
 		done();
 	});
 
+	/*
 	fastify.post(
 		'/login',
 		{
@@ -65,7 +66,7 @@ async function routes(fastify, options) {
 				console.log('userData', userData);
 
 				// 🔹 Generate JWT Token
-				const authToken = fastify.jwt.sign(userData, { expiresIn: '5m' });
+				const authToken = fastify.jwt.sign(userData, { expiresIn: '45m' });
 
 				// 🔹 Set authToken in Cookie
 				reply.setCookie('authToken', authToken, {
@@ -90,6 +91,81 @@ async function routes(fastify, options) {
 				return reply
 					.status(500)
 					.send({ message: err.message || 'Internal Server Error' });
+			} finally {
+				client.release();
+			}
+		}
+	);
+	*/
+	fastify.post(
+		'/login',
+		{
+			config: {
+				rateLimit: {
+					max: 15000000,
+					timeWindow: '15 minutes',
+					keyGenerator: (req) => req.body?.deviceId || req.ip,
+				},
+			},
+		},
+		async (request, reply) => {
+			const { email, password, deviceId } = request.body;
+			const ip = request.ip;
+
+			if (!deviceId) {
+				return reply.status(400).send({ message: 'Device ID is required' });
+			}
+
+			const client = await fastify.pg.connect();
+			fetchDataStart(request);
+
+			try {
+				// 🔹 Call the login function
+				const userData = await login(client, email, password, ip, deviceId);
+
+				console.log('userData', userData);
+
+				// 🔹 Generate JWT Token
+				const authToken = fastify.jwt.sign(
+					{
+						user_id: userData.user_id,
+						email: userData.email,
+						role: userData.role,
+					},
+					{ expiresIn: '45m' }
+				);
+
+				// 🔹 Set authToken in Cookie
+				reply.setCookie('authToken', authToken, {
+					httpOnly: true,
+					sameSite: 'None',
+					secure: true,
+					path: '/',
+				});
+
+				// ✅ Fix: Pass correct `user_id`
+				await createAuthLog(client, userData.user_id, ip, deviceId, true, null);
+				fetchDataEnd(request);
+
+				return reply.send({
+					message: 'Login successful',
+					user: userData, // ✅ Sending user profile data
+				});
+			} catch (err) {
+				console.error('Login Error:', err);
+				fetchDataEnd(request);
+
+				// ✅ Handle specific errors properly
+				if (err.message.includes('Account is locked')) {
+					return reply.status(403).send({ message: err.message });
+				} else if (
+					err.message.includes('Invalid password') ||
+					err.message.includes('Account with email does not exist')
+				) {
+					return reply.status(401).send({ message: err.message });
+				} else {
+					return reply.status(500).send({ message: 'Internal Server Error' });
+				}
 			} finally {
 				client.release();
 			}
