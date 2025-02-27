@@ -16,7 +16,7 @@ function Login() {
 	const [error, setError] = useState('');
 	const [isLoggingIn, setIsLoggingIn] = useState(false);
 	const navigate = useNavigate();
-	const { checkAuth } = useContext(AuthContext);
+	const { checkAuth, setUser, setJustLoggedIn } = useContext(AuthContext); // ✅ Added setUser & setJustLoggedIn
 
 	const handleSubmit = async (e) => {
 		e.preventDefault();
@@ -31,30 +31,23 @@ function Login() {
 		try {
 			// Load the fingerprintjs agent
 			const fp = await FingerprintJS.load();
-			// Get the visitor identifier
 			const result = await fp.get();
-			const deviceId = result.visitorId; // This is the unique identifier for the device
+			const deviceId = result.visitorId;
 
 			const response = await fetch(import.meta.env.VITE_BASE_ADDR + '/login', {
 				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-				},
+				headers: { 'Content-Type': 'application/json' },
 				credentials: 'include',
-				body: JSON.stringify({
-					email,
-					password,
-					deviceId,
-				}),
+				body: JSON.stringify({ email, password, deviceId }),
 			});
 
-			if (!response.ok) {
-				throw new Error('Invalid email or password');
-			}
+			if (!response.ok) throw new Error('Invalid email or password');
 
-			setError('');
+			const userData = await response.json(); // ✅ Get user data from login response
+			setUser(userData.user); // ✅ Set user immediately
+			setJustLoggedIn(true); // ✅ Prevent rechecking auth on /welcome
 
-			navigate('/welcome');
+			navigate('/welcome', { replace: true });
 		} catch (error) {
 			setError(error.message);
 		} finally {
