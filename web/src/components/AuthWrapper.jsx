@@ -1,6 +1,7 @@
 import React, { useContext, useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
+import Background from './Background';
 
 import LoadingScreen from './LoadingScreen';
 
@@ -9,7 +10,7 @@ const AuthWrapper = ({ children, allowedUserRoles }) => {
 
 	// If still loading, show loading screen
 	if (loading) {
-		return;
+		return <Background />;
 	}
 
 	// If user is not logged in, send them to login
