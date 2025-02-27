@@ -5,6 +5,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider } from './context/AuthContext';
 import { ConsentProvider } from './context/ConsentContext';
+import { RenderProvider } from './context/RenderContext';
 
 import Index from './views/home_page/index.jsx';
 import Login from './views/login_page/login.jsx';
@@ -53,209 +54,211 @@ import './global.css';
 createRoot(document.getElementById('root')).render(
 	<StrictMode>
 		<BrowserRouter>
-			<ConsentProvider>
-				<ThemeProvider>
-					<AuthProvider>
-						<Routes>
-							<Route
-								path="/"
-								element={
-									<UnAuthWrapper>
-										<Index />
-									</UnAuthWrapper>
-								}
-							/>
-							<Route
-								path="/offline"
-								element={<OfflineRenderer />}
-							/>
-							<Route
-								path="/login"
-								element={
-									<UnAuthWrapper>
-										<Login />
-									</UnAuthWrapper>
-								}
-							/>
-							<Route
-								path="/resetPassword"
-								element={
-									<UnAuthWrapper>
-										<ResetPass />
-									</UnAuthWrapper>
-								}
-							/>
-							<Route
-								path="/setpass"
-								element={
-									<UnAuthWrapper>
-										<SetPass />
-									</UnAuthWrapper>
-								}
-							/>
-							<Route
-								path="/forgotpass"
-								element={
-									<UnAuthWrapper>
-										<ForgotPass />
-									</UnAuthWrapper>
-								}
-							/>
-							<Route
-								path="/serverinfo"
-								element={
-									<AuthWrapper allowedUserRoles={['admin', 'maintainer']}>
-										<ServerInfo />
-									</AuthWrapper>
-								}
-							/>
-							<Route
-								path="/invite"
-								element={
-									<AuthWrapper allowedUserRoles={['admin', 'maintainer']}>
-										<Invite />
-									</AuthWrapper>
-								}
-							/>
-							<Route
-								path="/tables"
-								element={
-									<AuthWrapper allowedUserRoles={['admin', 'maintainer']}>
-										<TableRenderer />
-									</AuthWrapper>
-								}
-							/>
-							<Route
-								path="/manage-users"
-								element={
-									<AuthWrapper allowedUserRoles={['admin', 'maintainer']}>
-										<ManageUsers />
-									</AuthWrapper>
-								}
-							/>
-							<Route
-								path="/user/:uuid"
-								element={
-									<AuthWrapper allowedUserRoles={['admin', 'maintainer']}>
-										<UserDetail />
-									</AuthWrapper>
-								}
-							/>
-							<Route
-								path="/schedule"
-								element={
-									<AuthWrapper
-										allowedUserRoles={['admin', 'worker', 'maintainer']}>
-										<Schedule />
-									</AuthWrapper>
-								}
-							/>
-							<Route
-								path="/apply-unassigned"
-								element={
-									<AuthWrapper allowedUserRoles={['worker']}>
-										<ApplyUnassigned />
-									</AuthWrapper>
-								}
-							/>
-							<Route
-								path="/assign-shifts"
-								element={
-									<AuthWrapper allowedUserRoles={['admin', 'maintainer']}>
-										<AssignShifts />
-									</AuthWrapper>
-								}
-							/>
-							<Route
-								path="/create-schedule"
-								element={
-									<AuthWrapper allowedUserRoles={['admin', 'maintainer']}>
-										<CreateSchedule />
-									</AuthWrapper>
-								}
-							/>
-							<Route
-								path="/handle-shifts"
-								element={
-									<AuthWrapper allowedUserRoles={['admin', 'maintainer']}>
-										<ShiftRenderer />
-									</AuthWrapper>
-								}
-							/>
-							<Route
-								path="/handle-template"
-								element={
-									<AuthWrapper allowedUserRoles={['admin', 'maintainer']}>
-										<TemplateRenderer />
-									</AuthWrapper>
-								}
-							/>
-							<Route
-								path="/create-template"
-								element={
-									<AuthWrapper allowedUserRoles={['admin', 'maintainer']}>
-										<CreateTemplate />
-									</AuthWrapper>
-								}
-							/>
-							<Route
-								path="/server-panel"
-								element={
-									<AuthWrapper allowedUserRoles={['admin', 'maintainer']}>
-										<ServerPanel />
-									</AuthWrapper>
-								}
-							/>
-							<Route
-								path="/email-status"
-								element={
-									<AuthWrapper allowedUserRoles={['admin', 'maintainer']}>
-										<EmailStatus />
-									</AuthWrapper>
-								}
-							/>
-							<Route
-								path="/welcome"
-								element={
-									<AuthWrapper
-										allowedUserRoles={['admin', 'worker', 'maintainer']}>
-										<Welcome />
-									</AuthWrapper>
-								}
-							/>
-							<Route
-								path="/handle-status"
-								element={
-									<AuthWrapper allowedUserRoles={['admin', 'maintainer']}>
-										<StatusMsg />
-									</AuthWrapper>
-								}
-							/>
-							<Route
-								path="/calendarlink"
-								element={
-									<AuthWrapper
-										allowedUserRoles={['admin', 'worker', 'maintainer']}>
-										<CalendarLink />
-									</AuthWrapper>
-								}
-							/>
-							<Route
-								path="/logout"
-								element={
-									<AuthWrapper>
-										<Logout />
-									</AuthWrapper>
-								}
-							/>
-							<Route
-								path="*"
-								element={<NotFound />}
-							/>
-						</Routes>
-					</AuthProvider>
-				</ThemeProvider>
-			</ConsentProvider>
+			<RenderProvider>
+				<ConsentProvider>
+					<ThemeProvider>
+						<AuthProvider>
+							<Routes>
+								<Route
+									path="/"
+									element={
+										<UnAuthWrapper>
+											<Index />
+										</UnAuthWrapper>
+									}
+								/>
+								<Route
+									path="/offline"
+									element={<OfflineRenderer />}
+								/>
+								<Route
+									path="/login"
+									element={
+										<UnAuthWrapper>
+											<Login />
+										</UnAuthWrapper>
+									}
+								/>
+								<Route
+									path="/resetPassword"
+									element={
+										<UnAuthWrapper>
+											<ResetPass />
+										</UnAuthWrapper>
+									}
+								/>
+								<Route
+									path="/setpass"
+									element={
+										<UnAuthWrapper>
+											<SetPass />
+										</UnAuthWrapper>
+									}
+								/>
+								<Route
+									path="/forgotpass"
+									element={
+										<UnAuthWrapper>
+											<ForgotPass />
+										</UnAuthWrapper>
+									}
+								/>
+								<Route
+									path="/serverinfo"
+									element={
+										<AuthWrapper allowedUserRoles={['admin', 'maintainer']}>
+											<ServerInfo />
+										</AuthWrapper>
+									}
+								/>
+								<Route
+									path="/invite"
+									element={
+										<AuthWrapper allowedUserRoles={['admin', 'maintainer']}>
+											<Invite />
+										</AuthWrapper>
+									}
+								/>
+								<Route
+									path="/tables"
+									element={
+										<AuthWrapper allowedUserRoles={['admin', 'maintainer']}>
+											<TableRenderer />
+										</AuthWrapper>
+									}
+								/>
+								<Route
+									path="/manage-users"
+									element={
+										<AuthWrapper allowedUserRoles={['admin', 'maintainer']}>
+											<ManageUsers />
+										</AuthWrapper>
+									}
+								/>
+								<Route
+									path="/user/:uuid"
+									element={
+										<AuthWrapper allowedUserRoles={['admin', 'maintainer']}>
+											<UserDetail />
+										</AuthWrapper>
+									}
+								/>
+								<Route
+									path="/schedule"
+									element={
+										<AuthWrapper
+											allowedUserRoles={['admin', 'worker', 'maintainer']}>
+											<Schedule />
+										</AuthWrapper>
+									}
+								/>
+								<Route
+									path="/apply-unassigned"
+									element={
+										<AuthWrapper allowedUserRoles={['worker']}>
+											<ApplyUnassigned />
+										</AuthWrapper>
+									}
+								/>
+								<Route
+									path="/assign-shifts"
+									element={
+										<AuthWrapper allowedUserRoles={['admin', 'maintainer']}>
+											<AssignShifts />
+										</AuthWrapper>
+									}
+								/>
+								<Route
+									path="/create-schedule"
+									element={
+										<AuthWrapper allowedUserRoles={['admin', 'maintainer']}>
+											<CreateSchedule />
+										</AuthWrapper>
+									}
+								/>
+								<Route
+									path="/handle-shifts"
+									element={
+										<AuthWrapper allowedUserRoles={['admin', 'maintainer']}>
+											<ShiftRenderer />
+										</AuthWrapper>
+									}
+								/>
+								<Route
+									path="/handle-template"
+									element={
+										<AuthWrapper allowedUserRoles={['admin', 'maintainer']}>
+											<TemplateRenderer />
+										</AuthWrapper>
+									}
+								/>
+								<Route
+									path="/create-template"
+									element={
+										<AuthWrapper allowedUserRoles={['admin', 'maintainer']}>
+											<CreateTemplate />
+										</AuthWrapper>
+									}
+								/>
+								<Route
+									path="/server-panel"
+									element={
+										<AuthWrapper allowedUserRoles={['admin', 'maintainer']}>
+											<ServerPanel />
+										</AuthWrapper>
+									}
+								/>
+								<Route
+									path="/email-status"
+									element={
+										<AuthWrapper allowedUserRoles={['admin', 'maintainer']}>
+											<EmailStatus />
+										</AuthWrapper>
+									}
+								/>
+								<Route
+									path="/welcome"
+									element={
+										<AuthWrapper
+											allowedUserRoles={['admin', 'worker', 'maintainer']}>
+											<Welcome />
+										</AuthWrapper>
+									}
+								/>
+								<Route
+									path="/handle-status"
+									element={
+										<AuthWrapper allowedUserRoles={['admin', 'maintainer']}>
+											<StatusMsg />
+										</AuthWrapper>
+									}
+								/>
+								<Route
+									path="/calendarlink"
+									element={
+										<AuthWrapper
+											allowedUserRoles={['admin', 'worker', 'maintainer']}>
+											<CalendarLink />
+										</AuthWrapper>
+									}
+								/>
+								<Route
+									path="/logout"
+									element={
+										<AuthWrapper>
+											<Logout />
+										</AuthWrapper>
+									}
+								/>
+								<Route
+									path="*"
+									element={<NotFound />}
+								/>
+							</Routes>
+						</AuthProvider>
+					</ThemeProvider>
+				</ConsentProvider>
+			</RenderProvider>
 		</BrowserRouter>
 	</StrictMode>
 );

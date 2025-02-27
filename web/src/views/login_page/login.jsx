@@ -10,6 +10,8 @@ import DisplayStatus from '../../components/DisplayStatus';
 import { AuthContext } from '../../context/AuthContext';
 import LoadingScreen from '../../components/LoadingScreen';
 
+import { useStateContext } from '../../context/RenderContext';
+
 function Login() {
 	const [email, setEmail] = useState('');
 	const [password, setPassword] = useState('');
@@ -17,6 +19,8 @@ function Login() {
 	const [isLoggingIn, setIsLoggingIn] = useState(false);
 	const navigate = useNavigate();
 	const { checkAuth, setUser, setJustLoggedIn } = useContext(AuthContext); // ✅ Added setUser & setJustLoggedIn
+
+	const { setRenderLoading } = useStateContext();
 
 	const handleSubmit = async (e) => {
 		e.preventDefault();
@@ -27,6 +31,7 @@ function Login() {
 		}
 
 		setIsLoggingIn(true);
+		setRenderLoading(true); // Start loading
 
 		try {
 			// Load the fingerprintjs agent
