@@ -1,7 +1,7 @@
 import { createContext, useState, useContext } from 'react';
 
 // Create context
-const RenderContext = createContext();
+export const RenderContext = createContext(); // ✅ Add export here
 
 // StateProvider component
 export const RenderProvider = ({ children }) => {

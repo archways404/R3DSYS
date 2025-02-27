@@ -40,7 +40,6 @@ function Schedule() {
 			);
 			const data = await response.json();
 			setScheduleGroups(data);
-			console.log('data', data);
 		} catch (error) {
 			console.error('Error fetching groups:', error);
 		}
@@ -55,7 +54,6 @@ function Schedule() {
 			);
 			const data = await response.json();
 			setEvents(data);
-			console.log('shift: ', data);
 			//const formattedEvents = transformShiftData(data);
 			//setEvents(formattedEvents);
 		} catch (error) {

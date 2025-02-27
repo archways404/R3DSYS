@@ -1,14 +1,14 @@
-import React, { useContext } from 'react';
+import React, { useContext, useEffect } from 'react';
 import { AuthContext } from '../../context/AuthContext';
 import { ConsentContext } from '../../context/ConsentContext';
-import { useStateContext } from '../../context/RenderContext';
+import { RenderContext } from '../../context/RenderContext';
 
 import Layout from '../../components/Layout';
 
 const Welcome = () => {
 	const { user } = useContext(AuthContext);
 	const { consent } = useContext(ConsentContext);
-	const { setRenderLoading } = useStateContext();
+	const { setRenderLoading } = useContext(RenderContext);
 
 	if (!user) {
 		return null;
@@ -28,7 +28,9 @@ const Welcome = () => {
 		return acc;
 	}, {});
 
-	setRenderLoading(false);
+	useEffect(() => {
+		setRenderLoading(false); // ✅ Now it updates AFTER render
+	}, []);
 
 	return (
 		<Layout>

@@ -9,8 +9,6 @@ function ScheduleRenderer() {
 	const { user } = useContext(AuthContext);
 	const { consent } = useContext(ConsentContext);
 
-	console.log('user', user);
-
 	const allCategories = ['necessary', 'preferences', 'analytics'];
 	const permissionsObject = allCategories.reduce((acc, category) => {
 		acc[category] = consent?.acceptedCategories?.includes(category) ?? false;
@@ -50,7 +48,6 @@ function ScheduleRenderer() {
 			);
 			const data = await response.json();
 			setEvents(data);
-			console.log('shift: ', data);
 		} catch (error) {
 			console.error('Error fetching active shifts:', error);
 		}

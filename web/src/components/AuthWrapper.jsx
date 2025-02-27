@@ -18,7 +18,7 @@ const AuthWrapper = ({ children, allowedUserRoles }) => {
 	if (!user) {
 		return (
 			<Navigate
-				to="/login"
+				to="/"
 				replace
 			/>
 		);
