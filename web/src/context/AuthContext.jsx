@@ -7,6 +7,7 @@ export const AuthContext = createContext();
 export function AuthProvider({ children }) {
 	const [user, setUser] = useState(null);
 	const [loading, setLoading] = useState(true);
+	const [justLoggedIn, setJustLoggedIn] = useState(false); // ✅ New state
 
 	const location = useLocation();
 	const navigate = useNavigate();
@@ -21,10 +22,15 @@ export function AuthProvider({ children }) {
 	};
 
 	const checkAuth = async () => {
+		if (justLoggedIn) {
+			console.log('Skipping checkAuth because user just logged in.');
+			return; // ✅ Skip auth check immediately after login
+		}
+
 		const reachable = await isServerReachable();
 		if (!reachable) {
 			console.log('Server is unreachable.');
-			navigate('/offline'); // Redirect to offline page
+			navigate('/offline');
 			return;
 		}
 
@@ -55,18 +61,23 @@ export function AuthProvider({ children }) {
 	};
 
 	useEffect(() => {
-		if (
-			window.location.pathname === '/logout' ||
-			window.location.pathname === '/offline'
-		) {
-			setLoading(false); // Don't trigger auth check if logging out
+		// Skip `checkAuth` if user **just** logged in and is on /welcome
+		if (justLoggedIn && location.pathname === '/welcome') {
+			setJustLoggedIn(false); // ✅ Reset flag after first visit
 			return;
 		}
+
+		if (location.pathname === '/logout' || location.pathname === '/offline') {
+			setLoading(false);
+			return;
+		}
+
 		checkAuth();
 	}, [location]);
 
 	return (
-		<AuthContext.Provider value={{ user, loading, setUser, checkAuth }}>
+		<AuthContext.Provider
+			value={{ user, loading, setUser, checkAuth, setJustLoggedIn }}>
 			{children}
 		</AuthContext.Provider>
 	);
