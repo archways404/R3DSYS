@@ -5,8 +5,15 @@ import { AuthContext } from '../context/AuthContext';
 import LoadingScreen from './LoadingScreen';
 
 const AuthWrapper = ({ children, allowedUserRoles }) => {
-	const { user } = useContext(AuthContext);
+	const { user, loading } = useContext(AuthContext);
+
+	// If still loading, show loading screen
+	if (loading) {
+		return;
+	}
+
 	// If user is not logged in, send them to login
+
 	if (!user) {
 		return (
 			<Navigate

@@ -91,6 +91,22 @@
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+    --fc-list-event-hover-bg-color: rgba(255, 255, 255, 0.1); /* Light gray with slight transparency */
+
+    --fc-neutral-bg-color: #ffffff80;
+    --fc-page-bg-color: #ffffff80;
+    --fc-page-bg-color: #ffffff80;
+
+    /*
+    --fc-border-color:
+    --fc-neutral-text-color:
+    --fc-button-text-color:
+    --fc-button-bg-color:
+    --fc-event-bg-color:
+    --fc-event-border-color:
+    --fc-page-bg-color: #ffffff80;
+
+    */
   }
 
   .dark {
@@ -151,10 +167,30 @@ button:focus-visible {
   }
 }
 
-
+/*
 .fc .fc-list-sticky .fc-list-day > * {
   background: transparent !important;
   position: sticky;
   top: 0px;
 }
+  */
 
+
+.fc-theme-standard .fc-list-day-cushion {
+background-color: #ffffff00;
+}
+
+.fc .fc-daygrid-week-number {
+  background-color: #ffffff00;
+  color: #ffffff;
+}
+
+
+.fc-theme-standard td, .fc-theme-standard th {
+  border: 1px solid #dddddd24;
+}
+
+
+.fc-theme-standard .fc-scrollgrid {
+  border: 1px solid #ffffff00;
+}

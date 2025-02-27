@@ -62,8 +62,8 @@ function SetPass() {
 
 	return (
 		<Layout>
-			<div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900">
-				<div className="w-full max-w-md p-8 space-y-6 bg-white dark:bg-gray-800 shadow-md rounded-lg">
+			<div className="flex items-center justify-center min-h-screen">
+				<div className="w-full max-w-md p-8 space-y-6 rounded-lg">
 					<h2 className="text-2xl font-semibold text-center text-gray-900 dark:text-white">
 						Set Your Password
 					</h2>
@@ -87,7 +87,7 @@ function SetPass() {
 								type="password"
 								value={password}
 								onChange={(e) => setPassword(e.target.value)}
-								className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 dark:bg-gray-700 dark:text-white"
+								className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 dark:text-white"
 								placeholder="Enter your new password"
 								required
 							/>
@@ -104,7 +104,7 @@ function SetPass() {
 								type="password"
 								value={confirmPassword}
 								onChange={(e) => setConfirmPassword(e.target.value)}
-								className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 dark:bg-gray-700 dark:text-white"
+								className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 dark:text-white"
 								placeholder="Confirm your new password"
 								required
 							/>
