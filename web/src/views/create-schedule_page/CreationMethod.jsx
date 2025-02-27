@@ -22,7 +22,7 @@ const CreateMethod = ({ setRenderMode }) => {
 
 	return (
 		<Layout>
-			<div className="flex flex-col justify-center items-center min-h-screen bg-gray-100 dark:bg-gray-900">
+			<div className="flex flex-col justify-center items-center min-h-screen ">
 				<h2 className="text-2xl font-semibold mb-6">Calendar</h2>
 				<div className="flex space-x-6">
 					<button
@@ -31,6 +31,7 @@ const CreateMethod = ({ setRenderMode }) => {
 						Template
 					</button>
 					<button
+						disabled
 						onClick={handleManualClick}
 						className="w-32 h-32 flex items-center justify-center bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition">
 						Manual

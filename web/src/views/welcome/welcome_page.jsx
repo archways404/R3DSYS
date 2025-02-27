@@ -10,8 +10,6 @@ const Welcome = () => {
 	const { consent } = useContext(ConsentContext);
 	const { setRenderLoading } = useStateContext();
 
-	console.log('user', user);
-
 	if (!user) {
 		return null;
 	}
@@ -29,8 +27,6 @@ const Welcome = () => {
 		acc[category] = consent?.acceptedCategories?.includes(category) ?? false;
 		return acc;
 	}, {});
-
-	console.log('permissionObject', permissionsObject);
 
 	setRenderLoading(false);
 

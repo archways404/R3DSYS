@@ -63,7 +63,7 @@ function ApplyUnassigned() {
 						onGroupSelect={setGroupId}
 					/>
 				) : (
-					<div className="w-full max-w-lg p-6 bg-white dark:bg-gray-800 shadow-lg rounded-xl border border-gray-200 dark:border-gray-600">
+					<div className="w-full max-w-lg p-6 rounded-xl border border-gray-200 dark:border-gray-600">
 						{/* Display ShiftSelector */}
 						<ShiftSelector
 							shifts={unassignedShifts}
