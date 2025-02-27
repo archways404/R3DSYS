@@ -90,7 +90,7 @@ function ScheduleRenderer() {
 
 	return (
 		<Layout>
-			<div className="flex flex-col justify-center items-center mb-8 mt-4 space-y-4">
+			<div className="flex flex-col justify-center items-center min-h-screen space-y-4 pb-8">
 				{/* Row of buttons instead of dropdown */}
 				<div className="flex flex-wrap gap-2">
 					{scheduleGroups.map((group) => (
@@ -98,12 +98,12 @@ function ScheduleRenderer() {
 							key={group.id}
 							onClick={() => handleGroupChange(group.id)}
 							className={`px-4 py-2 rounded-md font-medium transition-all
-								${
-									selectedGroup === group.id
-										? 'bg-red-500 text-white'
-										: 'border border-red-500 text-red-500 bg-transparent hover:bg-red-500 hover:text-white'
-								}
-							`}>
+							${
+								selectedGroup === group.id
+									? 'bg-red-500 text-white'
+									: 'border border-red-500 text-red-500 bg-transparent hover:bg-red-500 hover:text-white'
+							}
+						`}>
 							{group.name}
 						</button>
 					))}
@@ -123,8 +123,8 @@ function ScheduleRenderer() {
 				</div>
 
 				{/* Calendar View */}
-				<div className="w-full max-w-6xl px-4 mt-4">
-					<div className="h-[calc(100vh-200px)] overflow-hidden rounded-lg shadow-md">
+				<div className="w-full max-w-6xl px-4 flex-grow">
+					<div className="min-h-[calc(100vh-200px)] overflow-none rounded-lg shadow-md">
 						<CalendarView
 							events={filteredEvents} // Pass filtered events
 							onEventSubmit={handleEventSubmit}

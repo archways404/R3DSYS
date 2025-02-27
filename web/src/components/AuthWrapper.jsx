@@ -6,23 +6,14 @@ import LoadingScreen from './LoadingScreen';
 
 const AuthWrapper = ({ children, allowedUserRoles }) => {
 	const { user, loading } = useContext(AuthContext);
-	const [showLoading, setShowLoading] = useState(true);
 
-	useEffect(() => {
-		const minLoadingTime = 500; // Minimum time to show loading (in ms)
-		const timeout = setTimeout(() => {
-			setShowLoading(false);
-		}, minLoadingTime);
-
-		return () => clearTimeout(timeout); // Cleanup on unmount
-	}, []);
-
-	// Ensure loading screen is displayed for at least 0.5s
-	if (loading || showLoading) {
-		return <LoadingScreen />;
+	// If still loading, show loading screen
+	if (loading) {
+		return;
 	}
 
-	// Redirect to login if user is not authenticated
+	// If user is not logged in, send them to login
+
 	if (!user) {
 		return (
 			<Navigate
@@ -32,7 +23,7 @@ const AuthWrapper = ({ children, allowedUserRoles }) => {
 		);
 	}
 
-	// Redirect if user role is not allowed
+	// If user role isn't allowed, send them to /welcome
 	if (allowedUserRoles && !allowedUserRoles.includes(user.role)) {
 		return (
 			<Navigate
@@ -42,6 +33,7 @@ const AuthWrapper = ({ children, allowedUserRoles }) => {
 		);
 	}
 
+	// Otherwise, render the page
 	return children;
 };
 

@@ -9,7 +9,7 @@ export function AuthProvider({ children }) {
 	const [loading, setLoading] = useState(true);
 
 	const location = useLocation();
-	const navigate = useNavigate(); // Added navigation hook
+	const navigate = useNavigate();
 
 	const isServerReachable = async () => {
 		try {
@@ -21,13 +21,10 @@ export function AuthProvider({ children }) {
 	};
 
 	const checkAuth = async () => {
-		setLoading(true);
-
 		const reachable = await isServerReachable();
 		if (!reachable) {
 			console.log('Server is unreachable.');
 			navigate('/offline'); // Redirect to offline page
-			setLoading(false);
 			return;
 		}
 
@@ -58,8 +55,13 @@ export function AuthProvider({ children }) {
 	};
 
 	useEffect(() => {
-		if (window.location.pathname === '/logout') return;
-		if (window.location.pathname === '/offline') return;
+		if (
+			window.location.pathname === '/logout' ||
+			window.location.pathname === '/offline'
+		) {
+			setLoading(false); // Don't trigger auth check if logging out
+			return;
+		}
 		checkAuth();
 	}, [location]);
 

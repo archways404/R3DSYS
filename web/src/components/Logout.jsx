@@ -1,44 +1,54 @@
 import React, { useEffect, useContext, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
-import LoadingScreen from '../components/LoadingScreen';
 
 function Logout() {
-	const navigate = useNavigate();
 	const { setUser } = useContext(AuthContext);
-	const [isLoggingOut, setIsLoggingOut] = useState(true);
+	const [logoutCompleted, setLogoutCompleted] = useState(false);
+	const [error, setError] = useState(false);
 
 	useEffect(() => {
 		const logoutUser = async () => {
-			const minLoadingTime = new Promise((resolve) => setTimeout(resolve, 500)); // Ensure 500ms min delay
-			const logoutRequest = axios.post(
-				import.meta.env.VITE_BASE_ADDR + '/logout',
-				{},
-				{ withCredentials: true }
-			);
-
 			try {
-				await Promise.all([logoutRequest, minLoadingTime]); // Wait for both to complete
+				await axios.post(
+					import.meta.env.VITE_BASE_ADDR + '/logout',
+					{},
+					{ withCredentials: true }
+				);
 				setUser(null);
-				navigate('/');
+				setLogoutCompleted(true);
 			} catch (error) {
 				console.error('Error logging out:', error);
 				setUser(null);
-				navigate('/error');
-			} finally {
-				setIsLoggingOut(false);
+				setError(true);
 			}
 		};
 
 		logoutUser();
-	}, [navigate, setUser]);
+	}, [setUser]);
 
-	// Ensure smooth transition (at least 500ms)
-	if (isLoggingOut) {
-		return <LoadingScreen />;
+	// Redirect to error page if logout fails
+	if (error) {
+		return (
+			<Navigate
+				to="/error"
+				replace
+			/>
+		);
 	}
 
+	// Redirect to home after logout
+	if (logoutCompleted) {
+		return (
+			<Navigate
+				to="/"
+				replace
+			/>
+		);
+	}
+
+	// Render nothing while waiting for logout to complete
 	return null;
 }
 

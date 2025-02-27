@@ -4,12 +4,9 @@ import { AuthContext } from '../context/AuthContext';
 import LoadingScreen from './LoadingScreen';
 
 const UnAuthWrapper = ({ children }) => {
-	const { user, loading } = useContext(AuthContext);
+	const { user } = useContext(AuthContext);
 
-	if (loading) {
-		return <LoadingScreen />;
-	}
-
+	// If user is logged in, redirect them to "/welcome"
 	if (user) {
 		return (
 			<Navigate
@@ -18,6 +15,8 @@ const UnAuthWrapper = ({ children }) => {
 			/>
 		);
 	}
+
+	// Otherwise, render the page immediately
 	return children;
 };
 
