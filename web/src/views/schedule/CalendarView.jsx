@@ -23,8 +23,6 @@ function CalendarView({ events, onEventSubmit, onDeleteEvent }) {
 
 	const { user } = useContext(AuthContext);
 
-	console.log('events', events);
-
 	function getCurrentTime() {
 		const now = new Date();
 		let hours = now.getHours();

@@ -15,8 +15,6 @@ import { AuthContext } from '../../context/AuthContext';
 const Invite = () => {
 	const { user } = useContext(AuthContext);
 
-	console.log('groups: ', user.groups);
-
 	// Form states
 	const [email, setEmail] = useState('');
 	const [firstName, setFirstName] = useState('');

@@ -147,8 +147,6 @@ export function AppSidebar({ user, consent }) {
 		return !item.roles || item.roles.includes(user.role);
 	});
 
-	console.log('permissions obj', permissionsObject);
-
 	return (
 		<SidebarProvider open={true}>
 			{/* Fixed Sidebar */}

@@ -4,7 +4,7 @@ import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
 
 function Logout() {
-	const { setUser } = useContext(AuthContext);
+	const { setUser, setJustLoggedOut } = useContext(AuthContext);
 	const [logoutCompleted, setLogoutCompleted] = useState(false);
 	const [error, setError] = useState(false);
 
@@ -17,6 +17,7 @@ function Logout() {
 					{ withCredentials: true }
 				);
 				setUser(null);
+				setJustLoggedOut(true);
 				setLogoutCompleted(true);
 			} catch (error) {
 				console.error('Error logging out:', error);

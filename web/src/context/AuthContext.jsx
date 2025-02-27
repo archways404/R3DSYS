@@ -8,6 +8,7 @@ export function AuthProvider({ children }) {
 	const [user, setUser] = useState(null);
 	const [loading, setLoading] = useState(true);
 	const [justLoggedIn, setJustLoggedIn] = useState(false); // ✅ New state
+	const [justLoggedOut, setJustLoggedOut] = useState(false); // ✅ New state
 
 	const location = useLocation();
 	const navigate = useNavigate();
@@ -23,7 +24,10 @@ export function AuthProvider({ children }) {
 
 	const checkAuth = async () => {
 		if (justLoggedIn) {
-			console.log('Skipping checkAuth because user just logged in.');
+			return; // ✅ Skip auth check immediately after login
+		}
+
+		if (justLoggedOut) {
 			return; // ✅ Skip auth check immediately after login
 		}
 
@@ -67,6 +71,11 @@ export function AuthProvider({ children }) {
 			return;
 		}
 
+		if (justLoggedIn && location.pathname === '/') {
+			setJustLoggedOut(false); // ✅ Reset flag after first visit
+			return;
+		}
+
 		if (location.pathname === '/logout' || location.pathname === '/offline') {
 			setLoading(false);
 			return;
@@ -77,7 +86,14 @@ export function AuthProvider({ children }) {
 
 	return (
 		<AuthContext.Provider
-			value={{ user, loading, setUser, checkAuth, setJustLoggedIn }}>
+			value={{
+				user,
+				loading,
+				setUser,
+				checkAuth,
+				setJustLoggedIn,
+				setJustLoggedOut,
+			}}>
 			{children}
 		</AuthContext.Provider>
 	);

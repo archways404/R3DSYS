@@ -8,7 +8,6 @@ export function ThemeProvider({ children }) {
 	const [theme, setTheme] = useState('dark');
 
 	const { consent } = useContext(ConsentContext);
-	console.log('consent', consent);
 
 	// Define all possible categories
 	const allCategories = ['necessary', 'preferences', 'analytics'];

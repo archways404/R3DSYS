@@ -78,7 +78,6 @@ function CreationCalendar({
 			});
 			const data = await response.json();
 			setEvents(data);
-			console.log('events', data);
 		} catch (error) {
 			console.error('Error fetching events:', error);
 			toast({
@@ -151,7 +150,6 @@ function CreationCalendar({
 				}
 			);
 			const result = await response.json();
-			console.log('Submission result:', result);
 			toast({
 				description: 'Events submitted successfully!',
 				variant: 'default',
