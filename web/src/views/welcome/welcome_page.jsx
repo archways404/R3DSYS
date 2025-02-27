@@ -1,14 +1,14 @@
 import React, { useContext } from 'react';
 import { AuthContext } from '../../context/AuthContext';
 import { ConsentContext } from '../../context/ConsentContext';
+import { useStateContext } from '../../context/RenderContext';
 
 import Layout from '../../components/Layout';
 
 const Welcome = () => {
 	const { user } = useContext(AuthContext);
 	const { consent } = useContext(ConsentContext);
-
-	console.log('user', user);
+	const { setRenderLoading } = useStateContext();
 
 	if (!user) {
 		return null;
@@ -28,7 +28,7 @@ const Welcome = () => {
 		return acc;
 	}, {});
 
-	console.log('permissionObject', permissionsObject);
+	setRenderLoading(false);
 
 	return (
 		<Layout>

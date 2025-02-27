@@ -97,6 +97,8 @@
     --fc-page-bg-color: #ffffff80;
     --fc-page-bg-color: #ffffff80;
 
+    --fc-border-color: #ffffff00;
+
     /*
     --fc-border-color:
     --fc-neutral-text-color:
@@ -173,11 +175,11 @@ button:focus-visible {
   position: sticky;
   top: 0px;
 }
-  */
+*/
 
 
 .fc-theme-standard .fc-list-day-cushion {
-background-color: #ffffff00;
+background-color: #353535;
 }
 
 .fc .fc-daygrid-week-number {
@@ -193,4 +195,16 @@ background-color: #ffffff00;
 
 .fc-theme-standard .fc-scrollgrid {
   border: 1px solid #ffffff00;
+}
+
+.fc-direction-ltr .fc-list-day-side-text, .fc-direction-rtl .fc-list-day-text {
+  float: left;
+}
+
+.fc .fc-list-empty {
+  align-items: center;
+  background-color: transparent;
+  display: flex;
+  height: 25%;
+  justify-content: center;
 }

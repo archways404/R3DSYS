@@ -108,7 +108,7 @@ function AssignShifts() {
 
 	return (
 		<Layout>
-			<div className="p-6 max-w-3xl mx-auto bg-white dark:bg-gray-900 shadow-lg rounded-lg">
+			<div className="p-6 max-w-3xl mx-auto shadow-lg rounded-lg">
 				<h1 className="text-2xl font-bold mb-6 text-gray-800 dark:text-gray-100 text-center">
 					Group Schedule
 				</h1>

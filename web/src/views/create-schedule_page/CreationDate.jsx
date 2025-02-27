@@ -65,7 +65,7 @@ const CreationDate = ({ onSelectDate, goBack }) => {
 
 	return (
 		<Layout>
-			<div className="flex flex-col justify-center items-center min-h-screen bg-gray-100 dark:bg-gray-900 space-y-6">
+			<div className="flex flex-col justify-center items-center min-h-screen space-y-6">
 				<h2 className="text-2xl font-semibold">Select Date</h2>
 
 				{/* Year Selector */}

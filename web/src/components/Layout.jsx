@@ -7,20 +7,26 @@ import { ThemeContext } from '../context/ThemeContext';
 import { AuthContext } from '../context/AuthContext';
 import { Toaster } from '@/components/ui/toaster';
 import { ConsentContext } from '../context/ConsentContext';
+import { useStateContext } from '../context/RenderContext';
 
 import { AppSidebar } from '@/components/appsidebar';
 
 import Background from './Background'; // Import background
+import LoadingScreen from './LoadingScreen';
 
 function Layout({ children }) {
 	const { theme } = useContext(ThemeContext);
 	const { user } = useContext(AuthContext);
 	const { consent } = useContext(ConsentContext);
+	const { renderLoading } = useStateContext();
 
 	return (
 		<div className="relative h-screen w-full">
 			{/* Background Component */}
 			<Background />
+
+			{/* Global Loading Screen with Smooth Transition */}
+			<LoadingScreen isVisible={renderLoading} />
 
 			{/* Main Content */}
 			{user ? (

@@ -40,7 +40,7 @@ const CreationTemplate = ({ onSelectTemplate, goBack }) => {
 
 	return (
 		<Layout>
-			<div className="flex flex-col justify-center items-center min-h-screen bg-gray-100 dark:bg-gray-900">
+			<div className="flex flex-col justify-center items-center min-h-screen ">
 				<h2 className="text-2xl font-semibold mb-6">Select a Template</h2>
 				<div className="p-6 max-w-3xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-lg">
 					{templateMeta.length === 0 ? (
