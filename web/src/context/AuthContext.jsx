@@ -10,8 +10,6 @@ export function AuthProvider({ children }) {
 	const [justLoggedIn, setJustLoggedIn] = useState(false); // ✅ New state
 	const [justLoggedOut, setJustLoggedOut] = useState(false); // ✅ New state
 
-	console.log('user', user);
-
 	const location = useLocation();
 	const navigate = useNavigate();
 
@@ -26,6 +24,7 @@ export function AuthProvider({ children }) {
 
 	const checkAuth = async () => {
 		if (justLoggedIn) {
+			setJustLoggedOut(false);
 			return; // ✅ Skip auth check immediately after login
 		}
 
