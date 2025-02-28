@@ -59,9 +59,8 @@ const CreateGroup = ({ onGroupCreated }) => {
 			setGroupName('');
 			setGroupDescription('');
 
-			// Notify parent to refresh groups
 			if (onGroupCreated) {
-				onGroupCreated(result.group_id);
+				onGroupCreated(); // ✅ This will now trigger checkAuth from GroupRenderer
 			}
 		} catch (error) {
 			console.error('Error creating group:', error);

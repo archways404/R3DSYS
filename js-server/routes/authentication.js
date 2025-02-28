@@ -343,6 +343,7 @@ async function routes(fastify, options) {
 		}
 	});
 
+	/*
 	fastify.get(
 		'/protected',
 		{ preValidation: fastify.verifyJWT },
@@ -412,7 +413,86 @@ async function routes(fastify, options) {
 			}
 		}
 	);
+	*/
+	fastify.get(
+		'/protected',
+		{ preValidation: fastify.verifyJWT },
+		async (request, reply) => {
+			const user = request.user;
+			const userInfoCacheKey = `${user.uuid}:userinfo`;
+			let userData = user; // Default to JWT payload
+			let newAuthToken = null;
 
+			try {
+				// 🔹 Check if JWT token needs to be refreshed
+				const tokenExpTime = user.exp * 1000 - Date.now();
+				let cachedUserData = await fastify.redis.get(userInfoCacheKey);
+				let cacheRefreshed = false;
+
+				if (cachedUserData) {
+					cachedUserData = JSON.parse(cachedUserData);
+
+					// 🔹 Check if groups in cache differ from groups in JWT
+					const groupsChanged =
+						JSON.stringify(user.groups) !==
+						JSON.stringify(cachedUserData.groups);
+
+					if (groupsChanged) {
+						console.log(
+							`🔄 User groups changed for ${user.uuid}, refreshing JWT...`
+						);
+						userData = cachedUserData;
+						cacheRefreshed = true;
+					}
+
+					// ✅ Refresh cache TTL regardless
+					await fastify.redis.expire(userInfoCacheKey, 900); // Extend TTL
+				} else {
+					// ❌ Cache miss: Fetch from DB
+					const userGroups = await getUserGroups(fastify.pg, user.uuid);
+					userData = {
+						uuid: user.uuid,
+						email: user.email,
+						role: user.role,
+						first: user.first,
+						last: user.last,
+						groups: userGroups,
+					};
+
+					// 🔹 Store the fresh user data in Redis
+					await fastify.redis.setex(
+						userInfoCacheKey,
+						900,
+						JSON.stringify(userData)
+					); // 15 min TTL
+					cacheRefreshed = true;
+				}
+
+				// 🔹 If token is about to expire OR group changed, refresh JWT
+				if (tokenExpTime < 5 * 60 * 1000 || cacheRefreshed) {
+					newAuthToken = fastify.jwt.sign(userData, { expiresIn: '45m' });
+
+					// 🔹 Update Cookie with new token
+					reply.setCookie('authToken', newAuthToken, {
+						httpOnly: true,
+						sameSite: 'None',
+						secure: true,
+						path: '/',
+					});
+				}
+
+				// ✅ Return user info
+				return reply.send({
+					message: 'You are authenticated',
+					user: userData,
+					tokenRefreshed: !!newAuthToken,
+				});
+			} catch (err) {
+				console.error('❌ Redis or Database Error:', err);
+				return reply.status(500).send({ error: 'Internal Server Error' });
+			}
+		}
+	);
 
 	/*
 	fastify.get(

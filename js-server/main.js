@@ -224,43 +224,138 @@ app.addHook('onReady', async () => {
 		const res = await client.query('SELECT NOW()');
 		app.log.info(`PostgreSQL connected: ${res.rows[0].now}`);
 
-		await updateStatusCache(client); // <-- Populate cache with data at boot
-
 		// Start listening for changes
 		await client.query('LISTEN status_channel');
 		await client.query('LISTEN active_shifts_channel');
+		await client.query('LISTEN account_changes');
+		await client.query('LISTEN group_changes');
 
-		client.on('notification', async (msg) => {
-			if (msg.channel === 'active_shifts_channel') {
-				const payload = JSON.parse(msg.payload);
-				console.log('Notification received:', payload);
+		client.on('notification', handlePostgresNotification);
 
-				// Get the list of affected user UUIDs.
+		client.on('error', async (err) => {
+			console.error('❌ PostgreSQL LISTEN error:', err);
+			console.log('⏳ Reconnecting to PostgreSQL...');
+
+			try {
+				client.release(); // Release the old, possibly broken client
+				const newClient = await app.pg.connect();
+				client = newClient;
+
+				await client.query('LISTEN status_channel');
+				await client.query('LISTEN active_shifts_channel');
+				await client.query('LISTEN account_changes');
+				await client.query('LISTEN group_changes');
+
+				client.on('notification', handlePostgresNotification); // Re-attach listener
+				console.log(
+					'✅ Successfully reconnected to PostgreSQL LISTEN channels'
+				);
+			} catch (reconnectError) {
+				console.error('❌ Failed to reconnect to PostgreSQL:', reconnectError);
+				setTimeout(() => client.emit('error', reconnectError), 5000); // Retry after 5s
+			}
+		});
+	} catch (err) {
+		app.log.error('❌ PostgreSQL connection error:', err);
+		throw new Error('PostgreSQL connection is not established');
+	}
+});
+
+const handlePostgresNotification = async (msg) => {
+	try {
+		const payload = JSON.parse(msg.payload);
+		console.log(`🔔 Notification from ${msg.channel}:`, payload);
+
+		switch (msg.channel) {
+			case 'active_shifts_channel':
 				const userUUIDs = await getAffectedUsers(
 					app,
 					payload.schedule_group_id
 				);
-				console.log('User UUIDs in group:', userUUIDs);
-
-				// For each user, get their active shifts and create an ICS file.
 				for (const userUUID of userUUIDs) {
 					const shifts = await getActiveShiftsForUser(app, userUUID);
-					console.log(`Active shifts for user ${userUUID}:`, shifts);
-					try {
-						await generateICSFileForUser(userUUID, shifts);
-					} catch (error) {
-						console.error(`Error generating ICS for user ${userUUID}:`, error);
-					}
+					await generateICSFileForUser(userUUID, shifts);
 				}
-			}
+				break;
 
-			if (msg.channel === 'status_channel') {
-				const payload = JSON.parse(msg.payload);
-				console.log('Notification received:', payload);
-				await updateStatusCache(client); // <-- Populate cache with data at boot
-			}
-		});
+			case 'status_channel':
+				await updateStatusCache(client);
+				break;
 
+			case 'account_changes':
+				await app.redis.del(`${payload.email}:logindetails`);
+				await app.redis.del(`${payload.user_id}:userinfo`);
+				console.log(`🗑 Cleared cache for user ${payload.user_id}`);
+				break;
+
+			case 'group_changes':
+				if (!payload.user_id || !payload.group_id) {
+					console.error('❌ Received invalid group_changes payload:', payload);
+					return;
+				}
+
+				// Delete user cache
+				await app.redis.del(`${payload.user_id}:userinfo`);
+				console.log(
+					`🗑 Cleared cache for user ${payload.user_id} due to group change`
+				);
+
+				// ✅ Force refresh user data from the database
+				await updateUserCache(payload.user_id);
+
+				break;
+		}
+	} catch (error) {
+		console.error('❌ Error handling database notification:', error);
+	}
+};
+
+async function updateUserCache(userId) {
+	try {
+		const client = await app.pg.connect();
+
+		// 🛠 Fetch full user details in **ONE QUERY**
+		const userResult = await client.query(
+			`SELECT a.user_id, a.email, a.first_name, a.last_name, a.role, 
+                    json_agg(json_build_object('id', g.group_id, 'name', g.name)) AS groups
+             FROM account a
+             LEFT JOIN account_schedule_groups ag ON a.user_id = ag.user_id
+             LEFT JOIN schedule_groups g ON ag.group_id = g.group_id
+             WHERE a.user_id = $1
+             GROUP BY a.user_id`,
+			[userId]
+		);
+		client.release();
+
+		// If user does not exist, skip caching
+		if (userResult.rowCount === 0) {
+			console.warn(`⚠ User ${userId} not found in DB`);
+			return;
+		}
+
+		const user = userResult.rows[0];
+
+		// ✅ Construct user object
+		const userInfo = {
+			uuid: user.user_id,
+			email: user.email,
+			first: user.first_name,
+			last: user.last_name,
+			role: user.role,
+			groups: user.groups || [],
+		};
+
+		// ✅ Store fresh data in Redis
+		await app.redis.setex(
+			`${user.user_id}:userinfo`,
+			900,
+			JSON.stringify(userInfo)
+		);
+		console.log(`🔄 Updated cache for user ${userId} with fresh data`);
+	} catch (error) {
+		console.error(`❌ Failed to update user cache for ${userId}:`, error);
+	}
+}
 		/*
 		// Populate the cache on server boot
 		await updateHDCache(client); // <-- Populate cache with data at boot
@@ -288,8 +383,3 @@ app.addHook('onReady', async () => {
 			}
 		});
 		*/
-	} catch (err) {
-		app.log.error('PostgreSQL connection error:', err);
-		throw new Error('PostgreSQL connection is not established');
-	}
-});
