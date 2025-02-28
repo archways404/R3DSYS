@@ -7,6 +7,7 @@ import { MdOutlinePrivacyTip } from 'react-icons/md';
 import { LuCircleUserRound } from 'react-icons/lu';
 import { FaChevronUp } from 'react-icons/fa';
 import { TbLogout } from 'react-icons/tb';
+import { BiGroup } from 'react-icons/bi';
 
 import { CgProfile } from 'react-icons/cg';
 import VersionComponent from './VersionComponent'; // ✅ Import VersionComponent
@@ -99,6 +100,12 @@ const items = [
 		title: 'Accounts',
 		url: '/manage-users',
 		icon: FaUsers,
+		roles: ['admin', 'maintainer'],
+	},
+	{
+		title: 'Groups',
+		url: '/handle-groups',
+		icon: BiGroup,
 		roles: ['admin', 'maintainer'],
 	},
 	{
