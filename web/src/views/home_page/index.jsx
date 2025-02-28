@@ -1,14 +1,20 @@
 import { Link } from 'react-router-dom';
 import Layout from '../../components/Layout';
+import VersionComponent from '../../components/VersionComponent';
 
 function Index() {
 	return (
 		<Layout>
 			<div className="flex flex-col items-center justify-center max-h-screen w-full px-4 py-48">
 				{/* Logo / Title */}
-				<h1 className="text-7xl lg:text-8xl font-extrabold text-white tracking-wider mb-16 drop-shadow-xl">
-					<span className="text-red-600">RƎD</span>SYS
-				</h1>
+				<div className="text-center mb-10">
+					<h1 className="text-7xl lg:text-8xl font-extrabold text-white tracking-wider mb-2 drop-shadow-xl">
+						<span className="text-red-600">RƎD</span>SYS
+					</h1>
+
+					{/* ✅ Version Component Below the Logo */}
+					<VersionComponent />
+				</div>
 
 				{/* Beta Notice - Uses Full Width If Needed */}
 				<div className="bg-yellow-500 text-black font-medium text-sm md:text-base px-6 py-3 rounded-md shadow-md text-center mb-12 whitespace-nowrap overflow-hidden">

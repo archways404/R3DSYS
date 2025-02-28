@@ -49,6 +49,8 @@ import TableRenderer from './views/tables/renderer';
 
 import OfflineRenderer from './views/offline/renderer';
 
+import GroupRenderer from './views/groups/renderer';
+
 import './global.css';
 
 createRoot(document.getElementById('root')).render(
@@ -222,6 +224,14 @@ createRoot(document.getElementById('root')).render(
 										<AuthWrapper
 											allowedUserRoles={['admin', 'worker', 'maintainer']}>
 											<Welcome />
+										</AuthWrapper>
+									}
+								/>
+								<Route
+									path="/handle-groups"
+									element={
+										<AuthWrapper allowedUserRoles={['admin', 'maintainer']}>
+											<GroupRenderer />
 										</AuthWrapper>
 									}
 								/>

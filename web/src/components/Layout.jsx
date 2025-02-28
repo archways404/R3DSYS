@@ -11,8 +11,9 @@ import { useStateContext } from '../context/RenderContext';
 
 import { AppSidebar } from '@/components/appsidebar';
 
-import Background from './Background'; // Import background
+import Background from './Background';
 import LoadingScreen from './LoadingScreen';
+import VersionComponent from './VersionComponent'; 
 
 function Layout({ children }) {
 	const { theme } = useContext(ThemeContext);

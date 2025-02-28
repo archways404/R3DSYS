@@ -124,9 +124,13 @@ app.register(require('./routes/schedule'));
 
 app.register(require('./routes/status'));
 
+app.register(require('./routes/groups'));
+
 app.register(require('./routes/table_data'));
 
 app.register(require('./routes/webhook'));
+
+app.register(require('./routes/version'));
 
 app.register(require('./routes/ical'), {
 	hook: 'preHandler',

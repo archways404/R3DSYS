@@ -20,6 +20,14 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { ArrowUp, ArrowDown } from 'lucide-react'; // Sorting icons
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+	Dialog,
+	DialogTrigger,
+	DialogContent,
+	DialogTitle,
+	DialogDescription,
+} from '@/components/ui/dialog';
+import { useToast } from '@/hooks/use-toast';
 
 export default function ActiveShifts() {
 	const [data, setData] = useState([]);
@@ -28,7 +36,9 @@ export default function ActiveShifts() {
 	const [sorting, setSorting] = useState([]);
 	const [selectedShiftIds, setSelectedShiftIds] = useState([]); // Track selected shift IDs
 	const [globalFilter, setGlobalFilter] = useState(''); // ShadCN filter state
-	const [loading, setShowLoading] = useState(true);
+	const [isDialogOpen, setIsDialogOpen] = useState(false); // State for dialog visibility
+
+	const { toast } = useToast();
 
 	useEffect(() => {
 		const fetchData = async () => {
@@ -54,6 +64,51 @@ export default function ActiveShifts() {
 
 		fetchData();
 	}, []);
+
+	const handleDeleteShifts = async () => {
+		if (selectedShiftIds.length === 0) return;
+
+		try {
+			const response = await fetch(
+				import.meta.env.VITE_BASE_ADDR + '/remove-active-shifts',
+				{
+					method: 'DELETE',
+					headers: { 'Content-Type': 'application/json' },
+					credentials: 'include',
+					body: JSON.stringify({ shift_ids: selectedShiftIds }),
+				}
+			);
+
+			const result = await response.json();
+
+			if (!response.ok) {
+				throw new Error(result.error || 'Failed to delete shifts');
+			}
+
+			// Remove deleted shifts from state
+			setData((prevData) =>
+				prevData.filter((shift) => !selectedShiftIds.includes(shift.shift_id))
+			);
+
+			// Clear selected shifts after deletion
+			setSelectedShiftIds([]);
+
+			// Show success toast
+			toast({
+				title: 'Shifts deleted',
+				description: `Successfully deleted ${selectedShiftIds.length} shift(s).`,
+			});
+		} catch (error) {
+			console.error('Error deleting shifts:', error);
+			toast({
+				variant: 'destructive',
+				title: 'Error',
+				description: 'Failed to delete shifts.',
+			});
+		} finally {
+			setIsDialogOpen(false); // Close dialog
+		}
+	};
 
 	// Function to handle individual checkbox selection
 	const handleCheckboxChange = (shiftId) => {
@@ -261,17 +316,9 @@ export default function ActiveShifts() {
 					)}
 				</TableBody>
 			</Table>
-			{/* Selected Shift IDs Display */}
-			<div className="mt-4">
-				<p className="font-semibold">Selected Shift IDs:</p>
-				<pre className="bg-transparent p-2 rounded-md">
-					{/* Selected Shift IDs Display */}
-					{JSON.stringify(selectedShiftIds, null, 2)}
-				</pre>
-			</div>
 
 			{/* Pagination Controls */}
-			<div className="flex justify-between items-center mt-4">
+			<div className="flex justify-between items-center mt-4 mb-4">
 				<Button
 					onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 0))}
 					disabled={!table.getCanPreviousPage()}>
@@ -286,6 +333,39 @@ export default function ActiveShifts() {
 					Next
 				</Button>
 			</div>
+
+			{/* Delete Button that opens the dialog */}
+			<Dialog
+				open={isDialogOpen}
+				onOpenChange={setIsDialogOpen}>
+				<DialogTrigger asChild>
+					<Button
+						variant="destructive"
+						disabled={selectedShiftIds.length === 0}>
+						Delete Selected
+					</Button>
+				</DialogTrigger>
+				<DialogContent>
+					<DialogTitle>Confirm Deletion</DialogTitle>
+					<DialogDescription>
+						Are you sure you want to delete{' '}
+						<strong>{selectedShiftIds.length}</strong> shift(s)? This action
+						cannot be undone.
+					</DialogDescription>
+					<div className="flex justify-end gap-2 mt-4">
+						<Button
+							variant="outline"
+							onClick={() => setIsDialogOpen(false)}>
+							Cancel
+						</Button>
+						<Button
+							variant="destructive"
+							onClick={handleDeleteShifts}>
+							Confirm Delete
+						</Button>
+					</div>
+				</DialogContent>
+			</Dialog>
 		</div>
 	);
 }
