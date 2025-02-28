@@ -47,7 +47,7 @@ const VersionComponent = () => {
 			) : (
 				<Badge
 					variant="outline"
-					className="text-green-600 text-sm">
+					className="text-yellow-500 border-yellow-500 text-sm">
 					<span>v</span>
 					{version}
 				</Badge>

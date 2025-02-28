@@ -126,7 +126,13 @@ const items = [
 		icon: FiDatabase,
 		roles: ['admin', 'maintainer'],
 	},
-	{ title: 'Settings', url: '/settings', icon: Settings }, // Everyone
+	{
+		title: 'Settings',
+		url: '/settings',
+		icon: Settings,
+		disabled: true,
+		showBadge: true,
+	}, // Everyone
 ];
 
 export function AppSidebar({ user, consent }) {
@@ -218,6 +224,16 @@ export function AppSidebar({ user, consent }) {
 																	variant="outline"
 																	className="border-green-500 text-green-500 text-[12px] font-light px-2 py-1 h-auto rounded-xl">
 																	NEW
+																</Badge>
+															</SidebarMenuBadge>
+														)}
+														{/* Show "NEW" badge only if item has showBadge=true and is disabled */}
+														{item.disabled && item.showBadge && (
+															<SidebarMenuBadge>
+																<Badge
+																	variant="outline"
+																	className="border-yellow-500 text-[12px] font-light px-3 py-1 h-auto rounded-xl">
+																	🚧
 																</Badge>
 															</SidebarMenuBadge>
 														)}
