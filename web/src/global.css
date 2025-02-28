@@ -208,3 +208,16 @@ background-color: #353535;
   height: 25%;
   justify-content: center;
 }
+
+.fc-theme-standard .fc-popover-header {
+  background: #09090b;
+}
+
+.fc-theme-standard .fc-popover {
+  background: #09090b;
+  border: 1px solid #dddddd24;
+}
+
+.fc-daygrid-dot-event:hover {
+  background: rgba(255, 255, 255, 0.1);
+}

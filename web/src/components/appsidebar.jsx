@@ -9,6 +9,7 @@ import { FaChevronUp } from 'react-icons/fa';
 import { TbLogout } from 'react-icons/tb';
 
 import { CgProfile } from 'react-icons/cg';
+import VersionComponent from './VersionComponent'; // ✅ Import VersionComponent
 
 //import UserIcon from '../assets/user.png'; // Import the image
 import UserIcon from '../assets/user1.png'; // Import the image
@@ -67,8 +68,8 @@ const items = [
 		url: '/apply-unassigned',
 		icon: TbReport,
 		roles: ['worker'],
-		disabled: true,
-		showBadge: false,
+		disabled: false,
+		showBadge: true,
 	},
 	{
 		title: 'Template',
@@ -159,10 +160,19 @@ export function AppSidebar({ user, consent }) {
 					<SidebarContent className="h-full flex flex-col">
 						<SidebarGroup className="flex-1">
 							{/* Centering the RƎDSYS logo */}
-							<SidebarGroupLabel className="mt-4 mb-12 flex justify-center">
-								<h1 className="text-4xl lg:text-4xl font-extrabold text-white tracking-wider drop-shadow-xl text-center">
-									<span className="text-red-600">RƎD</span>SYS
-								</h1>
+							{/* Sidebar Header with Logo */}
+							<SidebarGroupLabel className="mt-4 mb-16 flex flex-col items-center">
+								{/* ✅ Wrap the Logo in a div to keep it separate */}
+								<div className="text-center">
+									<h1 className="text-4xl lg:text-4xl font-extrabold text-white tracking-wider drop-shadow-xl">
+										<span className="text-red-600">RƎD</span>SYS
+									</h1>
+								</div>
+
+								{/* ✅ Ensure VersionComponent is on a new line and centered */}
+								<div className="mt-0">
+									<VersionComponent />
+								</div>
 							</SidebarGroupLabel>
 
 							{/* Sidebar Items Centered */}
