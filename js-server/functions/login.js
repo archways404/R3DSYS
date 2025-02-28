@@ -128,6 +128,7 @@ async function getUserGroups(client, userId) {
 	}
 }
 
+/* MOST RECENT CHANGE
 async function login(fastify, client, email, password, ip, deviceId) {
 	try {
 		const loginCacheKey = `${email}:logindetails`;
@@ -280,6 +281,140 @@ async function login(fastify, client, email, password, ip, deviceId) {
 		}
 
 		// Return user object
+		return userInfo;
+	} catch (error) {
+		console.error('Login failed:', error.message);
+		throw error;
+	}
+}
+*/
+
+async function login(fastify, client, email, password, ip, deviceId) {
+	try {
+		const loginCacheKey = `${email}:logindetails`;
+
+		// 🔹 Step 1: Check Redis for cached login details
+		let loginDetails = await fastify.redis.get(loginCacheKey);
+		let user;
+
+		if (loginDetails) {
+			loginDetails = JSON.parse(loginDetails);
+			user = {
+				user_id: loginDetails.uuid,
+				password: loginDetails.password,
+			};
+		} else {
+			// ❌ Cache Miss - Fetch from PostgreSQL in **ONE QUERY**
+			const userResult = await client.query(
+				`SELECT 
+                    a.user_id, a.password, a.first_name, a.last_name, a.role,
+                    al.failed_attempts, al.locked, al.unlock_time
+                 FROM account a
+                 LEFT JOIN account_lockout al ON a.user_id = al.user_id
+                 WHERE a.email = $1`,
+				[email]
+			);
+
+			if (userResult.rows.length === 0) {
+				throw new Error('Account with email does not exist');
+			}
+
+			user = userResult.rows[0];
+
+			// Ensure cache for login details
+			await fastify.redis.setex(
+				loginCacheKey,
+				900,
+				JSON.stringify({
+					uuid: user.user_id,
+					password: user.password,
+				})
+			);
+		}
+
+		// 🔹 Step 2: Check if account is locked
+		if (user.locked) {
+			if (user.unlock_time && user.unlock_time > new Date()) {
+				throw new Error(
+					`Account is locked until ${user.unlock_time.toISOString()}`
+				);
+			} else {
+				// Unlock account if lockout time has passed
+				await client.query(
+					`UPDATE account_lockout 
+                     SET locked = FALSE, failed_attempts = 0, unlock_time = NULL 
+                     WHERE user_id = $1`,
+					[user.user_id]
+				);
+			}
+		}
+
+		// 🔹 Step 3: Verify Password
+		const isPasswordValid = await argon2.verify(user.password, password);
+		if (!isPasswordValid) {
+			// 🚨 Failed Login - Update Lockout Table
+			await fastify.redis.del(loginCacheKey);
+			const failedAttempts = user.failed_attempts + 1;
+
+			// Lock account after 5 failed attempts
+			if (failedAttempts >= 5) {
+				const unlockTime = new Date(Date.now() + 15 * 60 * 1000); // 15 min lock
+				await client.query(
+					`UPDATE account_lockout 
+                     SET failed_attempts = $2, locked = TRUE, unlock_time = $3, last_failed_ip = $4, last_failed_time = CURRENT_TIMESTAMP 
+                     WHERE user_id = $1`,
+					[user.user_id, failedAttempts, unlockTime, ip]
+				);
+
+				throw new Error(
+					`Account locked due to too many failed attempts. Unlock at ${unlockTime.toISOString()}`
+				);
+			}
+
+			// Increment failed attempts without locking
+			await client.query(
+				`UPDATE account_lockout 
+                 SET failed_attempts = $2, last_failed_ip = $3, last_failed_time = CURRENT_TIMESTAMP 
+                 WHERE user_id = $1`,
+				[user.user_id, failedAttempts, ip]
+			);
+
+			throw new Error('Invalid password');
+		}
+
+		// 🔹 Step 4: Reset lockout on successful login
+		await client.query(
+			`UPDATE account_lockout 
+             SET failed_attempts = 0, locked = FALSE, unlock_time = NULL 
+             WHERE user_id = $1`,
+			[user.user_id]
+		);
+
+		// 🔹 Step 5: Fetch user groups (Only if cache miss)
+		const userInfoCacheKey = `${user.user_id}:userinfo`;
+		let userInfo = await fastify.redis.get(userInfoCacheKey);
+
+		if (!userInfo) {
+			const userGroups = await getUserGroups(client, user.user_id);
+			userInfo = {
+				uuid: user.user_id,
+				email,
+				first: user.first_name,
+				last: user.last_name,
+				role: user.role,
+				groups: userGroups,
+			};
+
+			// Cache user profile
+			await fastify.redis.setex(
+				userInfoCacheKey,
+				900,
+				JSON.stringify(userInfo)
+			);
+		} else {
+			userInfo = JSON.parse(userInfo);
+		}
+
 		return userInfo;
 	} catch (error) {
 		console.error('Login failed:', error.message);
