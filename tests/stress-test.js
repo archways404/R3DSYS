@@ -11,11 +11,7 @@ export const options = {
 
 export default function () {
 	const url = 'https://api.r3dsys.com/login';
-	const payload = JSON.stringify({
-		deviceId: '1b51f4347b2492349113f2dd65d148c8',
-		email: 'ak8893@mau.se',
-		password: 'Hnqtdtah123?',
-	});
+	const payload = JSON.stringify({});
 
 	const params = {
 		headers: { 'Content-Type': 'application/json' },
