@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="/extras/r3dsys-transp.png" alt="Logo" width="400">
+  <img src="/extras/r3dsys-transp-new.png" alt="Logo" width="400">
 </p>
 
 <p align="center">
