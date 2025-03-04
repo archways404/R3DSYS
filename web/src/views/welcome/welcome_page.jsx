@@ -150,17 +150,17 @@ const Welcome = () => {
 			</div>
 
 			{/* FLEX CONTAINER TO ALIGN COMPONENTS SIDE BY SIDE */}
-			<div className="flex w-full gap-4 p-4">
-				{/* WeekComponent takes 30% width */}
-				<div className="w-3/10">
+			<div className="flex flex-col md:flex-row w-full gap-4 p-4">
+				{/* WeekComponent: Full width on small screens, 70% on medium+ */}
+				<div className="w-full md:w-[70%]">
 					<WeekComponent
 						onDateSelect={setRenderDay}
 						shifts={filteredShifts}
 					/>
 				</div>
 
-				{/* WeekOverviewComponent takes 70% width */}
-				<div className="w-7/10">
+				{/* WeekOverviewComponent: Full width on small screens, 30% on medium+ */}
+				<div className="w-full md:w-[30%]">
 					<WeekOverviewComponent shifts={shifts} />
 				</div>
 			</div>
