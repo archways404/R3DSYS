@@ -5,6 +5,7 @@ import { RenderContext } from '../../context/RenderContext';
 
 import Layout from '../../components/Layout';
 import WeekComponent from './WeekComponent';
+import WeekOverviewComponent from './WeekOverviewComponent';
 
 const Welcome = () => {
 	const { user } = useContext(AuthContext);
@@ -147,22 +148,22 @@ const Welcome = () => {
 					</div>
 				</div>
 			</div>
-			{/* Selected Date */}
-			<div className="mt-4 text-center">
-				{renderDay ? (
-					<p className="text-gray-800 dark:text-white">
-						Selected Day: {renderDay.toLocaleDateString()}
-					</p>
-				) : (
-					<p className="text-gray-700 dark:text-gray-300">Select a day</p>
-				)}
-			</div>
 
-			{/* Pass setRenderDay and filtered shifts to WeekComponent */}
-			<WeekComponent
-				onDateSelect={setRenderDay}
-				shifts={filteredShifts}
-			/>
+			{/* FLEX CONTAINER TO ALIGN COMPONENTS SIDE BY SIDE */}
+			<div className="flex w-full gap-4 p-4">
+				{/* WeekComponent takes 30% width */}
+				<div className="w-3/10">
+					<WeekComponent
+						onDateSelect={setRenderDay}
+						shifts={filteredShifts}
+					/>
+				</div>
+
+				{/* WeekOverviewComponent takes 70% width */}
+				<div className="w-7/10">
+					<WeekOverviewComponent shifts={shifts} />
+				</div>
+			</div>
 		</Layout>
 	);
 };
