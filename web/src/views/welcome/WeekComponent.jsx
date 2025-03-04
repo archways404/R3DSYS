@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button'; // ShadCN button component
 
-const WeekComponent = ({ onDateSelect }) => {
+const WeekComponent = ({ onDateSelect, shifts }) => {
 	const today = new Date();
 	const currentDayIndex = today.getDay(); // Sunday = 0, Monday = 1, ..., Saturday = 6
 
@@ -59,6 +59,46 @@ const WeekComponent = ({ onDateSelect }) => {
 						</Button>
 					);
 				})}
+			</div>
+
+			{/* Shift Cards Below Buttons */}
+			<div className="mt-4 space-y-2">
+				{shifts.length > 0 ? (
+					shifts.map((shift) => {
+						// Construct full timestamps using date + start_time & end_time
+						const shiftStart = new Date(
+							`${shift.date.split('T')[0]}T${shift.start_time}`
+						);
+						const shiftEnd = new Date(
+							`${shift.date.split('T')[0]}T${shift.end_time}`
+						);
+
+						return (
+							<div
+								key={shift.shift_id}
+								className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">
+								<p className="font-semibold text-gray-900 dark:text-white">
+									{shift.shift_type_long}
+								</p>
+								<p className="text-gray-600 dark:text-gray-300 text-sm">
+									{shiftStart.toLocaleTimeString([], {
+										hour: '2-digit',
+										minute: '2-digit',
+									})}{' '}
+									-{' '}
+									{shiftEnd.toLocaleTimeString([], {
+										hour: '2-digit',
+										minute: '2-digit',
+									})}
+								</p>
+							</div>
+						);
+					})
+				) : (
+					<p className="text-gray-500 dark:text-gray-400 text-center">
+						No shifts scheduled for this day.
+					</p>
+				)}
 			</div>
 		</div>
 	);

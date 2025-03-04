@@ -68,7 +68,17 @@ const Welcome = () => {
 		};
 
 		fetchShifts();
-	}, []); // Re-fetch if token changes
+	}, []);
+
+	const filteredShifts = renderDay
+		? shifts.filter((shift) => {
+				// Extract only the YYYY-MM-DD part of the shift date
+				const shiftDate = new Date(shift.date).toISOString().split('T')[0];
+				const selectedDate = renderDay.toISOString().split('T')[0];
+
+				return shiftDate === selectedDate;
+		  })
+		: [];
 
 	return (
 		<Layout>
@@ -138,8 +148,11 @@ const Welcome = () => {
 				)}
 			</div>
 
-			{/* Pass setRenderDay to WeekComponent */}
-			<WeekComponent onDateSelect={setRenderDay} />
+			{/* Pass setRenderDay and filtered shifts to WeekComponent */}
+			<WeekComponent
+				onDateSelect={setRenderDay}
+				shifts={filteredShifts}
+			/>
 		</Layout>
 	);
 };

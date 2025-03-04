@@ -250,7 +250,7 @@ async function routes(fastify, options) {
 				},
 			}));
 
-			return reply.send(formattedData);
+			return reply.send(rows);
 		} catch (error) {
 			console.error('Error fetching active shifts for user:', error.message);
 			return reply.status(500).send({ error: 'Failed to fetch active shifts' });
