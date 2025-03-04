@@ -13,6 +13,14 @@ const { handleHDCache } = require('../functions/cache');
 async function routes(fastify, options) {
 	fastify.addHook('onRequest', (request, reply, done) => {
 		startRequest(request);
+		try {
+			const token = request.cookies.authToken; // Extract JWT from cookie
+			if (token) {
+				request.user = fastify.jwt.verify(token); // Decode and attach user
+			}
+		} catch (err) {
+			console.error('JWT Verification Failed:', err.message);
+		}
 		done();
 	});
 
@@ -165,6 +173,87 @@ async function routes(fastify, options) {
 			return reply
 				.status(500)
 				.send({ error: 'Failed to fetch schedule groups' });
+		}
+	});
+
+	fastify.get('/getActiveShiftsForUser', async (request, reply) => {
+		try {
+			const user = request.user; // Extract user from JWT session (assumes authentication middleware)
+			console.log('user', user);
+
+			if (!user || !user.groups || user.groups.length === 0) {
+				return reply
+					.status(400)
+					.send({ error: 'User has no groups assigned.' });
+			}
+
+			// Extract group IDs from the user's groups
+			const groupIds = user.groups.map((group) => group.id);
+
+			// Ensure we have valid UUIDs
+			if (groupIds.length === 0) {
+				return reply
+					.status(400)
+					.send({ error: 'User is not assigned to any schedule groups.' });
+			}
+
+			// Query to fetch active shifts for user's groups
+			const query = `
+        SELECT 
+            asf.shift_id, 
+            asf.shift_type_id, 
+            st.name_long AS shift_type_long,
+            st.name_short AS shift_type_short,
+            asf.assigned_to, 
+            acc.user_id AS assigned_user_id,
+            acc.email AS assigned_user_email,
+            acc.first_name AS assigned_user_first_name,
+            acc.last_name AS assigned_user_last_name,
+            asf.start_time, 
+            asf.end_time, 
+            asf.date, 
+            asf.schedule_group_id
+        FROM 
+            active_shifts asf
+        LEFT JOIN 
+            shift_types st ON asf.shift_type_id = st.shift_type_id
+        LEFT JOIN 
+            account acc ON asf.assigned_to = acc.user_id
+        WHERE 
+            asf.schedule_group_id = ANY($1::UUID[])
+        `;
+
+			// Execute query with an array of group IDs
+			const { rows } = await fastify.pg.query(query, [groupIds]);
+
+			// Transform data for frontend display
+			const formattedData = rows.map((shift) => ({
+				id: shift.shift_id,
+				title: shift.shift_type_short,
+				start: new Date(
+					`${shift.date.toISOString().split('T')[0]}T${shift.start_time}`
+				),
+				end: new Date(
+					`${shift.date.toISOString().split('T')[0]}T${shift.end_time}`
+				),
+				description: `${shift.shift_type_long || 'N/A'}`,
+				extendedProps: {
+					shiftTypeId: shift.shift_type_id,
+					shiftTypeLong: shift.shift_type_long,
+					shiftTypeShort: shift.shift_type_short,
+					assignedTo: shift.assigned_to,
+					assignedUserId: shift.assigned_user_id,
+					assignedUserEmail: shift.assigned_user_email,
+					assignedUserFirstName: shift.assigned_user_first_name,
+					assignedUserLastName: shift.assigned_user_last_name,
+					scheduleGroupId: shift.schedule_group_id,
+				},
+			}));
+
+			return reply.send(formattedData);
+		} catch (error) {
+			console.error('Error fetching active shifts for user:', error.message);
+			return reply.status(500).send({ error: 'Failed to fetch active shifts' });
 		}
 	});
 

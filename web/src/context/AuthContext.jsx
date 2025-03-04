@@ -10,8 +10,6 @@ export function AuthProvider({ children }) {
 	const [justLoggedIn, setJustLoggedIn] = useState(false); // ✅ New state
 	const [justLoggedOut, setJustLoggedOut] = useState(false); // ✅ New state
 
-	console.log('user', user);
-
 	const location = useLocation();
 	const navigate = useNavigate();
 

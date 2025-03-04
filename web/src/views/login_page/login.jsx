@@ -55,6 +55,7 @@ function Login() {
 			navigate('/welcome', { replace: true });
 		} catch (error) {
 			setError(error.message);
+			setRenderLoading(false);
 		} finally {
 			setIsLoggingIn(false);
 		}
