@@ -1,4 +1,13 @@
-# Project R3DSYS
+<p align="center">
+  <img src="/extras/r3dsys-transp.png" alt="Logo" width="400">
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fapi.r3dsys.com%2Fversion&query=version&prefix=v&style=plastic&label=%20&color=%23ffdd00" alt="Version">
+</p>
+
+
+
 
 ## Summary
 ...
@@ -23,31 +32,11 @@ The system also includes robust features like automated database backups, trade 
 
 ## Versioning
 
-We use [Semantic Versioning](https://semver.org/) for this project. For the available versions, see the [tags on this repository](https://github.com/your-repo/tags).
+We use [Semantic Versioning](https://semver.org/) for this project. For the available versions, see the [tags on this repository](https://github.com/archways404/r3dsys/tags).
 
 - **Pre Release (Beta)**: 0.5.0 - Planned February 2025
 - **Initial Release**: 1.0.0 - Planned April 2025
 - **Next Version**: 2.0.0 - Planned July 2025
-
-## Roadmap
-
-### Version 1.x
-- [x]  Automatic schedule generation
-- [x]  Google Calendar integration
-- [x]  Automated backups
-- [x]  Trade request management
-- [x]  Notifications for shift changes
-- [x]  Notifications for failed login attempts
-- [x]  Detailed Logfiles
-- [x]  Rate limits
-- [x]  Schedule creation using a Template Schema
-- [x]  Basic tools for supervisors
-
-### Version 2.0 (Planned)
-- [ ]  Support for Teachers and Teaching Assistants
-- [ ]  Enhanced scheduling features for multiple roles
-- [ ]  Improved UI/UX for slot selection
-- [ ]  Advanced tools for supervisors
 
 ## Installation
 
