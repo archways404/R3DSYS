@@ -77,6 +77,24 @@ pnpm run dev
 ## Contributions
 Contributions are welcome. To contribute, please send an email to the repository owner at archways@gmx.us to be invited as a contributor.
 
+## 📬 Contact
+
+For support or inquiries, feel free to reach out:
+
+📧 **Email:** [support@r3dsys.com](mailto:support@r3dsys.com)
+
+## 🐞 Bug Reports
+
+If you encounter a bug or unexpected behavior, please **open an issue** on GitHub:
+
+🔗 [Submit a Bug Report](https://github.com/YOUR-REPO/issues/new?template=bug_report.md)
+
+Before submitting, please check if the issue has already been reported. Provide as much detail as possible, including:
+- Steps to reproduce the issue
+- Expected vs. actual behavior
+- Screenshots or logs (if applicable)
+- System information (OS, browser, version, etc.)
+
 ## License
 
 This project is dual-licensed:
@@ -87,5 +105,9 @@ This project is dual-licensed:
 
 ## Credits
 
-- [archways404](https://github.com/archways404)
-- [danielmoradi1](https://github.com/danielmoradi1)
+### 🛠️ Core Maintainer & Developer
+- [archways404](https://github.com/archways404) – **Lead developer, architect, and maintainer of the project.**
+
+### 💡 Special Thanks
+- [danielmoradi1](https://github.com/danielmoradi1) – Provided valuable input in the early planning stages.
+
