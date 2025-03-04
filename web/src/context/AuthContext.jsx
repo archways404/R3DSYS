@@ -24,6 +24,7 @@ export function AuthProvider({ children }) {
 
 	const checkAuth = async () => {
 		if (justLoggedIn) {
+			setJustLoggedOut(false);
 			return; // ✅ Skip auth check immediately after login
 		}
 

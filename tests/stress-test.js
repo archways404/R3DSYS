@@ -5,18 +5,13 @@ export const options = {
 	insecureSkipTLSVerify: true,
 	stages: [
 		{ duration: '10s', target: 50 }, // Ramp-up to 50 users over 10 seconds
-		{ duration: '30s', target: 100 }, // Stay at 100 users for 30 seconds
 		{ duration: '10s', target: 0 }, // Ramp-down
 	],
 };
 
 export default function () {
-	const url = 'https://localhost:3000/login';
-	const payload = JSON.stringify({
-		deviceId: '',
-		email: '',
-		password: '',
-	});
+	const url = 'https://api.r3dsys.com/login';
+	const payload = JSON.stringify({});
 
 	const params = {
 		headers: { 'Content-Type': 'application/json' },

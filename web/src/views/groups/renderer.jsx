@@ -16,7 +16,7 @@ import { FaTrash } from 'react-icons/fa';
 
 function GroupRenderer() {
 	const [renderState, setRenderState] = useState('default');
-	const { user } = useContext(AuthContext);
+	const { user, checkAuth } = useContext(AuthContext);
 	const { toast } = useToast();
 	const [groupToDelete, setGroupToDelete] = useState(null);
 
@@ -125,7 +125,7 @@ function GroupRenderer() {
 							</CardTitle>
 						</CardHeader>
 						<CardContent>
-							<CreateGroup />
+							<CreateGroup onGroupCreated={() => checkAuth()} />
 						</CardContent>
 					</Card>
 				)}
