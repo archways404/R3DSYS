@@ -102,6 +102,30 @@ const Welcome = () => {
 
 	return (
 		<Layout>
+			{/* FLEX CONTAINER TO ALIGN COMPONENTS SIDE BY SIDE */}
+			<div className="flex flex-col md:flex-row w-full gap-6 p-4">
+				{/* Left Section (50% width on medium+) */}
+				<div className="w-full md:w-[50%]">
+					{/* Move Down DayOverviewComponent */}
+					<div className="mb-12 mt-12">
+						{' '}
+						{/* Adds bottom margin to push it down */}
+						<DayOverviewComponent shifts={shifts} />
+					</div>
+					{/* Add margin-top to WeekComponent */}
+					<WeekComponent
+						onDateSelect={setRenderDay}
+						shifts={filteredShifts}
+						className="mt-6"
+					/>
+				</div>
+
+				{/* Right Section (50% width on medium+) */}
+				<div className="w-full mt-12 md:w-[50%]">
+					<TabComponent shifts={shifts} />
+				</div>
+			</div>
+
 			<div className="flex flex-col items-center justify-center min-h-screen p-4">
 				<div className="max-w-md w-full rounded-lg p-6 space-y-4">
 					<h1 className="text-2xl font-semibold text-gray-800 dark:text-white text-center">
@@ -155,23 +179,6 @@ const Welcome = () => {
 							</p>
 						))}
 					</div>
-				</div>
-			</div>
-
-			{/* FLEX CONTAINER TO ALIGN COMPONENTS SIDE BY SIDE */}
-			<div className="flex flex-col md:flex-row w-full gap-4 p-4">
-				{/* WeekComponent: Full width on small screens, 70% on medium+ */}
-				<div className="w-full md:w-[70%]">
-					<DayOverviewComponent shifts={shifts} />
-					<WeekComponent
-						onDateSelect={setRenderDay}
-						shifts={filteredShifts}
-					/>
-				</div>
-
-				{/* WeekOverviewComponent: Full width on small screens, 30% on medium+ */}
-				<div className="w-full md:w-[30%]">
-					<TabComponent shifts={shifts} />
 				</div>
 			</div>
 		</Layout>
