@@ -11,7 +11,6 @@ const path = require('path');
 
 const fastifyRedis = require('@fastify/redis');
 const Redis = require('ioredis');
-//import Redis from 'ioredis'; // Required as a peer dependency
 
 const { getAffectedUsers } = require('./functions/ical-creation');
 const { getActiveShiftsForUser } = require('./functions/ical-creation');

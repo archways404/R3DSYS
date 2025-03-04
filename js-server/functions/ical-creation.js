@@ -1,60 +1,109 @@
 const fs = require('fs');
 const path = require('path');
 const ics = require('ics');
+const { DateTime } = require('luxon'); // Use luxon for proper timezone handling
 
 async function generateICSFileForUser(userUUID, shifts) {
-	// Define the directory to store the ICS files.
-	const userFilesPath = path.join(__dirname, '../user_files/');
-	if (!fs.existsSync(userFilesPath)) {
-		fs.mkdirSync(userFilesPath, { recursive: true });
-	}
+	try {
+		const userFilesPath = path.join(__dirname, '../user_files/');
+		if (!fs.existsSync(userFilesPath)) {
+			fs.mkdirSync(userFilesPath, { recursive: true });
+		}
 
-	// Map each shift to an event for the ICS file.
-	const events = shifts.map((shift) => {
-		// Create a Date object from the shift date.
-		const shiftDate = new Date(shift.date);
-		const year = shiftDate.getUTCFullYear();
-		const month = shiftDate.getUTCMonth() + 1; // months are 0-indexed in JS
-		const day = shiftDate.getUTCDate();
+		const events = shifts
+			.map((shift) => {
+				try {
+					const shiftDate = DateTime.fromJSDate(new Date(shift.date), {
+						zone: 'Europe/Stockholm',
+					});
 
-		// Parse the start and end times.
-		const [startHour, startMinute] = shift.start_time.split(':').map(Number);
-		const [endHour, endMinute] = shift.end_time.split(':').map(Number);
+					const [startHour, startMinute] = shift.start_time
+						.split(':')
+						.map(Number);
+					const [endHour, endMinute] = shift.end_time.split(':').map(Number);
 
-		return {
-			start: [year, month, day, startHour, startMinute],
-			end: [year, month, day, endHour, endMinute],
-			// Use the human-friendly shift type short name.
-			title: `${shift.name_short}`,
-			description: `${shift.name_long}`,
-			// If you have a location field in your data, set it here; otherwise, leave it empty.
-			location: '',
-			status: 'CONFIRMED',
-			organizer: { name: 'mainframeMAU', email: 'mainframeMAU@gmx.com' },
-			// Optionally add URL or other properties here.
-		};
-	});
+					const startTime = shiftDate.set({
+						hour: startHour,
+						minute: startMinute,
+					});
+					const endTime = shiftDate.set({ hour: endHour, minute: endMinute });
 
-	// Wrap the ICS creation in a promise.
-	return new Promise((resolve, reject) => {
-		ics.createEvents(events, (error, value) => {
-			if (error) {
-				console.error(`Error creating ICS events for user ${userUUID}:`, error);
-				return reject(error);
-			}
-			const filePath = path.join(userFilesPath, `${userUUID}.ical`);
-			fs.writeFile(filePath, value, (err) => {
-				if (err) {
-					console.error(`Failed to write ICS file for user ${userUUID}:`, err);
-					return reject(err);
-				} else {
-					console.log(`ICS file created for user ${userUUID} at ${filePath}`);
-					resolve(filePath);
+					console.log(
+						`🕒 Processing shift ${shift.shift_id} for user ${userUUID}`
+					);
+					console.log(`   - Shift Date (UTC): ${shift.date}`);
+					console.log(
+						`   - Converted Shift Date (Swedish Time): ${shiftDate.toISO()}`
+					);
+					console.log(`   - Start Time (Swedish Time): ${startTime.toISO()}`);
+					console.log(`   - End Time (Swedish Time): ${endTime.toISO()}`);
+
+					return {
+						start: [
+							startTime.year,
+							startTime.month,
+							startTime.day,
+							startTime.hour,
+							startTime.minute,
+						],
+						end: [
+							endTime.year,
+							endTime.month,
+							endTime.day,
+							endTime.hour,
+							endTime.minute,
+						],
+						title: shift.name_short,
+						description: shift.name_long,
+						location: '',
+						status: 'CONFIRMED',
+						organizer: { name: 'r3dsys', email: 'support@r3dsys.com' },
+					};
+				} catch (shiftError) {
+					console.error(
+						`❌ Error processing shift ${shift.shift_id}:`,
+						shiftError
+					);
+					return null;
 				}
+			})
+			.filter(Boolean);
+
+		return new Promise((resolve, reject) => {
+			ics.createEvents(events, (error, value) => {
+				if (error) {
+					console.error(
+						`❌ Error creating ICS events for user ${userUUID}:`,
+						error
+					);
+					return reject(error);
+				}
+				const filePath = path.join(userFilesPath, `${userUUID}.ical`);
+				fs.writeFile(filePath, value, (err) => {
+					if (err) {
+						console.error(
+							`❌ Failed to write ICS file for user ${userUUID}:`,
+							err
+						);
+						return reject(err);
+					} else {
+						console.log(
+							`✅ ICS file created for user ${userUUID} at ${filePath}`
+						);
+						resolve(filePath);
+					}
+				});
 			});
 		});
-	});
+	} catch (globalError) {
+		console.error(
+			`🚨 Unexpected error in generateICSFileForUser:`,
+			globalError
+		);
+	}
 }
+
+
 
 async function getAffectedUsers(fastify, group_id) {
 	const query = `
