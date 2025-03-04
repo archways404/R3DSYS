@@ -34,6 +34,7 @@
 		"ics": "^3.8.0",
 		"ioredis": "^5.5.0",
 		"jsonwebtoken": "^9.0.2",
+		"luxon": "^3.5.0",
 		"morgan": "^1.10.0",
 		"node-cache": "^5.1.2",
 		"nodemailer": "^6.9.15",
