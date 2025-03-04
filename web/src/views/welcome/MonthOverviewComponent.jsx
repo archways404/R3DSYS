@@ -1,30 +1,28 @@
 import React, { useContext } from 'react';
 import { AuthContext } from '../../context/AuthContext';
 
-const WeekOverviewComponent = ({ shifts }) => {
+const MonthOverviewComponent = ({ shifts }) => {
 	const { user } = useContext(AuthContext);
 	if (!user) return null;
 
 	// Get the current date
 	const today = new Date();
-	const dayOfWeek = today.getDay(); // 0 (Sunday) to 6 (Saturday)
 
-	// Adjust so the week starts on Monday (ISO week format)
-	const monday = new Date(today);
-	monday.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1)); // Move to Monday
-	monday.setHours(0, 0, 0, 0);
+	// Get first and last day of the month
+	const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+	const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
 
-	const sunday = new Date(monday);
-	sunday.setDate(monday.getDate() + 6); // Move to Sunday
-	sunday.setHours(23, 59, 59, 999);
+	// Ensure correct time for comparisons
+	firstDayOfMonth.setHours(0, 0, 0, 0);
+	lastDayOfMonth.setHours(23, 59, 59, 999);
 
-	// Filter shifts for the current user within the current week
+	// Filter shifts for the current user within the current month
 	const userShifts = shifts.filter((shift) => {
 		const shiftStart = new Date(shift.start);
 		return (
 			shift.extendedProps.assignedUserId === user.uuid &&
-			shiftStart >= monday &&
-			shiftStart <= sunday
+			shiftStart >= firstDayOfMonth &&
+			shiftStart <= lastDayOfMonth
 		);
 	});
 
@@ -45,7 +43,10 @@ const WeekOverviewComponent = ({ shifts }) => {
 
 	return (
 		<div className="p-4">
-			<h2 className="text-xl font-bold text-center mb-4">Week Overview</h2>
+			<h2 className="text-xl font-bold text-center mb-4">
+				Month Overview -{' '}
+				{today.toLocaleDateString('en-SE', { month: 'long', year: 'numeric' })}
+			</h2>
 
 			<div className="space-y-6">
 				{sortedDays.length > 0 ? (
@@ -97,7 +98,7 @@ const WeekOverviewComponent = ({ shifts }) => {
 					))
 				) : (
 					<p className="text-gray-500 dark:text-gray-400 text-center">
-						No assigned shifts this week.
+						No assigned shifts this month.
 					</p>
 				)}
 			</div>
@@ -105,4 +106,4 @@ const WeekOverviewComponent = ({ shifts }) => {
 	);
 };
 
-export default WeekOverviewComponent;
+export default MonthOverviewComponent;

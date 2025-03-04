@@ -5,7 +5,8 @@ import { RenderContext } from '../../context/RenderContext';
 
 import Layout from '../../components/Layout';
 import WeekComponent from './WeekComponent';
-import WeekOverviewComponent from './WeekOverviewComponent';
+import DayOverviewComponent from './DayOverviewComponent';
+import TabComponent from './TabComponent';
 
 const Welcome = () => {
 	const { user } = useContext(AuthContext);
@@ -77,17 +78,25 @@ const Welcome = () => {
 
 	const filteredShifts = renderDay
 		? shifts.filter((shift) => {
-				if (!shift.date) return false; // Ensure date exists
+				if (!shift.start) return false; // Ensure start time exists
 
-				// Ensure the shift date is interpreted as local time
-				const shiftDate = new Date(shift.date);
-				shiftDate.setHours(0, 0, 0, 0); // Normalize time
+				// Convert shift start to a UTC-based date
+				const shiftDate = new Date(shift.start);
+				const shiftYear = shiftDate.getUTCFullYear();
+				const shiftMonth = shiftDate.getUTCMonth();
+				const shiftDay = shiftDate.getUTCDate();
 
-				// Ensure `renderDay` only contains the date part
+				// Normalize `renderDay` to local date for comparison
 				const selectedDate = new Date(renderDay);
-				selectedDate.setHours(0, 0, 0, 0); // Normalize time
+				const selectedYear = selectedDate.getFullYear();
+				const selectedMonth = selectedDate.getMonth();
+				const selectedDay = selectedDate.getDate();
 
-				return shiftDate.getTime() === selectedDate.getTime(); // Compare exact day
+				return (
+					shiftYear === selectedYear &&
+					shiftMonth === selectedMonth &&
+					shiftDay === selectedDay
+				);
 		  })
 		: [];
 
@@ -153,6 +162,7 @@ const Welcome = () => {
 			<div className="flex flex-col md:flex-row w-full gap-4 p-4">
 				{/* WeekComponent: Full width on small screens, 70% on medium+ */}
 				<div className="w-full md:w-[70%]">
+					<DayOverviewComponent shifts={shifts} />
 					<WeekComponent
 						onDateSelect={setRenderDay}
 						shifts={filteredShifts}
@@ -161,7 +171,7 @@ const Welcome = () => {
 
 				{/* WeekOverviewComponent: Full width on small screens, 30% on medium+ */}
 				<div className="w-full md:w-[30%]">
-					<WeekOverviewComponent shifts={shifts} />
+					<TabComponent shifts={shifts} />
 				</div>
 			</div>
 		</Layout>

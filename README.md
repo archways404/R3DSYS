@@ -26,7 +26,7 @@ The system also includes robust features like automated database backups, trade 
 We use [Semantic Versioning](https://semver.org/) for this project. For the available versions, see the [tags on this repository](https://github.com/your-repo/tags).
 
 - **Pre Release (Beta)**: 0.5.0 - Planned February 2025
-- **Initial Release**: 1.0.0 - Planned March 2025
+- **Initial Release**: 1.0.0 - Planned April 2025
 - **Next Version**: 2.0.0 - Planned July 2025
 
 ## Roadmap

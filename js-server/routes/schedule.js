@@ -227,30 +227,49 @@ async function routes(fastify, options) {
 			const { rows } = await fastify.pg.query(query, [groupIds]);
 
 			// Transform data for frontend display
-			const formattedData = rows.map((shift) => ({
-				id: shift.shift_id,
-				title: shift.shift_type_short,
-				start: new Date(
-					`${shift.date.toISOString().split('T')[0]}T${shift.start_time}`
-				),
-				end: new Date(
-					`${shift.date.toISOString().split('T')[0]}T${shift.end_time}`
-				),
-				description: `${shift.shift_type_long || 'N/A'}`,
-				extendedProps: {
-					shiftTypeId: shift.shift_type_id,
-					shiftTypeLong: shift.shift_type_long,
-					shiftTypeShort: shift.shift_type_short,
-					assignedTo: shift.assigned_to,
-					assignedUserId: shift.assigned_user_id,
-					assignedUserEmail: shift.assigned_user_email,
-					assignedUserFirstName: shift.assigned_user_first_name,
-					assignedUserLastName: shift.assigned_user_last_name,
-					scheduleGroupId: shift.schedule_group_id,
-				},
-			}));
+			// Transform data for frontend display
+			const formattedData = rows.map((shift) => {
+				const shiftDate = new Date(shift.date); // Ensure shift.date is treated as local time
 
-			return reply.send(rows);
+				// Ensure `shiftDate` contains only the date part (reset time to midnight)
+				shiftDate.setHours(0, 0, 0, 0);
+
+				// Construct `start` and `end` using local date values
+				const start = new Date(
+					shiftDate.getFullYear(),
+					shiftDate.getMonth(),
+					shiftDate.getDate(),
+					...shift.start_time.split(':').map(Number)
+				);
+
+				const end = new Date(
+					shiftDate.getFullYear(),
+					shiftDate.getMonth(),
+					shiftDate.getDate(),
+					...shift.end_time.split(':').map(Number)
+				);
+
+				return {
+					id: shift.shift_id,
+					title: shift.shift_type_short,
+					start,
+					end,
+					description: `${shift.shift_type_long || 'N/A'}`,
+					extendedProps: {
+						shiftTypeId: shift.shift_type_id,
+						shiftTypeLong: shift.shift_type_long,
+						shiftTypeShort: shift.shift_type_short,
+						assignedTo: shift.assigned_to,
+						assignedUserId: shift.assigned_user_id,
+						assignedUserEmail: shift.assigned_user_email,
+						assignedUserFirstName: shift.assigned_user_first_name,
+						assignedUserLastName: shift.assigned_user_last_name,
+						scheduleGroupId: shift.schedule_group_id,
+					},
+				};
+			});
+
+			return reply.send(formattedData);
 		} catch (error) {
 			console.error('Error fetching active shifts for user:', error.message);
 			return reply.status(500).send({ error: 'Failed to fetch active shifts' });
