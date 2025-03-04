@@ -6,11 +6,9 @@
   <img src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fapi.r3dsys.com%2Fversion&query=version&prefix=v&style=plastic&label=%20&color=%23ffdd00" alt="Version">
 </p>
 
-
-
-
 ## Summary
-...
+
+Coming Soon...
 
 ## Overview
 The project aims to streamline the scheduling process for employees over at the Malmö University Student Helpdesk, but we plan on adding support for ex: Teaching-Assistants that will be included in version 2.0.
