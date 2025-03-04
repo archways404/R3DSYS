@@ -9,6 +9,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { ConsentContext } from '../context/ConsentContext';
 import { useStateContext } from '../context/RenderContext';
 import { AppSidebar } from '@/components/appsidebar';
+import Footer from './Footer';
 import Background from './Background';
 import LoadingScreen from './LoadingScreen';
 
@@ -98,6 +99,7 @@ function Layout({ children }) {
 						<Toaster />
 					</div>
 				)}
+				<Footer />
 			</div>
 		</VersionContext.Provider>
 	);
