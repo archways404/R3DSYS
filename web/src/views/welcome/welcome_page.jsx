@@ -70,13 +70,23 @@ const Welcome = () => {
 		fetchShifts();
 	}, []);
 
+	useEffect(() => {
+		setRenderDay(new Date()); // Set today's date after mounting
+	}, []);
+
 	const filteredShifts = renderDay
 		? shifts.filter((shift) => {
-				// Extract only the YYYY-MM-DD part of the shift date
-				const shiftDate = new Date(shift.date).toISOString().split('T')[0];
-				const selectedDate = renderDay.toISOString().split('T')[0];
+				if (!shift.date) return false; // Ensure date exists
 
-				return shiftDate === selectedDate;
+				// Ensure the shift date is interpreted as local time
+				const shiftDate = new Date(shift.date);
+				shiftDate.setHours(0, 0, 0, 0); // Normalize time
+
+				// Ensure `renderDay` only contains the date part
+				const selectedDate = new Date(renderDay);
+				selectedDate.setHours(0, 0, 0, 0); // Normalize time
+
+				return shiftDate.getTime() === selectedDate.getTime(); // Compare exact day
 		  })
 		: [];
 
