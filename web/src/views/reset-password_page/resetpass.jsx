@@ -4,6 +4,9 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
+import PasswordReqInput from '@/components/ui/PasswordReqInput';
+import PasswordInput from '@/components/ui/PasswordInput';
+
 import Layout from '../../components/Layout';
 
 function ResetPass() {
@@ -63,7 +66,7 @@ function ResetPass() {
 
 	return (
 		<Layout>
-			<div className="flex items-center justify-center max-h-screen">
+			<div className="min-h-screen flex flex-col items-center justify-center">
 				<div className="w-full max-w-md p-8 space-y-6 rounded-lg">
 					<h2 className="text-2xl font-semibold text-center text-gray-900 dark:text-white">
 						Reset Your Password
@@ -77,37 +80,29 @@ function ResetPass() {
 					<form
 						onSubmit={handleSubmit}
 						className="space-y-4">
+						{/* New Password with Strength Checker */}
 						<div>
 							<Label
 								htmlFor="password"
 								className="block text-sm font-medium text-gray-700 dark:text-gray-200">
 								New Password
 							</Label>
-							<Input
-								id="password"
-								type="password"
+							<PasswordReqInput
 								value={password}
 								onChange={(e) => setPassword(e.target.value)}
-								className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 dark:bg-gray-700 dark:text-white"
-								placeholder="Enter your new password"
-								required
 							/>
 						</div>
 
+						{/* Confirm Password */}
 						<div>
 							<Label
 								htmlFor="confirmPassword"
 								className="block text-sm font-medium text-gray-700 dark:text-gray-200">
 								Confirm Password
 							</Label>
-							<Input
-								id="confirmPassword"
-								type="password"
+							<PasswordInput
 								value={confirmPassword}
 								onChange={(e) => setConfirmPassword(e.target.value)}
-								className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 dark:bg-gray-700 dark:text-white"
-								placeholder="Confirm your new password"
-								required
 							/>
 						</div>
 
