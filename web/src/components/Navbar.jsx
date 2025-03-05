@@ -1,292 +1,138 @@
 import React, { useContext } from 'react';
-import { Link } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import { ThemeContext } from '../context/ThemeContext';
 import { AuthContext } from '../context/AuthContext';
+
+import { motion } from 'framer-motion';
+import { Home, Settings, Bell, User } from 'lucide-react';
 
 const Navbar = () => {
 	const { theme } = useContext(ThemeContext);
 	const { user } = useContext(AuthContext);
+	const location = useLocation();
 
-	if (!user) {
-		return null;
-	}
+	// Determines if the theme is dark
+	const isDarkTheme = theme === 'dark';
 
-	const renderLinksForUserRole = () => {
-		switch (user.role) {
-			case 'worker':
-				return (
-					<>
-						<li>
-							<Link
-								to="/schedule"
-								className={`${
-									theme === 'dark'
-										? 'hover:text-gray-400'
-										: 'hover:text-gray-600'
-								}`}>
-								Schedule
-							</Link>
-						</li>
-						<li>
-							<Link
-								to="/apply-unassigned"
-								className={`${
-									theme === 'dark'
-										? 'hover:text-gray-400'
-										: 'hover:text-gray-600'
-								}`}>
-								unassigned
-							</Link>
-						</li>
-						<li>
-							<Link
-								to="/calendarlink"
-								className={`${
-									theme === 'dark'
-										? 'hover:text-gray-400'
-										: 'hover:text-gray-600'
-								}`}>
-								iCAL
-							</Link>
-						</li>
-					</>
-				);
-			case 'admin':
-				return (
-					<>
-						<li>
-							<Link
-								to="/create-template"
-								className={`${
-									theme === 'dark'
-										? 'hover:text-gray-400'
-										: 'hover:text-gray-600'
-								}`}>
-								templates
-							</Link>
-						</li>
-						<li>
-							<Link
-								to="/handle-template"
-								className={`${
-									theme === 'dark'
-										? 'hover:text-gray-400'
-										: 'hover:text-gray-600'
-								}`}>
-								templ
-							</Link>
-						</li>
-						<li>
-							<Link
-								to="/handle-shifts"
-								className={`${
-									theme === 'dark'
-										? 'hover:text-gray-400'
-										: 'hover:text-gray-600'
-								}`}>
-								shifts
-							</Link>
-						</li>
-						<li>
-							<Link
-								to="/apply-unassigned"
-								className={`${
-									theme === 'dark'
-										? 'hover:text-gray-400'
-										: 'hover:text-gray-600'
-								}`}>
-								unassigned
-							</Link>
-						</li>
-						<li>
-							<Link
-								to="/assign-shifts"
-								className={`${
-									theme === 'dark'
-										? 'hover:text-gray-400'
-										: 'hover:text-gray-600'
-								}`}>
-								assign
-							</Link>
-						</li>
-						<li>
-							<Link
-								to="/invite"
-								className={`${
-									theme === 'dark'
-										? 'hover:text-gray-400'
-										: 'hover:text-gray-600'
-								}`}>
-								invitation
-							</Link>
-						</li>
-						<li>
-							<Link
-								to="/calendarlink"
-								className={`${
-									theme === 'dark'
-										? 'hover:text-gray-400'
-										: 'hover:text-gray-600'
-								}`}>
-								iCAL
-							</Link>
-						</li>
-						<li>
-							<Link
-								to="/manage-users"
-								className={`${
-									theme === 'dark'
-										? 'hover:text-gray-400'
-										: 'hover:text-gray-600'
-								}`}>
-								users
-							</Link>
-						</li>
-						<li>
-							<Link
-								to="/handle-status"
-								className={`${
-									theme === 'dark'
-										? 'hover:text-gray-400'
-										: 'hover:text-gray-600'
-								}`}>
-								status
-							</Link>
-						</li>
-						<li>
-							<Link
-								to="/schedule"
-								className={`${
-									theme === 'dark'
-										? 'hover:text-gray-400'
-										: 'hover:text-gray-600'
-								}`}>
-								schedule
-							</Link>
-						</li>
-						<li>
-							<Link
-								to="/create-schedule"
-								className={`${
-									theme === 'dark'
-										? 'hover:text-gray-400'
-										: 'hover:text-gray-600'
-								}`}>
-								create-schedule
-							</Link>
-						</li>
-						<li>
-							<Link
-								to="/serverinfo"
-								className={`${
-									theme === 'dark'
-										? 'hover:text-gray-400'
-										: 'hover:text-gray-600'
-								}`}>
-								s-info
-							</Link>
-						</li>
-						<li>
-							<Link
-								to="/server-panel"
-								className={`${
-									theme === 'dark'
-										? 'hover:text-gray-400'
-										: 'hover:text-gray-600'
-								}`}>
-								d-panel
-							</Link>
-						</li>
-						<li>
-							<Link
-								to="/email-status"
-								className={`${
-									theme === 'dark'
-										? 'hover:text-gray-400'
-										: 'hover:text-gray-600'
-								}`}>
-								email-status
-							</Link>
-						</li>
-					</>
-				);
-			case 'maintainer':
-				return (
-					<>
-						<li>
-							<Link
-								to="/dashboard"
-								className={`${
-									theme === 'dark'
-										? 'hover:text-gray-400'
-										: 'hover:text-gray-600'
-								}`}>
-								Dashboard
-							</Link>
-						</li>
-						<li>
-							<Link
-								to="/server-panel"
-								className={`${
-									theme === 'dark'
-										? 'hover:text-gray-400'
-										: 'hover:text-gray-600'
-								}`}>
-								Server-Panel
-							</Link>
-						</li>
-						<li>
-							<Link
-								to="/email-status"
-								className={`${
-									theme === 'dark'
-										? 'hover:text-gray-400'
-										: 'hover:text-gray-600'
-								}`}>
-								Email-Status
-							</Link>
-						</li>
-					</>
-				);
-		}
+	// Navbar menu items
+	const menuItems = [
+		{
+			icon: <Home className="h-5 w-5" />,
+			label: 'Home',
+			to: '/',
+			gradient:
+				'radial-gradient(circle, rgba(59,130,246,0.15) 0%, rgba(37,99,235,0.06) 50%, rgba(29,78,216,0) 100%)',
+			activeColor: 'text-blue-500',
+		},
+		{
+			icon: <Bell className="h-5 w-5" />,
+			label: 'Notifications',
+			to: '/notifications',
+			gradient:
+				'radial-gradient(circle, rgba(249,115,22,0.15) 0%, rgba(234,88,12,0.06) 50%, rgba(194,65,12,0) 100%)',
+			activeColor: 'text-orange-500',
+		},
+		{
+			icon: <Settings className="h-5 w-5" />,
+			label: 'Settings',
+			to: '/settings',
+			gradient:
+				'radial-gradient(circle, rgba(34,197,94,0.15) 0%, rgba(22,163,74,0.06) 50%, rgba(21,128,61,0) 100%)',
+			activeColor: 'text-green-500',
+		},
+		{
+			icon: <User className="h-5 w-5" />,
+			label: 'Profile',
+			to: '/profile',
+			gradient:
+				'radial-gradient(circle, rgba(239,68,68,0.15) 0%, rgba(220,38,38,0.06) 50%, rgba(185,28,28,0) 100%)',
+			activeColor: 'text-red-500',
+		},
+	];
+
+	const glowVariants = {
+		initial: { opacity: 0, scale: 0.8 },
+		hover: {
+			opacity: 1,
+			scale: 2,
+			transition: {
+				opacity: { duration: 0.5, ease: [0.4, 0, 0.2, 1] },
+				scale: { duration: 0.5, type: 'spring', stiffness: 300, damping: 25 },
+			},
+		},
+	};
+
+	const navGlowVariants = {
+		initial: { opacity: 0 },
+		hover: {
+			opacity: 1,
+			transition: {
+				duration: 0.5,
+				ease: [0.4, 0, 0.2, 1],
+			},
+		},
 	};
 
 	return (
-		<nav className={`p-4 w-full`}>
-			<ul className="flex w-full justify-between px-5">
-				<li>
-					<Link
-						to="/welcome"
-						className={`${
-							theme === 'dark' ? 'hover:text-gray-400' : 'hover:text-gray-600'
-						}`}>
-						Home
-					</Link>
-				</li>
-				<li>
-					<Link
-						to="/settings"
-						className={`${
-							theme === 'dark' ? 'hover:text-gray-400' : 'hover:text-gray-600'
-						}`}>
-						Settings
-					</Link>
-				</li>
-
-				{/* Conditionally render links based on user Role */}
-				{renderLinksForUserRole()}
-
-				<li>
-					<Link
-						to="/logout"
-						className={`${
-							theme === 'dark' ? 'hover:text-gray-400' : 'hover:text-gray-600'
-						}`}>
-						Logout
-					</Link>
-				</li>
+		<motion.nav
+			className="fixed top-4 left-1/2 transform -translate-x-1/2 inline-flex gap-4 p-3 rounded-2xl bg-gradient-to-b from-background/80 to-background/40 backdrop-blur-lg border border-border/40 shadow-lg overflow-hidden"
+			initial="initial"
+			whileHover="hover">
+			<motion.div
+				className={`absolute -inset-2 bg-gradient-radial from-transparent ${
+					isDarkTheme
+						? 'via-blue-400/30 via-30% via-purple-400/30 via-60% via-red-400/30 via-90%'
+						: 'via-blue-400/20 via-30% via-purple-400/20 via-60% via-red-400/20 via-90%'
+				} to-transparent rounded-3xl z-0 pointer-events-none`}
+				variants={navGlowVariants}
+			/>
+			<ul className="flex items-center gap-4 relative z-10">
+				{menuItems.map((item) => {
+					const isActive = location.pathname === item.to;
+					return (
+						<motion.li
+							key={item.label}
+							className="relative">
+							<motion.div
+								className="block rounded-xl overflow-visible group relative"
+								style={{ perspective: '600px' }}
+								whileHover="hover"
+								initial="initial">
+								<motion.div
+									className="absolute inset-0 z-0 pointer-events-none"
+									variants={glowVariants}
+									style={{
+										background: item.gradient,
+										opacity: 0,
+										borderRadius: '16px',
+									}}
+								/>
+								<Link
+									to={item.to}
+									style={{
+										transformStyle: 'preserve-3d',
+										transformOrigin: 'center bottom',
+									}}
+									className="flex items-center gap-2 px-4 py-2 relative z-10 transition-colors rounded-xl">
+									<span
+										className={`transition-colors duration-300 ${
+											isActive ? item.activeColor : 'text-white'
+										}`}>
+										{item.icon}
+									</span>
+									<span
+										className={`transition-colors duration-300 ${
+											isActive ? item.activeColor : 'text-white'
+										}`}>
+										{item.label}
+									</span>
+								</Link>
+							</motion.div>
+						</motion.li>
+					);
+				})}
 			</ul>
-		</nav>
+		</motion.nav>
 	);
 };
 
