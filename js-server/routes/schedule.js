@@ -74,28 +74,34 @@ async function routes(fastify, options) {
 			console.log('rows', rows);
 
 			// Transform data for BigCalendar format
-			const formattedData = rows.map((shift) => ({
-				id: shift.shift_id,
-				title: shift.shift_type_short,
-				start: new Date(
-					`${shift.date.toISOString().split('T')[0]}T${shift.start_time}`
-				),
-				end: new Date(
-					`${shift.date.toISOString().split('T')[0]}T${shift.end_time}`
-				),
-				description: `${shift.shift_type_long || 'N/A'}`,
-				extendedProps: {
-					shiftTypeId: shift.shift_type_id,
-					shiftTypeLong: shift.shift_type_long,
-					shiftTypeShort: shift.shift_type_short,
-					assignedTo: shift.assigned_to,
-					assignedUserId: shift.assigned_user_id,
-					assignedUserEmail: shift.assigned_user_email,
-					assignedUserFirstName: shift.assigned_user_first_name,
-					assignedUserLastName: shift.assigned_user_last_name,
-					scheduleGroupId: shift.schedule_group_id,
-				},
-			}));
+			const formattedData = rows.map((shift) => {
+				const shiftDate = new Date(shift.date); // Keep it in local time
+				const startDateTime = new Date(
+					`${shiftDate.toLocaleDateString('sv-SE')}T${shift.start_time}`
+				);
+				const endDateTime = new Date(
+					`${shiftDate.toLocaleDateString('sv-SE')}T${shift.end_time}`
+				);
+
+				return {
+					id: shift.shift_id,
+					title: shift.shift_type_short,
+					start: startDateTime,
+					end: endDateTime,
+					description: `${shift.shift_type_long || 'N/A'}`,
+					extendedProps: {
+						shiftTypeId: shift.shift_type_id,
+						shiftTypeLong: shift.shift_type_long,
+						shiftTypeShort: shift.shift_type_short,
+						assignedTo: shift.assigned_to,
+						assignedUserId: shift.assigned_user_id,
+						assignedUserEmail: shift.assigned_user_email,
+						assignedUserFirstName: shift.assigned_user_first_name,
+						assignedUserLastName: shift.assigned_user_last_name,
+						scheduleGroupId: shift.schedule_group_id,
+					},
+				};
+			});
 
 			console.log('formattedData', formattedData);
 

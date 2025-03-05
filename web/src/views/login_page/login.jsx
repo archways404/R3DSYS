@@ -9,6 +9,8 @@ import Layout from '../../components/Layout';
 import DisplayStatus from '../../components/DisplayStatus';
 import { AuthContext } from '../../context/AuthContext';
 import LoadingScreen from '../../components/LoadingScreen';
+import PasswordInput from '@/components/ui/PasswordInput';
+import EmailInput from '@/components/ui/EmailInput';
 
 import { useStateContext } from '../../context/RenderContext';
 
@@ -18,7 +20,7 @@ function Login() {
 	const [error, setError] = useState('');
 	const [isLoggingIn, setIsLoggingIn] = useState(false);
 	const navigate = useNavigate();
-	const { checkAuth, setUser, setJustLoggedIn } = useContext(AuthContext); // ✅ Added setUser & setJustLoggedIn
+	const { checkAuth, setUser, setJustLoggedIn } = useContext(AuthContext);
 
 	const { setRenderLoading } = useStateContext();
 
@@ -71,16 +73,14 @@ function Login() {
 
 	return (
 		<Layout>
-			{/*
-			<div className="absolute bottom-4 right-4">
-				<DisplayStatus />
-			</div>
-			*/}
-			<div className="flex items-center justify-center max-h-screen">
+			<div className="min-h-screen flex flex-col items-center justify-center">
 				<div className="w-full max-w-md p-8 space-y-6 rounded-lg">
-					<h2 className="text-2xl font-semibold text-center text-gray-900 dark:text-white">
-						Login
-					</h2>
+					<h1 className="text-5xl font-extrabold text-white tracking-wide drop-shadow-xl text-center">
+						<span className="text-white">R</span>
+						<span className="text-red-600">Ǝ</span>
+						<span className="text-white">D</span>
+						<span className="text-white">SYS</span>
+					</h1>
 
 					{error && <p className="text-red-500 text-sm text-center">{error}</p>}
 
@@ -88,46 +88,25 @@ function Login() {
 						onSubmit={handleSubmit}
 						className="space-y-4">
 						<div>
-							<Label
-								htmlFor="email"
-								className="block text-sm font-medium text-gray-700 dark:text-gray-200">
-								Email
-							</Label>
-							<Input
-								id="email"
-								type="email"
-								value={email}
-								onChange={(e) => setEmail(e.target.value)}
-								className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 dark:text-white"
-								placeholder="Enter your email"
-								required
+							<EmailInput
+								value={email} // ✅ Pass value
+								onChange={(e) => setEmail(e.target.value)} // ✅ Pass onChange handler
 							/>
 						</div>
 
 						<div>
-							<Label
-								htmlFor="password"
-								className="block text-sm font-medium text-gray-700 dark:text-gray-200">
-								Password
-							</Label>
-							<Input
-								id="password"
-								type="password"
-								value={password}
-								onChange={(e) => setPassword(e.target.value)}
-								className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 dark:text-white"
-								placeholder="Enter your password"
-								required
+							<PasswordInput
+								value={password} // ✅ Pass value
+								onChange={(e) => setPassword(e.target.value)} // ✅ Pass onChange handler
 							/>
 						</div>
-
 						<Button
 							type="submit"
 							disabled={isLoggingIn}
 							className={`w-full px-4 py-2 mt-4 text-white rounded-md transition ${
 								isLoggingIn
-									? 'bg-green-300 cursor-not-allowed'
-									: 'bg-green-600 hover:bg-green-700'
+									? 'bg-red-300 cursor-not-allowed'
+									: 'bg-red-600 hover:bg-red-700'
 							}`}>
 							{isLoggingIn ? 'Logging in...' : 'Login'}
 						</Button>
@@ -137,7 +116,7 @@ function Login() {
 						Don't know your password?{' '}
 						<Link
 							to="/forgotpass"
-							className="text-green-500 hover:underline">
+							className="text-red-500 hover:underline">
 							Reset it here
 						</Link>
 					</p>

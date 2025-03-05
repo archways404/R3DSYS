@@ -1,5 +1,6 @@
 import React, { useContext } from 'react';
 import { AuthContext } from '../../context/AuthContext';
+import { Skeleton } from '@/components/ui/skeleton'; // Import ShadCN Skeleton
 
 const DayOverviewComponent = ({ shifts }) => {
 	const { user } = useContext(AuthContext);
@@ -34,17 +35,26 @@ const DayOverviewComponent = ({ shifts }) => {
 				})}
 			</h2>
 
-			<div className="space-y-6">
+			<div className="mt-8 space-y-1 w-full">
 				{userShifts.length > 0 ? (
 					userShifts.map((shift) => {
 						const shiftStart = new Date(shift.start);
 						const shiftEnd = new Date(shift.end);
 
+						// 🔹 Check if shift has ended
+						const isPastShift = shiftEnd < new Date();
+
 						return (
 							<div
 								key={shift.id}
-								className="flex items-center gap-x-6 bg-gray-100 dark:bg-gray-800 p-3 rounded-md shadow">
-								<p className="text-gray-900 dark:text-white font-medium">
+								className="grid grid-cols-[150px_1fr_200px] w-full items-center px-4 py-2 border-b border-gray-300 dark:border-gray-700">
+								{/* Time */}
+								<p
+									className={`text-lg font-semibold ${
+										isPastShift
+											? 'text-gray-500 dark:text-gray-400'
+											: 'text-blue-500 dark:text-blue-400'
+									}`}>
 									{shiftStart.toLocaleTimeString([], {
 										hour: '2-digit',
 										minute: '2-digit',
@@ -55,7 +65,14 @@ const DayOverviewComponent = ({ shifts }) => {
 										minute: '2-digit',
 									})}
 								</p>
-								<p className="text-gray-700 dark:text-gray-300">
+
+								{/* Shift Title */}
+								<p
+									className={`text-lg font-bold ${
+										isPastShift
+											? 'text-gray-500 dark:text-gray-400'
+											: 'text-gray-900 dark:text-white'
+									}`}>
 									{shift.extendedProps.shiftTypeLong}
 								</p>
 							</div>
