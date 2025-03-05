@@ -18,7 +18,7 @@ function Login() {
 	const [error, setError] = useState('');
 	const [isLoggingIn, setIsLoggingIn] = useState(false);
 	const navigate = useNavigate();
-	const { checkAuth, setUser, setJustLoggedIn } = useContext(AuthContext); // ✅ Added setUser & setJustLoggedIn
+	const { checkAuth, setUser, setJustLoggedIn } = useContext(AuthContext);
 
 	const { setRenderLoading } = useStateContext();
 
@@ -71,12 +71,7 @@ function Login() {
 
 	return (
 		<Layout>
-			{/*
-			<div className="absolute bottom-4 right-4">
-				<DisplayStatus />
-			</div>
-			*/}
-			<div className="flex items-center justify-center max-h-screen">
+			<div className="min-h-screen flex flex-col items-center justify-center">
 				<div className="w-full max-w-md p-8 space-y-6 rounded-lg">
 					<h2 className="text-2xl font-semibold text-center text-gray-900 dark:text-white">
 						Login
@@ -145,6 +140,7 @@ function Login() {
 			</div>
 		</Layout>
 	);
+
 }
 
 export default Login;
