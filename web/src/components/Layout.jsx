@@ -96,9 +96,6 @@ function Layout({ children }) {
 						<Toaster />
 					</div>
 				)}
-
-				{/* Footer should always be at the bottom */}
-				<Footer />
 			</div>
 		</VersionContext.Provider>
 	);
