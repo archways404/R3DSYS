@@ -58,16 +58,15 @@ function Layout({ children }) {
 
 	return (
 		<VersionContext.Provider value={{ version, loading }}>
-			<div className="relative h-screen w-full">
+			<div className="relative flex flex-col min-h-screen">
 				{/* Background Component */}
 				<Background />
 
 				{/* Global Loading Screen with Smooth Transition */}
 				<LoadingScreen isVisible={renderLoading} />
 
-				{/* Main Content */}
 				{user ? (
-					<div className="grid grid-cols-[15rem_auto] gap-2 relative h-screen">
+					<div className="grid grid-cols-[15rem_auto] gap-2 flex-1 relative">
 						{/* Sidebar */}
 						<div className="w-60 relative z-10">
 							<AppSidebar
@@ -77,11 +76,13 @@ function Layout({ children }) {
 						</div>
 
 						{/* Main Content */}
-						<div className="flex flex-col flex-1 min-h-screen relative z-10">
+						<div className="flex flex-col flex-1 relative z-10">
 							{/* Navbar */}
-							<div className="h-16 flex items-center">{/*<Navbar />*/}</div>
+							<div className="h-16 flex items-center">
+								<Navbar />
+							</div>
 
-							{/* Scrollable Main Content */}
+							{/* Main Content */}
 							<main className="flex-1 overflow-auto">{children}</main>
 						</div>
 
@@ -89,16 +90,14 @@ function Layout({ children }) {
 						<Toaster />
 					</div>
 				) : (
-					<div className="h-screen relative z-10">
-						<div className="flex flex-col flex-1 min-h-screen">
-							<div className="h-16 w-full flex items-center">
-								<Navbar />
-							</div>
-							<main className="flex-1 overflow-auto">{children}</main>
-						</div>
+					<div className="flex flex-col flex-1 min-h-screen relative">
+						<Navbar />
+						<main className="flex-1">{children}</main>
 						<Toaster />
 					</div>
 				)}
+
+				{/* Footer should always be at the bottom */}
 				<Footer />
 			</div>
 		</VersionContext.Provider>

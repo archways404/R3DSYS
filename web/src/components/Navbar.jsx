@@ -75,7 +75,7 @@ const Navbar = () => {
 
 	return (
 		<motion.nav
-			className="fixed top-4 left-1/2 transform -translate-x-1/2 inline-flex gap-4 p-3 rounded-2xl bg-gradient-to-b from-background/80 to-background/40 backdrop-blur-lg border border-border/40 shadow-lg overflow-hidden"
+			className="fixed top-4 left-1/2 transform -translate-x-1/2 inline-flex gap-4 p-3 rounded-2xl bg-transparent border border-border/40 shadow-lg overflow-hidden z-50"
 			initial="initial"
 			whileHover="hover">
 			<motion.div
