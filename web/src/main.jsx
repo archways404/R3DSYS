@@ -51,6 +51,8 @@ import OfflineRenderer from './views/offline/renderer';
 
 import GroupRenderer from './views/groups/renderer';
 
+import BugreportRenderer from './views/bugreport/renderer';
+
 import './global.css';
 
 createRoot(document.getElementById('root')).render(
@@ -80,6 +82,10 @@ createRoot(document.getElementById('root')).render(
 											<Login />
 										</UnAuthWrapper>
 									}
+								/>
+								<Route
+									path="/bug-report"
+									element={<BugreportRenderer />}
 								/>
 								<Route
 									path="/resetPassword"
