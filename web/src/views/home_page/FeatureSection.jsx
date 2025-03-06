@@ -49,11 +49,8 @@ const features = [
 
 const FeatureSection = () => {
 	return (
-		<section className="relative w-full py-20 text-white">
-			{/* Background Glow Effect */}
-			<div className="absolute inset-0 flex items-center justify-center pointer-events-none"></div>
-
-			<div className="relative z-10 mx-auto max-w-6xl px-6 text-center">
+		<section className="relative w-full py-20 text-white bg-transparent">
+			<div className="relative z-10 mx-auto max-w-6xl px-6">
 				<motion.h2
 					initial={{ opacity: 0, y: 20 }}
 					animate={{ opacity: 1, y: 0 }}
@@ -74,7 +71,7 @@ const FeatureSection = () => {
 					initial={{ opacity: 0, y: 10 }}
 					animate={{ opacity: 1, y: 0 }}
 					transition={{ delay: 0.4, duration: 1 }}
-					className="mt-4 text-lg text-gray-300 max-w-2xl mx-auto">
+					className="mt-4 text-lg text-gray-300 max-w-2xl">
 					Manage shift availability, trades, and schedules with ease. An
 					all-in-one solution designed for both employees and administrators.
 				</motion.p>
@@ -87,22 +84,22 @@ const FeatureSection = () => {
 							initial={{ opacity: 0, y: 20 }}
 							animate={{ opacity: 1, y: 0 }}
 							transition={{ delay: 0.2 * index, duration: 0.8 }}
-							className="relative flex items-center space-x-4 p-6 rounded-xl border transition-transform duration-300 hover:scale-[1.03]">
-							{/* Icon */}
-							<div className="flex items-center justify-center w-12 h-12 rounded-lg ">
-								<feature.icon
-									className="w-6 h-6 text-red-500"
-									aria-hidden="true"
-								/>
+							className="flex flex-col p-6 bg-transparent rounded-xl border border-gray-700 transition-transform duration-300 hover:scale-[1.03]">
+							{/* Icon & Title in One Row */}
+							<div className="flex items-center space-x-3">
+								<div className="flex items-center justify-center w-12 h-12 rounded-lg bg-transparent">
+									<feature.icon
+										className="w-6 h-6 text-red-500"
+										aria-hidden="true"
+									/>
+								</div>
+								<h4 className="text-lg font-semibold">{feature.name}</h4>
 							</div>
 
-							{/* Feature Content */}
-							<div>
-								<h4 className="text-lg font-semibold">{feature.name}</h4>
-								<p className="mt-1 text-sm text-gray-400">
-									{feature.description}
-								</p>
-							</div>
+							{/* Feature Description Below */}
+							<p className="mt-3 text-sm text-gray-400">
+								{feature.description}
+							</p>
 						</motion.div>
 					))}
 				</div>
