@@ -228,6 +228,9 @@ app.addHook('onReady', async () => {
 		const res = await client.query('SELECT NOW()');
 		app.log.info(`PostgreSQL connected: ${res.rows[0].now}`);
 
+		await app.redis.del('version:data');
+		console.log(`🗑 Cleared cache for version `);
+
 		// Start listening for changes
 		await client.query('LISTEN status_channel');
 		await client.query('LISTEN active_shifts_channel');
