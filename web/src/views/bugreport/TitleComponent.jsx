@@ -1,6 +1,6 @@
 import { Textarea } from '@/components/ui/textarea';
 
-export default function DescriptionComponent({ description, setDescription }) {
+export default function TitleComponent({ description, setDescription }) {
 	return (
 		<div className="space-y-4">
 			{/* Bug Description Input */}

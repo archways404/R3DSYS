@@ -4,18 +4,22 @@ import { Button } from '@/components/ui/button';
 import FormProgression from '@/components/ui/FormProgression';
 
 // Import Step Components
+import TitleComponent from './TitleComponent';
 import DescriptionComponent from './DescriptionComponent';
 import ReproduceComponent from './ReproduceComponent';
 import ExpectedBehaviorComponent from './ExpectedBehaviorComponent';
-import SubmitComponent from './SubmitComponent';
+import ScreenshotComponent from './ScreenshotComponent';
+import SummaryComponent from './SummaryComponent';
 
 function BugreportRenderer() {
 	// Define the steps and their status
 	const [steps, setSteps] = useState([
-		{ id: 1, title: 'Describe the Bug', completed: false },
-		{ id: 2, title: 'Reproduction Steps', completed: false },
-		{ id: 3, title: 'Expected Behavior', completed: false },
-		{ id: 4, title: 'Submit Report', completed: false },
+		{ id: 1, title: 'Title', completed: false },
+		{ id: 2, title: 'Describe the Bug', completed: false },
+		{ id: 3, title: 'Reproduction Steps', completed: false },
+		{ id: 4, title: 'Expected Behavior', completed: false },
+		{ id: 5, title: 'Screenshots', completed: false },
+		{ id: 6, title: 'Summary', completed: false },
 	]);
 
 	const [currentStep, setCurrentStep] = useState(0);
@@ -40,17 +44,20 @@ function BugreportRenderer() {
 		}
 	};
 
-	// Function to render the correct step component
 	const renderStepComponent = () => {
 		switch (currentStep) {
-			case 0:
-				return <DescriptionComponent />;
 			case 1:
-				return <ReproduceComponent />;
+				return <TitleComponent />;
 			case 2:
-				return <ExpectedBehaviorComponent />;
+				return <DescriptionComponent />;
 			case 3:
-				return <SubmitComponent />;
+				return <ReproduceComponent />;
+			case 4:
+				return <ExpectedBehaviorComponent />;
+			case 5:
+				return <ScreenshotComponent />;
+			case 6:
+				return <SummaryComponent />;
 			default:
 				return null;
 		}
@@ -62,10 +69,7 @@ function BugreportRenderer() {
 			<div className="flex items-center justify-between min-h-screen px-12">
 				{/* Left Side: FormProgression (Pinned to the left) */}
 				<div className="absolute left-24">
-					<FormProgression
-						steps={steps}
-						currentStep={currentStep}
-					/>
+					<FormProgression steps={steps} />
 				</div>
 
 				{/* Right Side: Step Components (Centered Content) */}
@@ -86,7 +90,7 @@ function BugreportRenderer() {
 						<Button
 							onClick={nextStep}
 							disabled={currentStep === steps.length}>
-							{currentStep === steps.length - 1 ? 'Submit' : 'Next'}
+							{currentStep === steps.length ? 'Submit' : 'Next'}
 						</Button>
 					</div>
 				</div>

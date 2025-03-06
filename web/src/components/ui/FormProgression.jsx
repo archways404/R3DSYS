@@ -7,12 +7,12 @@ import {
 	TimelineSeparator,
 	TimelineTitle,
 } from '@/components/ui/timeline';
-import { Check, X, Minus } from 'lucide-react';
+import { Check, X } from 'lucide-react';
 
 export default function FormProgression({ steps, currentStep }) {
 	return (
 		<Timeline
-			defaultValue={1}
+			defaultValue={currentStep}
 			className="relative">
 			{steps.map((step, index) => (
 				<TimelineItem
@@ -31,17 +31,9 @@ export default function FormProgression({ steps, currentStep }) {
 								${
 									step.completed
 										? 'bg-green-500 text-white' // ✅ Green for completed
-										: step.id === currentStep + 1
-										? 'bg-yellow-500 text-white' // ➖ Yellow for current step
 										: 'bg-gray-500 text-white' // ❌ Gray for incomplete
 								}`}>
-							{step.completed ? (
-								<Check size={18} />
-							) : step.id === currentStep + 1 ? ( // FIXED: `+1` ensures correct step matching
-								<Minus size={18} />
-							) : (
-								<X size={18} />
-							)}
+							{step.completed ? <Check size={18} /> : <X size={18} />}
 						</TimelineIndicator>
 
 						<TimelineTitle className="ml-8">{step.title}</TimelineTitle>

@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 
-export default function SubmitComponent() {
+export default function SummaryComponent() {
 	return (
 		<div>
 			<p className="font-semibold">Step 4: Submit Bug Report</p>
