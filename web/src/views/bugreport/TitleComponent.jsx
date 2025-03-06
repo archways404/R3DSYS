@@ -1,16 +1,12 @@
-import { Textarea } from '@/components/ui/textarea';
+import InputCharlimit from '@/components/ui/InputCharlimit';
 
-export default function TitleComponent({ description, setDescription }) {
+export default function TitleComponent({ title, setTitle }) {
 	return (
 		<div className="space-y-4">
-			{/* Bug Description Input */}
-			<div>
-				<Textarea
-					placeholder="Clearly explain the issue..."
-					value={description}
-					onChange={(e) => setDescription(e.target.value)}
-				/>
-			</div>
+			<InputCharlimit
+				title={title}
+				setTitle={setTitle}
+			/>
 		</div>
 	);
 }

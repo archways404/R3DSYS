@@ -5,6 +5,7 @@ const jwt = require('@fastify/jwt');
 const csfr = require('@fastify/csrf-protection');
 const fastifyStatic = require('@fastify/static');
 const rateLimit = require('@fastify/rate-limit');
+const fastifyMultipart = require('@fastify/multipart'); // ✅ Import multipart plugin
 const metrics = require('fastify-metrics');
 const fs = require('fs');
 const path = require('path');
@@ -94,6 +95,8 @@ app.register(rateLimit, {
 	max: 1500000,
 	timeWindow: '1 minute',
 });
+
+app.register(fastifyMultipart); // ✅ Register Multipart Plugin
 
 // Register the Redis plugin for Fastify
 app.register(fastifyRedis, {

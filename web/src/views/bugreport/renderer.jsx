@@ -22,13 +22,36 @@ function BugreportRenderer() {
 		{ id: 6, title: 'Summary', completed: false },
 	]);
 
-	const [currentStep, setCurrentStep] = useState(0);
+	const [currentStep, setCurrentStep] = useState(1);
+	const [images, setImages] = useState([]); // ✅ Store images
+	const [title, setTitle] = useState('');
+	const [description, setDescription] = useState('');
+	const [reproduce, setReproduce] = useState('');
+	const [expected, setExpected] = useState('');
+
+	// Function to determine if the "Next" button should be disabled
+	const isNextDisabled = () => {
+		switch (currentStep) {
+			case 1:
+				return !title.trim(); // Title must not be empty
+			case 2:
+				return !description.trim(); // Description must not be empty
+			case 3:
+				return !reproduce.trim(); // Reproduction steps must not be empty
+			case 4:
+				return !expected.trim(); // Expected behavior must not be empty
+			case 5:
+				return images.length === 0; // At least one image is required
+			default:
+				return false;
+		}
+	};
 
 	// Function to mark the current step as completed and move to the next
 	const nextStep = () => {
-		if (currentStep < steps.length - 1) {
+		if (currentStep < steps.length && !isNextDisabled()) {
 			const updatedSteps = [...steps];
-			updatedSteps[currentStep].completed = true;
+			updatedSteps[currentStep - 1].completed = true;
 			setSteps(updatedSteps);
 			setCurrentStep(currentStep + 1);
 		}
@@ -36,9 +59,9 @@ function BugreportRenderer() {
 
 	// Function to move back a step
 	const prevStep = () => {
-		if (currentStep > 0) {
+		if (currentStep > 1) {
 			const updatedSteps = [...steps];
-			updatedSteps[currentStep - 1].completed = false;
+			updatedSteps[currentStep - 2].completed = false;
 			setSteps(updatedSteps);
 			setCurrentStep(currentStep - 1);
 		}
@@ -47,19 +70,111 @@ function BugreportRenderer() {
 	const renderStepComponent = () => {
 		switch (currentStep) {
 			case 1:
-				return <TitleComponent />;
+				return (
+					<TitleComponent
+						title={title}
+						setTitle={setTitle}
+					/>
+				);
 			case 2:
-				return <DescriptionComponent />;
+				return (
+					<DescriptionComponent
+						description={description}
+						setDescription={setDescription}
+					/>
+				);
 			case 3:
-				return <ReproduceComponent />;
+				return (
+					<ReproduceComponent
+						reproduce={reproduce}
+						setReproduce={setReproduce}
+					/>
+				);
 			case 4:
-				return <ExpectedBehaviorComponent />;
+				return (
+					<ExpectedBehaviorComponent
+						expected={expected}
+						setExpected={setExpected}
+					/>
+				);
 			case 5:
-				return <ScreenshotComponent />;
+				return (
+					<ScreenshotComponent
+						images={images}
+						setImages={setImages}
+					/>
+				);
 			case 6:
-				return <SummaryComponent />;
+				return (
+					<SummaryComponent
+						title={title}
+						description={description}
+						reproduce={reproduce}
+						expected={expected}
+						images={images}
+					/>
+				);
 			default:
-				return null;
+				return (
+					<TitleComponent
+						title={title}
+						setTitle={setTitle}
+					/>
+				);
+		}
+	};
+
+	// ✅ Submit form function (including uploaded images)
+	const handleSubmit = async () => {
+		try {
+			const formData = new FormData();
+
+			// ✅ Append text fields to FormData
+			formData.append('title', title);
+			formData.append('description', description);
+			formData.append('reproduce', reproduce);
+			formData.append('expected', expected);
+
+			// ✅ Append images (if any)
+			images.forEach((image, index) => {
+				formData.append(`screenshots`, image);
+			});
+
+			console.log('Submitting Bug Report:', {
+				title,
+				description,
+				reproduce,
+				expected,
+				images,
+			});
+
+			const response = await fetch(
+				import.meta.env.VITE_BASE_ADDR + '/submit-bug',
+				{
+					method: 'POST',
+					body: formData, // ✅ Sending formData
+				}
+			);
+
+			if (response.ok) {
+				const data = await response.json();
+				console.log(`Bug report submitted! Issue URL: ${data.issue_url}`);
+
+				// ✅ Open the GitHub issue in a new tab
+				window.open(data.issue_url, '_blank');
+
+				// ✅ Redirect to home page after 2 seconds (optional delay)
+				setTimeout(() => {
+					window.location.href = '/';
+				}, 1000);
+			} else {
+				const errorData = await response.json();
+				console.error('Error submitting bug:', errorData);
+				alert('Failed to submit bug report.');
+			}
+		} catch (error) {
+			console.error('Error:', error);
+			alert('An unexpected error occurred.');
 		}
 	};
 
@@ -83,15 +198,23 @@ function BugreportRenderer() {
 					<div className="mt-6 flex justify-between w-full">
 						<Button
 							onClick={prevStep}
-							disabled={currentStep === 0}
+							disabled={currentStep === 1}
 							variant="outline">
 							Previous
 						</Button>
-						<Button
-							onClick={nextStep}
-							disabled={currentStep === steps.length}>
-							{currentStep === steps.length ? 'Submit' : 'Next'}
-						</Button>
+						{currentStep === steps.length ? (
+							<Button
+								onClick={handleSubmit}
+								variant="primary">
+								Submit
+							</Button>
+						) : (
+							<Button
+								onClick={nextStep}
+								disabled={isNextDisabled()}>
+								Next
+							</Button>
+						)}
 					</div>
 				</div>
 			</div>

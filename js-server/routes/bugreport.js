@@ -1,3 +1,8 @@
+require('dotenv').config();
+const axios = require('axios');
+const fs = require('fs');
+const FormData = require('form-data');
+
 async function routes(fastify, options) {
 	fastify.addHook('onRequest', (request, reply, done) => {
 		done();
@@ -10,68 +15,66 @@ async function routes(fastify, options) {
 		done();
 	});
 
-	fastify.post('/test', async (request, reply) => {
-		const client = await fastify.pg.connect();
-
+	fastify.post('/submit-bug', async (request, reply) => {
 		try {
-			await client.query('BEGIN');
+			const parts = request.parts(); // ✅ Parse `multipart/form-data`
 
-			// Extract and verify token
-			const authToken = request.cookies.authToken;
-			if (!authToken) {
-				return reply.status(401).send({ error: 'Unauthorized' });
+			let bugData = {
+				title: '',
+				description: '',
+				reproduce: '',
+				expected: '',
+				images: [],
+			};
+
+			for await (const part of parts) {
+				if (part.type === 'file') {
+					// ✅ Store File Buffer
+					const fileBuffer = await part.toBuffer();
+					bugData.images.push({
+						filename: part.filename,
+						mimetype: part.mimetype,
+						buffer: fileBuffer,
+					});
+				} else {
+					// ✅ Store Form Fields (text)
+					bugData[part.fieldname] = part.value;
+				}
 			}
 
-			const decoded = fastify.jwt.verify(authToken);
-			if (!decoded || !decoded.uuid) {
-				return reply.status(403).send({ error: 'Forbidden' });
-			}
+			console.log('Received Bug Report:', bugData);
 
-			const { name, description } = request.body;
-			if (!name) {
-				return reply.status(400).send({ error: 'Group name is required' });
-			}
+			// ✅ Create GitHub Issue
+			const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+			const GITHUB_REPO_OWNER = process.env.GITHUB_REPO_OWNER;
+			const GITHUB_REPO_NAME = process.env.GITHUB_REPO_NAME;
 
-			console.log(`Creating new schedule group: ${name}`);
+			const issuePayload = {
+				title: bugData.title,
+				body: `### Description\n${bugData.description}\n\n### Steps to Reproduce\n${bugData.reproduce}\n\n### Expected Behavior\n${bugData.expected}\n`,
+			};
 
-			// Step 1: Insert new schedule group
-			const insertGroupQuery = `
-                INSERT INTO schedule_groups (name, description) 
-                VALUES ($1, $2) 
-                RETURNING group_id;
-            `;
-			const groupResult = await client.query(insertGroupQuery, [
-				name,
-				description,
-			]);
-			const groupId = groupResult.rows[0].group_id;
+			const githubResponse = await axios.post(
+				`https://api.github.com/repos/${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}/issues`,
+				issuePayload,
+				{
+					headers: {
+						Authorization: `token ${GITHUB_TOKEN}`,
+						Accept: 'application/vnd.github.v3+json',
+					},
+				}
+			);
 
-			console.log(`New schedule group created with ID: ${groupId}`);
+			const issueUrl = githubResponse.data.html_url;
+			console.log(`GitHub Issue Created: ${issueUrl}`);
 
-			// Step 2: Add current user to the new group
-			const insertUserGroupQuery = `
-                INSERT INTO account_schedule_groups (user_id, group_id)
-                VALUES ($1, $2);
-            `;
-			await client.query(insertUserGroupQuery, [decoded.uuid, groupId]);
-
-			console.log(`Added user ${decoded.uuid} to the new group ${groupId}`);
-
-			// Commit transaction
-			await client.query('COMMIT');
-
-			return reply.send({
-				message: 'Schedule group created successfully',
-				group_id: groupId,
+			reply.send({
+				message: 'Bug report submitted successfully!',
+				issue_url: issueUrl,
 			});
 		} catch (error) {
-			console.error('Error creating schedule group:', error.message);
-			await client.query('ROLLBACK');
-			return reply
-				.status(500)
-				.send({ error: 'Failed to create schedule group' });
-		} finally {
-			client.release();
+			console.error('Error processing bug report:', error);
+			reply.status(500).send({ error: 'Failed to submit bug report' });
 		}
 	});
 }
