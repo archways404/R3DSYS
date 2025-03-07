@@ -4,6 +4,7 @@ import { FaGithub } from 'react-icons/fa';
 import { MdOutlineEmail } from 'react-icons/md';
 import { BiDonateHeart } from 'react-icons/bi';
 import { IoNewspaperOutline } from 'react-icons/io5';
+import { FaBug } from 'react-icons/fa';
 
 const FooterSection = () => {
 	return (
@@ -42,6 +43,11 @@ const FooterSection = () => {
 							className="transition text-gray-400 hover:text-red-500">
 							<BiDonateHeart className="w-5 h-5" />
 						</a>
+						<Link
+							to="/bug-report"
+							className="transition text-gray-400 hover:text-red-500">
+							<FaBug className="w-5 h-5" />
+						</Link>
 					</div>
 				</div>
 
@@ -52,27 +58,22 @@ const FooterSection = () => {
 						<Link
 							to="/"
 							className="transition text-gray-400 hover:text-red-500">
-							Placeholder
+							About
 						</Link>
 						<Link
 							to="/"
 							className="transition text-gray-400 hover:text-red-500">
-							Placeholder
+							Contact
 						</Link>
 						<Link
 							to="/"
 							className="transition text-gray-400 hover:text-red-500">
-							Placeholder
+							Terms of Service
 						</Link>
 						<Link
 							to="/"
 							className="transition text-gray-400 hover:text-red-500">
-							Placeholder
-						</Link>
-						<Link
-							to="/"
-							className="transition text-gray-400 hover:text-red-500">
-							Placeholder
+							Privacy
 						</Link>
 					</nav>
 				</div>

@@ -5,6 +5,7 @@ const jwt = require('@fastify/jwt');
 const csfr = require('@fastify/csrf-protection');
 const fastifyStatic = require('@fastify/static');
 const rateLimit = require('@fastify/rate-limit');
+const fastifyMultipart = require('@fastify/multipart');
 const metrics = require('fastify-metrics');
 const fs = require('fs');
 const path = require('path');
@@ -95,6 +96,8 @@ app.register(rateLimit, {
 	timeWindow: '1 minute',
 });
 
+app.register(fastifyMultipart); // ✅ Register Multipart Plugin
+
 // Register the Redis plugin for Fastify
 app.register(fastifyRedis, {
 	host: '127.0.0.1', // Change to your Dragonfly host if needed
@@ -130,6 +133,8 @@ app.register(require('./routes/table_data'));
 app.register(require('./routes/webhook'));
 
 app.register(require('./routes/version'));
+
+app.register(require('./routes/bugreport'));
 
 app.register(require('./routes/ical'), {
 	hook: 'preHandler',
@@ -222,6 +227,9 @@ app.addHook('onReady', async () => {
 	try {
 		const res = await client.query('SELECT NOW()');
 		app.log.info(`PostgreSQL connected: ${res.rows[0].now}`);
+
+		await app.redis.del('version:data');
+		console.log(`🗑 Cleared cache for version `);
 
 		// Start listening for changes
 		await client.query('LISTEN status_channel');

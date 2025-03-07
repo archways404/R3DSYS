@@ -4,7 +4,21 @@ import { ThemeContext } from '../context/ThemeContext';
 import { AuthContext } from '../context/AuthContext';
 
 import { motion } from 'framer-motion';
-import { Home, Settings, Bell, User } from 'lucide-react';
+import {
+	Home,
+	Settings,
+	Bell,
+	User,
+	Info,
+	Send,
+	Handshake,
+	Cookie,
+	GlobeLock,
+	Construction,
+	ServerCrash,
+	ServerOff,
+	Rss,
+} from 'lucide-react';
 
 const Navbar = () => {
 	const { theme } = useContext(ThemeContext);
@@ -21,31 +35,39 @@ const Navbar = () => {
 			label: 'Home',
 			to: '/',
 			gradient:
-				'radial-gradient(circle, rgba(59,130,246,0.15) 0%, rgba(37,99,235,0.06) 50%, rgba(29,78,216,0) 100%)',
+				'radial-gradient(circle, rgba(59,130,246,0.20) 0%, rgba(37,99,235,0.06) 50%, rgba(29,78,216,0) 100%)',
 			activeColor: 'text-blue-500',
 		},
 		{
-			icon: <Bell className="h-5 w-5" />,
-			label: 'Notifications',
-			to: '/notifications',
+			icon: <Info className="h-5 w-5" />,
+			label: 'About',
+			to: '/about',
 			gradient:
-				'radial-gradient(circle, rgba(249,115,22,0.15) 0%, rgba(234,88,12,0.06) 50%, rgba(194,65,12,0) 100%)',
+				'radial-gradient(circle, rgba(249,115,22,0.20) 0%, rgba(234,88,12,0.06) 50%, rgba(194,65,12,0) 100%)',
 			activeColor: 'text-orange-500',
 		},
 		{
-			icon: <Settings className="h-5 w-5" />,
-			label: 'Settings',
-			to: '/settings',
+			icon: <Send className="h-5 w-5" />,
+			label: 'Contact',
+			to: '/contact',
 			gradient:
-				'radial-gradient(circle, rgba(34,197,94,0.15) 0%, rgba(22,163,74,0.06) 50%, rgba(21,128,61,0) 100%)',
+				'radial-gradient(circle, rgba(34,197,94,0.20) 0%, rgba(22,163,74,0.06) 50%, rgba(21,128,61,0) 100%)',
 			activeColor: 'text-green-500',
 		},
 		{
-			icon: <User className="h-5 w-5" />,
-			label: 'Profile',
-			to: '/profile',
+			icon: <Handshake className="h-5 w-5" />,
+			label: 'ToS',
+			to: '/ToS',
 			gradient:
-				'radial-gradient(circle, rgba(239,68,68,0.15) 0%, rgba(220,38,38,0.06) 50%, rgba(185,28,28,0) 100%)',
+				'radial-gradient(circle, rgba(239,68,68,0.20) 0%, rgba(220,38,38,0.06) 50%, rgba(185,28,28,0) 100%)',
+			activeColor: 'text-red-500',
+		},
+		{
+			icon: <GlobeLock className="h-5 w-5" />,
+			label: 'Privacy',
+			to: '/privacy',
+			gradient:
+				'radial-gradient(circle, rgba(239,68,68,0.20) 0%, rgba(220,38,38,0.06) 50%, rgba(185,28,28,0) 100%)',
 			activeColor: 'text-red-500',
 		},
 	];
