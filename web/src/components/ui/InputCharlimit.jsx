@@ -28,6 +28,7 @@ export default function InputCharlimit({ title, setTitle, maxLength = 72 }) {
 					maxLength={maxLength}
 					onChange={handleChange} // ✅ Updates both internal & external state
 					aria-describedby={`${id}-description`}
+					placeholder="Enter a title for the bug report..."
 				/>
 				<div
 					id={`${id}-description`}
