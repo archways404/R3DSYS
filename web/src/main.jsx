@@ -53,6 +53,14 @@ import GroupRenderer from './views/groups/renderer';
 
 import BugreportRenderer from './views/bugreport/renderer';
 
+import ToSRenderer from './views/ToS/renderer';
+
+import PrivacyRenderer from './views/privacy/renderer';
+
+import AboutRenderer from './views/about/renderer';
+
+import ContactRenderer from './views/contact/renderer';
+
 import './global.css';
 
 createRoot(document.getElementById('root')).render(
@@ -74,6 +82,22 @@ createRoot(document.getElementById('root')).render(
 								<Route
 									path="/offline"
 									element={<OfflineRenderer />}
+								/>
+								<Route
+									path="/ToS"
+									element={<ToSRenderer />}
+								/>
+								<Route
+									path="/Privacy"
+									element={<PrivacyRenderer />}
+								/>
+								<Route
+									path="/About"
+									element={<AboutRenderer />}
+								/>
+								<Route
+									path="/Contact"
+									element={<ContactRenderer />}
 								/>
 								<Route
 									path="/login"
