@@ -131,15 +131,17 @@ async function routes(fastify, options) {
 		async (request, reply) => {
 			const { email, password, deviceId } = request.body;
 			const ip = request.ip;
+
 			if (!deviceId) {
 				return reply.status(400).send({ message: 'Device ID is required' });
 			}
 
 			const client = await fastify.pg.connect();
 			fetchDataStart(request);
+
 			try {
 				// 🔹 Call the login function
-				const userData = await login(
+				const loginResult = await login(
 					fastify,
 					client,
 					email,
@@ -147,9 +149,20 @@ async function routes(fastify, options) {
 					ip,
 					deviceId
 				);
-				console.log('userData', userData);
+
+				// ✅ If login fails, return the structured error response
+				if (loginResult.error) {
+					return reply.status(loginResult.status).send({
+						message: loginResult.error,
+						unlock_time: loginResult.unlock_time || null,
+					});
+				}
+
 				// 🔹 Generate JWT Token
-				const authToken = fastify.jwt.sign(userData, { expiresIn: '15m' });
+				const authToken = fastify.jwt.sign(loginResult.user, {
+					expiresIn: '15m',
+				});
+
 				// 🔹 Set authToken in Cookie
 				reply.setCookie('authToken', authToken, {
 					httpOnly: true,
@@ -157,17 +170,16 @@ async function routes(fastify, options) {
 					secure: true,
 					path: '/',
 				});
+
 				fetchDataEnd(request);
 				return reply.send({
 					message: 'Login successful',
-					user: userData, // ✅ Sending user profile data
+					user: loginResult.user,
 				});
 			} catch (err) {
 				console.error('Login Error:', err);
 				fetchDataEnd(request);
-				return reply
-					.status(500)
-					.send({ message: err.message || 'Internal Server Error' });
+				return reply.status(500).send({ message: 'Internal Server Error' });
 			} finally {
 				client.release();
 			}

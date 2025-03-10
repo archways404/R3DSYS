@@ -1,4 +1,5 @@
 const argon2 = require('argon2');
+const { createLog } = require('./log.js');
 
 /*
 async function login(client, email, password, ip, deviceid) {
@@ -316,10 +317,25 @@ async function login(fastify, client, email, password, ip, deviceId) {
 			);
 
 			if (userResult.rows.length === 0) {
-				throw new Error('Account with email does not exist');
+				// 🔹 Log failed login attempt
+				createLog({
+					type: 'auth',
+					user_id: null,
+					ip_address: ip,
+					fingerprint: deviceId,
+					success: false,
+					error_message: 'Email does not exist',
+				});
+
+				return { error: 'Invalid email or password', status: 400 };
 			}
 
 			user = userResult.rows[0];
+
+			if (!user.user_id) {
+				console.error('❌ Error: user_id is undefined!');
+				return { error: 'Invalid user ID', status: 400 };
+			}
 
 			// Ensure cache for login details
 			await fastify.redis.setex(
@@ -333,20 +349,32 @@ async function login(fastify, client, email, password, ip, deviceId) {
 		}
 
 		// 🔹 Step 2: Check if account is locked
+		if (user.locked && user.unlock_time && user.unlock_time > new Date()) {
+			// 🔹 Log failed login attempt
+			createLog({
+				type: 'auth',
+				user_id: user.user_id,
+				ip_address: ip,
+				fingerprint: deviceId,
+				success: false,
+				error_message: 'Account is locked',
+			});
+
+			return {
+				error: `Account is locked until ${user.unlock_time.toISOString()}`,
+				status: 403,
+				unlock_time: user.unlock_time.toISOString(),
+			};
+		}
+
+		// If lockout expired, reset it
 		if (user.locked) {
-			if (user.unlock_time && user.unlock_time > new Date()) {
-				throw new Error(
-					`Account is locked until ${user.unlock_time.toISOString()}`
-				);
-			} else {
-				// Unlock account if lockout time has passed
-				await client.query(
-					`UPDATE account_lockout 
-                     SET locked = FALSE, failed_attempts = 0, unlock_time = NULL 
-                     WHERE user_id = $1`,
-					[user.user_id]
-				);
-			}
+			await client.query(
+				`UPDATE account_lockout 
+                 SET locked = FALSE, failed_attempts = 0, unlock_time = NULL 
+                 WHERE user_id = $1`,
+				[user.user_id]
+			);
 		}
 
 		// 🔹 Step 3: Verify Password
@@ -354,7 +382,7 @@ async function login(fastify, client, email, password, ip, deviceId) {
 		if (!isPasswordValid) {
 			// 🚨 Failed Login - Update Lockout Table
 			await fastify.redis.del(loginCacheKey);
-			const failedAttempts = user.failed_attempts + 1;
+			const failedAttempts = Number(user.failed_attempts || 0) + 1;
 
 			// Lock account after 5 failed attempts
 			if (failedAttempts >= 5) {
@@ -366,9 +394,21 @@ async function login(fastify, client, email, password, ip, deviceId) {
 					[user.user_id, failedAttempts, unlockTime, ip]
 				);
 
-				throw new Error(
-					`Account locked due to too many failed attempts. Unlock at ${unlockTime.toISOString()}`
-				);
+				// 🔹 Log failed login attempt
+				createLog({
+					type: 'auth',
+					user_id: user.user_id,
+					ip_address: ip,
+					fingerprint: deviceId,
+					success: false,
+					error_message: 'Account locked due to too many failed attempts',
+				});
+
+				return {
+					error: `Account locked due to too many failed attempts. Unlock at ${unlockTime.toISOString()}`,
+					status: 403,
+					unlock_time: unlockTime.toISOString(),
+				};
 			}
 
 			// Increment failed attempts without locking
@@ -379,7 +419,17 @@ async function login(fastify, client, email, password, ip, deviceId) {
 				[user.user_id, failedAttempts, ip]
 			);
 
-			throw new Error('Invalid password');
+			// 🔹 Log failed login attempt
+			createLog({
+				type: 'auth',
+				user_id: user.user_id,
+				ip_address: ip,
+				fingerprint: deviceId,
+				success: false,
+				error_message: 'Invalid password',
+			});
+
+			return { error: 'Invalid email or password', status: 401 };
 		}
 
 		// 🔹 Step 4: Reset lockout on successful login
@@ -415,10 +465,20 @@ async function login(fastify, client, email, password, ip, deviceId) {
 			userInfo = JSON.parse(userInfo);
 		}
 
-		return userInfo;
+		// 🔹 Log successful login attempt
+		createLog({
+			type: 'auth',
+			user_id: user.user_id,
+			ip_address: ip,
+			fingerprint: deviceId,
+			success: true,
+			error_message: null,
+		});
+
+		return { user: userInfo, status: 200 };
 	} catch (error) {
 		console.error('Login failed:', error.message);
-		throw error;
+		return { error: 'Internal Server Error', status: 500 };
 	}
 }
 

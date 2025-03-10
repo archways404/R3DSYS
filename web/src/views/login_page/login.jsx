@@ -48,11 +48,23 @@ function Login() {
 				body: JSON.stringify({ email, password, deviceId }),
 			});
 
-			if (!response.ok) throw new Error('Invalid email or password');
+			const data = await response.json();
 
-			const userData = await response.json(); // ✅ Get user data from login response
-			setUser(userData.user); // ✅ Set user immediately
-			setJustLoggedIn(true); // ✅ Prevent rechecking auth on /welcome
+			if (response.status === 403 && data.unlock_time) {
+				setError(
+					`Your account is locked until ${new Date(
+						data.unlock_time
+					).toLocaleString()}`
+				);
+				setRenderLoading(false);
+				return;
+			}
+
+			if (!response.ok)
+				throw new Error(data.message || 'Invalid email or password');
+
+			setUser(data.user);
+			setJustLoggedIn(true);
 
 			navigate('/welcome', { replace: true });
 		} catch (error) {
