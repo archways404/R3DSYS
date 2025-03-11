@@ -76,17 +76,22 @@ const ServerInfo = () => {
 
 	// ✅ Prepare Request Charts (Reduce chart size)
 	const routeNames = Object.keys(requestStats);
-	const totalRequests = routeNames.map(
+	// ✅ Prepare Request Charts (Filter & Round)
+	const filteredRoutes = Object.keys(requestStats).filter(
+		(route) => !['/system-stats', '/request-durations'].includes(route)
+	);
+
+	const totalRequests = filteredRoutes.map(
 		(route) => requestStats[route].totalRequests
 	);
-	const avgDurations = routeNames.map(
-		(route) => requestStats[route].avgDuration
+	const avgDurations = filteredRoutes.map((route) =>
+		Math.round(requestStats[route].avgDuration)
 	);
-	const highestDurations = routeNames.map(
-		(route) => requestStats[route].highestDuration
+	const highestDurations = filteredRoutes.map((route) =>
+		Math.round(requestStats[route].highestDuration)
 	);
-	const lowestDurations = routeNames.map(
-		(route) => requestStats[route].lowestDuration
+	const lowestDurations = filteredRoutes.map((route) =>
+		Math.round(requestStats[route].lowestDuration)
 	);
 
 	const chartOptions = {

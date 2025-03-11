@@ -185,20 +185,27 @@ app.addHook('onResponse', (request, reply, done) => {
 		return done(); // Skip tracking OPTIONS requests
 	}
 
+	// Exclude system stats & request duration routes from metrics
+	const excludedRoutes = ['/system-stats', '/request-durations'];
+	if (excludedRoutes.includes(request.raw.url)) {
+		return done();
+	}
+
 	if (!request.startTime) {
 		console.error(`❌ Missing start time for ${request.raw.url}`);
 		return done();
 	}
 
-	const diff = process.hrtime(request.startTime); // Get time difference
-	const durationInMs = (diff[0] * 1e9 + diff[1]) / 1e6; // Convert to milliseconds
-	const durationInSeconds = durationInMs / 1000; // Convert to seconds
+	const diff = process.hrtime(request.startTime);
+	let durationInMs = Math.round((diff[0] * 1e9 + diff[1]) / 1e6); // Convert to ms & round
 
 	// ✅ Ensure duration is not NaN
 	if (isNaN(durationInMs)) {
 		console.error(`❌ Duration NaN for ${request.raw.url}`);
 		return done();
 	}
+
+	const durationInSeconds = durationInMs / 1000;
 
 	requestDurationHistogram
 		.labels(request.method, request.raw.url, reply.statusCode)
@@ -212,7 +219,7 @@ app.addHook('onResponse', (request, reply, done) => {
 		method: request.method,
 		url: request.raw.url,
 		statusCode: reply.statusCode,
-		duration: durationInMs.toFixed(2),
+		duration: durationInMs, // ✅ Now rounded to whole numbers
 		time: new Date().toISOString(),
 	});
 
