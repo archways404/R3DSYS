@@ -87,7 +87,7 @@ async function routes(fastify, options) {
 				.status(500)
 				.send({ error: 'Failed to assign schedule group' });
 		}
-	});
+	});	
 
 	fastify.delete('/removeScheduleGroup', async (request, reply) => {
 		try {
