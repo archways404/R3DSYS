@@ -181,10 +181,6 @@ app.addHook('onRequest', (request, reply, done) => {
 });
 
 app.addHook('onResponse', (request, reply, done) => {
-	if (request.method === 'OPTIONS') {
-		return done(); // Skip tracking OPTIONS requests
-	}
-
 	// Exclude system stats & request duration routes from metrics
 	const excludedRoutes = ['/system-stats', '/request-durations'];
 	if (excludedRoutes.includes(request.raw.url)) {
