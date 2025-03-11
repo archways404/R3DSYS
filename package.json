@@ -3,8 +3,10 @@
 		"build": "cd web && pnpm install && cross-env NODE_ENV=production pnpm run build",
 		"dev:web": "cd web && pnpm install && cross-env NODE_ENV=development pnpm run dev",
 		"dev:js": "cd js-server && pnpm install && cross-env NODE_ENV=development pnpm run dev",
+		"dev:ext": "cd js-server && pnpm install && cross-env NODE_ENV=development pnpm run ext-dev",
 		"dev": "concurrently \"pnpm run dev:web\" \"pnpm run dev:js\"",
 		"prod": "cd js-server && cross-env NODE_ENV=production node main.js",
+		"ext": "pnpm run dev:ext",
 		"controller": "cd js-server && pnpm install && cross-env NODE_ENV=development pnpm run prod"
 	},
 	"devDependencies": {

@@ -2,16 +2,7 @@ import dgram from 'dgram';
 import pg from 'pg';
 import dotenv from 'dotenv';
 
-/*
-require('dotenv').config({
-	path:
-		process.env.NODE_ENV === 'production'
-			? '.env.production'
-			: '.env.development',
-});
-*/
-
-const { Pool } = pg; // ✅ Fix for 'pg' import
+const { Pool } = pg;
 
 dotenv.config({
 	path: '.env.development',
@@ -25,125 +16,140 @@ const pool = new Pool({
 
 const server = dgram.createSocket('udp4');
 
-// Main queues
-const queue1 = [];
-const queue2 = [];
+const authLogsQueues = [[], []];
+const generalLogsQueues = [[], []];
+let activeAuthQueueIndex = 0;
+let activeGeneralQueueIndex = 0;
+//const AUTH_SWITCH_INTERVAL = 300000; // 5 minutes
+const AUTH_SWITCH_INTERVAL = 60000; // 1 minute ( testing )
+const GENERAL_SWITCH_INTERVAL = 60000; // 1 minute
 
-// Waiting queues
-const wq1 = [];
-const wq2 = [];
-
-// Lock states
-let lock_q1 = false;
-let lock_q2 = false;
-
-// Track last insert time
-let lastInsertTime_q1 = Date.now();
-let lastInsertTime_q2 = Date.now();
-
-const MAX_QUEUE_SIZE = 10; // Maximum before switching to waiting queue
-const CHECK_INTERVAL = 60000; // Check queues every 1 minute
-const IDLE_INSERT_INTERVAL = 300000; // 5 minutes without new data
-
-// Function to add logs to the correct queue
-function addToQueue(logData) {
-	const { Process, ...log } = logData;
-	const currentTime = Date.now();
-
-	if (Process === 'q1') {
-		if (!lock_q1 && queue1.length < MAX_QUEUE_SIZE) {
-			queue1.push(log);
-			lastInsertTime_q1 = currentTime; // Update last insert time
-			console.log(`📥 Added to Queue1 (${queue1.length} logs)`);
-		} else {
-			wq1.push(log);
-			console.log(
-				`📥 Queue1 locked! Added to Waiting Queue1 (${wq1.length} logs)`
-			);
-		}
-	} else if (Process === 'q2') {
-		if (!lock_q2 && queue2.length < MAX_QUEUE_SIZE) {
-			queue2.push(log);
-			lastInsertTime_q2 = currentTime; // Update last insert time
-			console.log(`📥 Added to Queue2 (${queue2.length} logs)`);
-		} else {
-			wq2.push(log);
-			console.log(
-				`📥 Queue2 locked! Added to Waiting Queue2 (${wq2.length} logs)`
-			);
-		}
+function addToQueue(logData, queueType) {
+	let queues, activeQueueIndex;
+	if (queueType === 'auth') {
+		queues = authLogsQueues;
+		activeQueueIndex = activeAuthQueueIndex;
+	} else if (queueType === 'general') {
+		queues = generalLogsQueues;
+		activeQueueIndex = activeGeneralQueueIndex;
 	} else {
-		console.warn(`⚠️ Unknown Process Type: ${Process}`);
+		console.error('❌ Invalid queue type:', queueType);
+		return;
 	}
+
+	queues[activeQueueIndex].push(logData);
+	console.log(
+		`📥 Added log to ${queueType} Queue ${activeQueueIndex} (${queues[activeQueueIndex].length} logs)`
+	);
 }
 
-// Function to flush logs from a queue to PostgreSQL
-async function flushQueue(queue, tableName, lockVar, setUnlockCallback) {
+async function flushQueue(queueIndex, queues, tableName) {
+	const queue = queues[queueIndex];
 	if (queue.length === 0) return;
 
 	try {
 		const client = await pool.connect();
-		client.release();
-		console.log(`✅ Inserted ${queue.length} logs into ${tableName}`);
+		console.log(`✅ Inserting ${queue.length} logs into ${tableName}`);
 
-		// Unlock the queue after inserting
-		setUnlockCallback(false);
-		queue.length = 0; // Clear the queue
+		// Generate placeholders dynamically
+		const columns =
+			tableName === 'auth_logs'
+				? ['user_id', 'ip_address', 'fingerprint', 'success', 'error_message']
+				: [
+						'user_id',
+						'action_type',
+						'success',
+						'error_message',
+						'creation_method',
+				  ];
+
+		const values = queue.map((log) =>
+			tableName === 'auth_logs'
+				? [
+						log.user_id,
+						log.ip_address,
+						log.fingerprint,
+						log.success,
+						log.error_message,
+				  ]
+				: [
+						log.user_id,
+						log.action_type,
+						log.success,
+						log.error_message,
+						log.creation_method,
+				  ]
+		);
+
+		// Create parameterized placeholders
+		const paramPlaceholders = values
+			.map(
+				(_, rowIndex) =>
+					`(${columns
+						.map(
+							(_, colIndex) => `$${rowIndex * columns.length + colIndex + 1}`
+						)
+						.join(', ')})`
+			)
+			.join(', ');
+
+		// Flatten values array for pg.query
+		const flattenedValues = values.flat();
+
+		// Execute batch insert query
+		await client.query(
+			`INSERT INTO ${tableName} (${columns.join(
+				', '
+			)}) VALUES ${paramPlaceholders}`,
+			flattenedValues
+		);
+
+		client.release();
+		queue.length = 0; // Clear queue after successful insert
 	} catch (error) {
 		console.error(`❌ Error inserting logs into ${tableName}:`, error);
 	}
 }
 
-// UDP message listener
-server.on('message', (msg, rinfo) => {
+setInterval(() => {
+	const oldAuthQueueIndex = activeAuthQueueIndex;
+	activeAuthQueueIndex = (activeAuthQueueIndex + 1) % 2;
+	console.log(`🔄 Switching active authLogs queue to ${activeAuthQueueIndex}`);
+	flushQueue(oldAuthQueueIndex, authLogsQueues, 'auth_logs');
+}, AUTH_SWITCH_INTERVAL);
+
+setInterval(() => {
+	const oldGeneralQueueIndex = activeGeneralQueueIndex;
+	activeGeneralQueueIndex = (activeGeneralQueueIndex + 1) % 2;
+	console.log(
+		`🔄 Switching active generalLogs queue to ${activeGeneralQueueIndex}`
+	);
+	flushQueue(oldGeneralQueueIndex, generalLogsQueues, 'general_logs');
+}, GENERAL_SWITCH_INTERVAL);
+
+server.on('message', (msg) => {
 	try {
 		const logData = JSON.parse(msg.toString());
-		addToQueue(logData);
+		if (logData.type === 'auth') {
+			addToQueue(logData, 'auth');
+		} else {
+			addToQueue(logData, 'general');
+		}
 	} catch (error) {
 		console.error('❌ Invalid log message:', error);
 	}
 });
 
-// Periodic queue checking
-setInterval(() => {
-	const currentTime = Date.now();
-
-	// Check Queue1: If full, lock and flush
-	if (queue1.length >= MAX_QUEUE_SIZE) {
-		lock_q1 = true;
-		flushQueue(queue1, 'auth_logs_q1', lock_q1, (status) => (lock_q1 = status));
-	} else if (
-		!lock_q1 &&
-		currentTime - lastInsertTime_q1 >= IDLE_INSERT_INTERVAL
-	) {
-		// If idle for 5 minutes, flush logs
-		flushQueue(queue1, 'auth_logs_q1', lock_q1, (status) => (lock_q1 = status));
-	}
-
-	// Check Queue2: If full, lock and flush
-	if (queue2.length >= MAX_QUEUE_SIZE) {
-		lock_q2 = true;
-		flushQueue(queue2, 'auth_logs_q2', lock_q2, (status) => (lock_q2 = status));
-	} else if (
-		!lock_q2 &&
-		currentTime - lastInsertTime_q2 >= IDLE_INSERT_INTERVAL
-	) {
-		flushQueue(queue2, 'auth_logs_q2', lock_q2, (status) => (lock_q2 = status));
-	}
-
-	// Move waiting queue logs into main queues if space is available
-	while (queue1.length < MAX_QUEUE_SIZE && wq1.length > 0) {
-		queue1.push(wq1.shift());
-		console.log(`🔄 Moved log from Waiting Queue1 to Queue1`);
-	}
-
-	while (queue2.length < MAX_QUEUE_SIZE && wq2.length > 0) {
-		queue2.push(wq2.shift());
-		console.log(`🔄 Moved log from Waiting Queue2 to Queue2`);
-	}
-}, CHECK_INTERVAL);
-
-// Start the UDP server
 server.bind(3001, () => {
 	console.log('🚀 UDP Log Server listening on port 3001');
 });
+
+
+/* USED IN PROD
+require('dotenv').config({
+	path:
+		process.env.NODE_ENV === 'production'
+			? '.env.production'
+			: '.env.development',
+});
+*/

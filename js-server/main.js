@@ -6,12 +6,13 @@ const csfr = require('@fastify/csrf-protection');
 const fastifyStatic = require('@fastify/static');
 const rateLimit = require('@fastify/rate-limit');
 const fastifyMultipart = require('@fastify/multipart');
+const promClient = require('prom-client');
 const metrics = require('fastify-metrics');
 const fs = require('fs');
 const path = require('path');
+const os = require('os'); // Import OS module for system stats
 
 const fastifyRedis = require('@fastify/redis');
-const Redis = require('ioredis');
 
 const { getAffectedUsers } = require('./functions/ical-creation');
 const { getActiveShiftsForUser } = require('./functions/ical-creation');
@@ -161,50 +162,162 @@ app.decorate('verifyJWT', async function (request, reply) {
 	}
 });
 
-app.register(metrics, {
-	endpoint: '/metrics',
-	blacklist: ['/healthcheck', '/favicon.ico'],
-	metrics: {
-		gauge: { enabled: true },
-		counter: { enabled: true },
-		histogram: { enabled: true },
-		timing: { enabled: true },
-	},
+// ✅ Register Prometheus Metrics for Request Duration
+const requestDurationHistogram = new promClient.Histogram({
+	name: 'http_request_duration_seconds',
+	help: 'Duration of HTTP requests in seconds',
+	labelNames: ['method', 'route', 'status_code'],
+	buckets: [0.1, 0.5, 1, 2, 5, 10], // Buckets for request durations
 });
 
-/* REQUEST DURATIONS
+// ✅ Keep a Limited Array of Request Durations
 const requestDurations = [];
+const MAX_DURATION_ENTRIES = 1000;
 
 // Middleware to track request duration
 app.addHook('onRequest', (request, reply, done) => {
-	request.startTime = process.hrtime(); // Capture the start time
+	request.startTime = process.hrtime(); // Capture start time
 	done();
 });
 
 app.addHook('onResponse', (request, reply, done) => {
-	const diff = process.hrtime(request.startTime); // Capture the end time
-	const durationInMs = (diff[0] * 1e9 + diff[1]) / 1e6; // Convert to milliseconds
+	if (request.method === 'OPTIONS') {
+		return done(); // Skip tracking OPTIONS requests
+	}
 
-	// Store the duration along with request details
+	const diff = process.hrtime(request.startTime);
+	const durationInMs = (diff[0] * 1e9 + diff[1]) / 1e6;
+	const durationInSeconds = durationInMs / 1000;
+
+	requestDurationHistogram
+		.labels(request.method, request.raw.url, reply.statusCode)
+		.observe(durationInSeconds);
+
+	if (requestDurations.length >= MAX_DURATION_ENTRIES) {
+		requestDurations.shift();
+	}
+
 	requestDurations.push({
 		method: request.method,
 		url: request.raw.url,
 		statusCode: reply.statusCode,
-		duration: durationInMs.toFixed(2) + 'ms',
+		duration: durationInMs.toFixed(2),
 		time: new Date().toISOString(),
 	});
 
-	// Log the request details for debugging
 	console.log(`Request to ${request.raw.url} took ${durationInMs} ms`);
-
 	done();
 });
 
-// Serve request duration data
+// ✅ Serve Request Duration Data
 app.get('/request-durations', (request, reply) => {
-	reply.send(requestDurations);
+	const aggregatedDurations = {};
+
+	// Aggregate durations per route
+	requestDurations.forEach((entry) => {
+		const key = `${entry.method} ${entry.url}`;
+		if (!aggregatedDurations[key]) {
+			aggregatedDurations[key] = {
+				totalRequests: 0,
+				totalDuration: 0,
+				highestDuration: 0,
+				lowestDuration: Infinity,
+			};
+		}
+
+		aggregatedDurations[key].totalRequests += 1;
+		aggregatedDurations[key].totalDuration += parseFloat(entry.duration);
+		aggregatedDurations[key].highestDuration = Math.max(
+			aggregatedDurations[key].highestDuration,
+			parseFloat(entry.duration)
+		);
+		aggregatedDurations[key].lowestDuration = Math.min(
+			aggregatedDurations[key].lowestDuration,
+			parseFloat(entry.duration)
+		);
+	});
+
+	// Compute averages
+	Object.keys(aggregatedDurations).forEach((key) => {
+		aggregatedDurations[key].avgDuration =
+			aggregatedDurations[key].totalDuration /
+			aggregatedDurations[key].totalRequests;
+	});
+
+	reply.send(aggregatedDurations);
 });
-*/
+
+// ✅ Serve Metrics in Prometheus Format
+app.get('/metrics', async (request, reply) => {
+	try {
+		const metricsData = await promClient.register.metrics();
+		reply.type('text/plain').send(metricsData);
+	} catch (error) {
+		reply.code(500).send({ error: 'Failed to fetch metrics' });
+	}
+});
+
+const getCpuUsage = () => {
+	return new Promise((resolve) => {
+		const startMeasure = os.cpus();
+
+		setTimeout(() => {
+			const endMeasure = os.cpus();
+			let idleDiff = 0;
+			let totalDiff = 0;
+
+			for (let i = 0; i < startMeasure.length; i++) {
+				const startCpu = startMeasure[i].times;
+				const endCpu = endMeasure[i].times;
+
+				const idle = endCpu.idle - startCpu.idle;
+				const total =
+					endCpu.user -
+					startCpu.user +
+					(endCpu.nice - startCpu.nice) +
+					(endCpu.sys - startCpu.sys) +
+					(endCpu.irq - startCpu.irq) +
+					idle;
+
+				idleDiff += idle;
+				totalDiff += total;
+			}
+
+			const cpuUsage = 100 - (idleDiff / totalDiff) * 100;
+			resolve(cpuUsage.toFixed(2)); // Return CPU usage as a percentage
+		}, 500); // Measure CPU usage over 500ms for accuracy
+	});
+};
+
+app.get('/system-stats', async (request, reply) => {
+	try {
+		const uptime = process.uptime(); // Get uptime in seconds
+
+		// ✅ Memory Usage Calculation
+		const totalMemory = os.totalmem();
+		const freeMemory = os.freemem();
+		const usedMemory = totalMemory - freeMemory;
+		const memoryUsage = (usedMemory / totalMemory) * 100;
+
+		// ✅ Accurate CPU Usage
+		const cpuUsage = await getCpuUsage();
+
+		reply.send({
+			uptime,
+			totalMemory: (totalMemory / (1024 * 1024)).toFixed(2),
+			freeMemory: (freeMemory / (1024 * 1024)).toFixed(2),
+			usedMemory: (usedMemory / (1024 * 1024)).toFixed(2),
+			memoryUsage: memoryUsage.toFixed(2),
+			cpuUsage,
+		});
+	} catch (error) {
+		reply.code(500).send({ error: 'Failed to fetch system stats' });
+	}
+});
+
+
+
+
 
 app.listen({ port: PORT, host: HOST }, async function (err, address) {
 	if (err) {

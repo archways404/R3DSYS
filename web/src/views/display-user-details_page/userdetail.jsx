@@ -1,4 +1,22 @@
 import React, { useEffect, useState } from 'react';
+import {
+	useReactTable,
+	getCoreRowModel,
+	getPaginationRowModel,
+	getSortedRowModel,
+	getFilteredRowModel,
+	flexRender,
+} from '@tanstack/react-table';
+import {
+	Table,
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
+} from '@/components/ui/table';
+import { Input } from '@/components/ui/input';
+import { ArrowUp, ArrowDown } from 'lucide-react'; // Sorting icons
 import { Button } from '@/components/ui/button';
 import {
 	EnvelopeIcon,
@@ -19,6 +37,10 @@ const UserDetail = () => {
 	const [availableGroups, setAvailableGroups] = useState([]);
 	const [selectedGroup, setSelectedGroup] = useState('');
 	const [role, setRole] = useState('');
+	const [authLogs, setAuthLogs] = useState([]);
+	const [loadingLogs, setLoadingLogs] = useState(true);
+	const [errorLogs, setErrorLogs] = useState(null);
+	const [globalFilter, setGlobalFilter] = useState('');
 	const { toast } = useToast();
 
 	useEffect(() => {
@@ -74,6 +96,26 @@ const UserDetail = () => {
 			fetchGroups();
 		}
 	}, [user, toast]);
+
+	useEffect(() => {
+		const fetchAuthLogs = async () => {
+			try {
+				const response = await fetch(
+					`${import.meta.env.VITE_BASE_ADDR}/get-auth-logs?uuid=${uuid}`
+				);
+				if (!response.ok) {
+					throw new Error('Failed to fetch authentication logs');
+				}
+				const data = await response.json();
+				setAuthLogs(data);
+			} catch (err) {
+				setErrorLogs(err.message);
+			} finally {
+				setLoadingLogs(false);
+			}
+		};
+		fetchAuthLogs();
+	}, [uuid]);
 
 	const handleRoleChange = async (e) => {
 		e.preventDefault();
@@ -326,19 +368,64 @@ const UserDetail = () => {
 		}
 	};
 
+	// Define table columns
+	const columns = [
+		{ accessorKey: 'ip_address', header: 'IP Address', enableSorting: true },
+		{ accessorKey: 'fingerprint', header: 'Fingerprint', enableSorting: true },
+		{
+			accessorKey: 'success',
+			header: 'Success',
+			enableSorting: true,
+			cell: ({ getValue }) => (
+				<span
+					className={`px-2 py-1 rounded ${
+						getValue() ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+					}`}>
+					{getValue() ? '✅ Yes' : '❌ No'}
+				</span>
+			),
+		},
+		{
+			accessorKey: 'error_message',
+			header: 'Error Message',
+			cell: ({ getValue }) => <>{getValue() || 'None'}</>,
+		},
+		{
+			accessorKey: 'created_at',
+			header: 'Timestamp',
+			enableSorting: true,
+			cell: ({ getValue }) => <>{new Date(getValue()).toLocaleString()}</>,
+		},
+	];
+
+	// Set up TanStack Table
+	const table = useReactTable({
+		data: authLogs,
+		columns,
+		getCoreRowModel: getCoreRowModel(),
+		getPaginationRowModel: getPaginationRowModel(),
+		getSortedRowModel: getSortedRowModel(),
+		getFilteredRowModel: getFilteredRowModel(),
+		state: {
+			globalFilter,
+		},
+		onGlobalFilterChange: setGlobalFilter,
+		manualPagination: false,
+	});
+
 	return (
 		<Layout>
 			{loading ? (
 				<LoadingScreen />
 			) : (
-				<div className="user-detail p-8 max-w-xl mx-auto bg-white dark:bg-gray-900 rounded-lg shadow-lg">
+				<div className="user-detail p-8 mx-auto rounded-lg shadow-lg">
 					{error ? (
 						<p className="text-center text-red-500 font-semibold">{error}</p>
 					) : user ? (
 						<div className="space-y-8">
 							{/* User Details Section */}
 							<div className="text-center">
-								<div className="mx-auto w-24 h-24 mb-6 rounded-full bg-gray-300 dark:bg-gray-700 flex items-center justify-center">
+								<div className="mx-auto w-24 h-24 mb-6 rounded-full flex items-center justify-center">
 									<UserIcon className="w-16 h-16 text-gray-800 dark:text-gray-200" />
 								</div>
 								<h2 className="text-3xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
@@ -365,7 +452,7 @@ const UserDetail = () => {
 											<select
 												value={role}
 												onChange={(e) => setRole(e.target.value)}
-												className="p-2 border rounded dark:bg-gray-700">
+												className="p-2 border rounded">
 												{role === '' ? (
 													<option value="">Select a role</option>
 												) : null}
@@ -398,7 +485,7 @@ const UserDetail = () => {
 							</div>
 
 							{/* Lockout Details Section */}
-							<div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg">
+							<div className=" p-4 rounded-lg">
 								<h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
 									Account Lockout Details
 								</h3>
@@ -431,7 +518,7 @@ const UserDetail = () => {
 							</div>
 
 							{/* Schedule Groups Section */}
-							<div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg">
+							<div className=" p-4 rounded-lg">
 								<h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
 									Schedule Groups
 								</h3>
@@ -464,7 +551,7 @@ const UserDetail = () => {
 									<select
 										value={selectedGroup}
 										onChange={(e) => setSelectedGroup(e.target.value)}
-										className="p-2 border rounded dark:bg-gray-700">
+										className="p-2 border rounded">
 										<option value="">Select a schedule group to add</option>
 										{availableGroups.map((group) => (
 											<option
@@ -482,6 +569,109 @@ const UserDetail = () => {
 						<p className="text-center text-lg text-gray-600 dark:text-gray-300">
 							User not found.
 						</p>
+					)}
+					{/* Authentication Logs Section */}
+					<h3 className="text-2xl font-semibold mb-4">Authentication Logs</h3>
+
+					{/* Loading or Error State */}
+					{loadingLogs ? (
+						<LoadingScreen />
+					) : errorLogs ? (
+						<p className="text-red-500">{errorLogs}</p>
+					) : authLogs.length === 0 ? (
+						<p className="text-gray-500">No authentication logs found.</p>
+					) : (
+						<>
+							{/* Filter Input */}
+							<div className="mb-4 flex items-center gap-2">
+								<Input
+									type="text"
+									placeholder="Search logs..."
+									value={globalFilter ?? ''}
+									onChange={(e) => setGlobalFilter(e.target.value)}
+									className="w-full"
+								/>
+								<Button
+									onClick={() => setGlobalFilter('')}
+									variant="outline">
+									Clear
+								</Button>
+							</div>
+
+							{/* Table */}
+							<Table>
+								<TableHeader>
+									{table.getHeaderGroups().map((headerGroup) => (
+										<TableRow key={headerGroup.id}>
+											{headerGroup.headers.map((header) => {
+												const isSorted = header.column.getIsSorted();
+												return (
+													<TableHead
+														key={header.id}
+														className="cursor-pointer select-none"
+														onClick={header.column.getToggleSortingHandler()}>
+														{header.isPlaceholder
+															? null
+															: flexRender(
+																	header.column.columnDef.header,
+																	header.getContext()
+															  )}
+														{isSorted === 'asc' && (
+															<ArrowUp className="inline-block w-4 h-4 ml-1" />
+														)}
+														{isSorted === 'desc' && (
+															<ArrowDown className="inline-block w-4 h-4 ml-1" />
+														)}
+													</TableHead>
+												);
+											})}
+										</TableRow>
+									))}
+								</TableHeader>
+								<TableBody>
+									{table.getRowModel().rows.length ? (
+										table.getRowModel().rows.map((row) => (
+											<TableRow key={row.id}>
+												{row.getVisibleCells().map((cell) => (
+													<TableCell key={cell.id}>
+														{flexRender(
+															cell.column.columnDef.cell,
+															cell.getContext()
+														)}
+													</TableCell>
+												))}
+											</TableRow>
+										))
+									) : (
+										<TableRow>
+											<TableCell
+												colSpan={columns.length}
+												className="text-center">
+												No results found.
+											</TableCell>
+										</TableRow>
+									)}
+								</TableBody>
+							</Table>
+
+							{/* Pagination Controls */}
+							<div className="flex justify-between items-center mt-4">
+								<Button
+									onClick={() => table.previousPage()}
+									disabled={!table.getCanPreviousPage()}>
+									Previous
+								</Button>
+								<span>
+									Page {table.getState().pagination.pageIndex + 1} of{' '}
+									{table.getPageCount()}
+								</span>
+								<Button
+									onClick={() => table.nextPage()}
+									disabled={!table.getCanNextPage()}>
+									Next
+								</Button>
+							</div>
+						</>
 					)}
 				</div>
 			)}

@@ -63,6 +63,7 @@ import { FiDatabase } from 'react-icons/fi';
 const items = [
 	{ title: 'Home', url: '/welcome', icon: Home }, // Everyone
 	{ title: 'Schedule', url: '/schedule', icon: GrSchedule }, // Everyone
+	{ title: 'My Shifts', url: '/myshifts', icon: GrSchedule, roles: ['worker'] },
 	{ title: 'Calendar Link', url: '/calendarlink', icon: SiGooglecalendar }, // Everyone
 	{
 		title: 'Report',
