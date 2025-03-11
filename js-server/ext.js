@@ -5,7 +5,10 @@ import dotenv from 'dotenv';
 const { Pool } = pg;
 
 dotenv.config({
-	path: '.env.development',
+	path:
+		process.env.NODE_ENV === 'production'
+			? '.env.production'
+			: '.env.development',
 });
 
 // Configure PostgreSQL connection pool
