@@ -50,6 +50,62 @@ async function routes(fastify, options) {
 		}
 	});
 
+	fastify.get('/get-auth-logs', async (request, reply) => {
+		const { uuid } = request.query;
+		if (!uuid) {
+			return reply.status(400).send({ error: 'UUID is required' });
+		}
+
+		const client = await fastify.pg.connect();
+		try {
+			// 🔹 Step 1: Get IPs and Fingerprints associated with the user
+			const ipFingerprintQuery = `
+            SELECT DISTINCT ip_address, fingerprint 
+            FROM auth_logs 
+            WHERE user_id = $1
+        `;
+			const ipFingerprintResult = await client.query(ipFingerprintQuery, [
+				uuid,
+			]);
+
+			if (ipFingerprintResult.rows.length === 0) {
+				return reply
+					.status(404)
+					.send({ error: 'No authentication logs found' });
+			}
+
+			// Extract unique IPs and fingerprints
+			const ips = ipFingerprintResult.rows.map((row) => row.ip_address);
+			const fingerprints = ipFingerprintResult.rows.map(
+				(row) => row.fingerprint
+			);
+
+			// 🔹 Step 2: Fetch all matching logs
+			const authLogsQuery = `
+            SELECT * FROM auth_logs
+            WHERE 
+                user_id = $1 
+                OR (user_id IS NULL OR user_id = $1)
+                AND (ip_address = ANY($2) OR fingerprint = ANY($3))
+            ORDER BY created_at DESC
+        `;
+			const authLogsResult = await client.query(authLogsQuery, [
+				uuid,
+				ips,
+				fingerprints,
+			]);
+
+			return reply.send(authLogsResult.rows);
+		} catch (error) {
+			console.error('Error fetching authentication logs:', error.message);
+			return reply
+				.status(500)
+				.send({ error: 'Failed to fetch authentication logs' });
+		} finally {
+			client.release();
+		}
+	});
+
 	fastify.post('/assignScheduleGroup', async (request, reply) => {
 		try {
 			const { user_id, group_id } = request.body;
