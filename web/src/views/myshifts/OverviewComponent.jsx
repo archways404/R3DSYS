@@ -82,7 +82,7 @@ const OverviewComponent = ({ shifts }) => {
 												<p className="text-gray-700 dark:text-gray-300">
 													{shift.extendedProps.shiftTypeLong}
 												</p>
-												{/* Buttons */}
+
 												{/* Buttons */}
 												<div className="flex gap-x-3">
 													<button
