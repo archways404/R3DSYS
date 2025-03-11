@@ -185,9 +185,20 @@ app.addHook('onResponse', (request, reply, done) => {
 		return done(); // Skip tracking OPTIONS requests
 	}
 
-	const diff = process.hrtime(request.startTime);
-	const durationInMs = (diff[0] * 1e9 + diff[1]) / 1e6;
-	const durationInSeconds = durationInMs / 1000;
+	if (!request.startTime) {
+		console.error(`❌ Missing start time for ${request.raw.url}`);
+		return done();
+	}
+
+	const diff = process.hrtime(request.startTime); // Get time difference
+	const durationInMs = (diff[0] * 1e9 + diff[1]) / 1e6; // Convert to milliseconds
+	const durationInSeconds = durationInMs / 1000; // Convert to seconds
+
+	// ✅ Ensure duration is not NaN
+	if (isNaN(durationInMs)) {
+		console.error(`❌ Duration NaN for ${request.raw.url}`);
+		return done();
+	}
 
 	requestDurationHistogram
 		.labels(request.method, request.raw.url, reply.statusCode)
@@ -205,9 +216,10 @@ app.addHook('onResponse', (request, reply, done) => {
 		time: new Date().toISOString(),
 	});
 
-	console.log(`Request to ${request.raw.url} took ${durationInMs} ms`);
+	console.log(`✅ Request to ${request.raw.url} took ${durationInMs} ms`);
 	done();
 });
+
 
 // ✅ Serve Request Duration Data
 app.get('/request-durations', (request, reply) => {
