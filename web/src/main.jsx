@@ -61,6 +61,8 @@ import AboutRenderer from './views/about/renderer';
 
 import ContactRenderer from './views/contact/renderer';
 
+import MyShiftsRenderer from './views/myshifts/renderer';
+
 import './global.css';
 
 createRoot(document.getElementById('root')).render(
@@ -189,6 +191,14 @@ createRoot(document.getElementById('root')).render(
 									element={
 										<AuthWrapper allowedUserRoles={['worker']}>
 											<ApplyUnassigned />
+										</AuthWrapper>
+									}
+								/>
+								<Route
+									path="/myshifts"
+									element={
+										<AuthWrapper allowedUserRoles={['worker']}>
+											<MyShiftsRenderer />
 										</AuthWrapper>
 									}
 								/>
