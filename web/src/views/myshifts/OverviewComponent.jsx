@@ -1,5 +1,7 @@
 import React, { useContext } from 'react';
 import { AuthContext } from '../../context/AuthContext';
+import { PiMicrosoftTeamsLogoFill } from 'react-icons/pi';
+import { ArrowRightLeft } from 'lucide-react';
 
 const OverviewComponent = ({ shifts }) => {
 	const { user } = useContext(AuthContext);
@@ -26,8 +28,8 @@ const OverviewComponent = ({ shifts }) => {
 	);
 
 	// Handlers for button clicks
-	const handleSickLeave = (shiftId) => {
-		console.log(`Marked shift ${shiftId} as sick leave.`);
+	const handleTeamsChat = (shiftId) => {
+		console.log(`Teams chat for ${shiftId}`);
 		// Implement sick leave logic here
 	};
 
@@ -81,16 +83,20 @@ const OverviewComponent = ({ shifts }) => {
 													{shift.extendedProps.shiftTypeLong}
 												</p>
 												{/* Buttons */}
-												<div className="flex gap-x-2">
+												{/* Buttons */}
+												<div className="flex gap-x-3">
 													<button
-														onClick={() => handleSickLeave(shift.id)}
-														className="px-3 py-1 text-sm font-medium text-white bg-red-500 rounded hover:bg-red-600">
-														I am sick
+														onClick={() => handleTeamsChat(shift.id)}
+														className="flex items-center gap-x-2 px-4 py-2 text-sm font-medium text-white bg-blue-500 rounded-lg hover:bg-blue-600 transition-all">
+														<PiMicrosoftTeamsLogoFill className="w-5 h-5" />
+														<span>Chat</span>
 													</button>
+
 													<button
 														onClick={() => handleTradeRequest(shift.id)}
-														className="px-3 py-1 text-sm font-medium text-white bg-blue-500 rounded hover:bg-blue-600">
-														Request a trade
+														className="flex items-center gap-x-2 px-4 py-2 text-sm font-medium text-white bg-green-700 rounded-lg hover:bg-green-800 transition-all">
+														<ArrowRightLeft className="w-5 h-5" />
+														<span>Trade</span>
 													</button>
 												</div>
 											</div>
