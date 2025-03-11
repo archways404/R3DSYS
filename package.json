@@ -7,6 +7,7 @@
 		"dev": "concurrently \"pnpm run dev:web\" \"pnpm run dev:js\"",
 		"prod": "cd js-server && cross-env NODE_ENV=production node main.js",
 		"ext": "pnpm run dev:ext",
+		"ext-prod": "cd js-server && cross-env NODE_ENV=production node ext.js",
 		"controller": "cd js-server && pnpm install && cross-env NODE_ENV=development pnpm run prod"
 	},
 	"devDependencies": {
