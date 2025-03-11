@@ -1,10 +1,9 @@
-import dgram from 'dgram';
-import pg from 'pg';
-import dotenv from 'dotenv';
+const dgram = require('dgram');
+const pg = require('pg');
 
 const { Pool } = pg;
 
-dotenv.config({
+require('dotenv').config({
 	path:
 		process.env.NODE_ENV === 'production'
 			? '.env.production'
@@ -146,13 +145,3 @@ server.on('message', (msg) => {
 server.bind(3001, () => {
 	console.log('🚀 UDP Log Server listening on port 3001');
 });
-
-
-/* USED IN PROD
-require('dotenv').config({
-	path:
-		process.env.NODE_ENV === 'production'
-			? '.env.production'
-			: '.env.development',
-});
-*/
