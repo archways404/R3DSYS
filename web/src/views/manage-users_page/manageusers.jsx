@@ -18,6 +18,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
 	Select,
 	SelectContent,
@@ -25,9 +26,8 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@/components/ui/select';
-import { ArrowUp, ArrowDown } from 'lucide-react'; // Sorting icons
+import { ArrowUp, ArrowDown } from 'lucide-react';
 import Layout from '../../components/Layout';
-import LoadingScreen from '../../components/LoadingScreen';
 import { AuthContext } from '../../context/AuthContext';
 
 const ManageUsers = () => {
@@ -35,11 +35,11 @@ const ManageUsers = () => {
 
 	// State for users, filters, and loading/error states
 	const [users, setUsers] = useState([]);
-	const [role, setRole] = useState(''); // Role filter
-	const [searchQuery, setSearchQuery] = useState(''); // Global search
+	const [role, setRole] = useState('');
+	const [searchQuery, setSearchQuery] = useState('');
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState(null);
-	const [columnFilters, setColumnFilters] = useState({}); // Column-specific filters
+	const [columnFilters, setColumnFilters] = useState({});
 
 	// Function to fetch users
 	const fetchUsers = async (role = '') => {
@@ -75,7 +75,7 @@ const ManageUsers = () => {
 
 	// Handle role selection change
 	const handleRoleChange = (value) => {
-		setRole(value === 'all' ? '' : value); // Set "" if "all" is selected
+		setRole(value === 'all' ? '' : value);
 		fetchUsers(value === 'all' ? '' : value);
 	};
 
@@ -96,10 +96,9 @@ const ManageUsers = () => {
 		},
 	];
 
-	// **Optimized Filtering Using useMemo**
+	// Optimized Filtering Using useMemo
 	const filteredUsers = useMemo(() => {
 		return users.filter((user) => {
-			// Global search filter
 			const globalSearch =
 				searchQuery === '' ||
 				[user.first_name, user.last_name, user.email]
@@ -107,7 +106,6 @@ const ManageUsers = () => {
 					.toLowerCase()
 					.includes(searchQuery.toLowerCase());
 
-			// Column-specific filters
 			const columnSearch = Object.keys(columnFilters).every((key) => {
 				const value = columnFilters[key]?.toLowerCase() || '';
 				return user[key]?.toLowerCase().includes(value);
@@ -115,11 +113,11 @@ const ManageUsers = () => {
 
 			return globalSearch && columnSearch;
 		});
-	}, [users, searchQuery, columnFilters]); // 🔥 Only recalculates when dependencies change
+	}, [users, searchQuery, columnFilters]);
 
 	// Setup TanStack Table
 	const table = useReactTable({
-		data: filteredUsers, // 👈 Now using `filteredUsers`
+		data: filteredUsers,
 		columns,
 		getCoreRowModel: getCoreRowModel(),
 		getPaginationRowModel: getPaginationRowModel(),
@@ -131,7 +129,7 @@ const ManageUsers = () => {
 		manualPagination: false,
 	});
 
-	// **Optimized Column Filter Handler**
+	// Optimized Column Filter Handler
 	const updateColumnFilter = (column, value) => {
 		setColumnFilters((prev) => ({
 			...prev,
@@ -141,115 +139,133 @@ const ManageUsers = () => {
 
 	return (
 		<Layout>
-			{loading ? (
-				<LoadingScreen />
-			) : (
-				<div className="p-6">
-					<h2 className="text-3xl font-semibold mb-6 text-center">
-						Manage Users
-					</h2>
+			<div className="p-6">
+				<h2 className="text-3xl font-semibold mb-6 text-center">
+					Manage Users
+				</h2>
 
-					{/* Global Search */}
-					<div className="mb-4 flex items-center gap-2">
-						<Input
-							type="text"
-							placeholder="Search all columns..."
-							value={searchQuery}
-							onChange={(e) => setSearchQuery(e.target.value)}
-							className="w-full"
-						/>
-						<Button
-							onClick={() => setSearchQuery('')}
-							variant="outline">
-							Clear
-						</Button>
-					</div>
-
-					{/* Role Selection */}
-					<div className="mb-6">
-						<Label htmlFor="role">Filter by Role</Label>
-						<Select
-							onValueChange={handleRoleChange}
-							value={role}>
-							<SelectTrigger>
-								<SelectValue placeholder="Select role" />
-							</SelectTrigger>
-							<SelectContent>
-								<SelectItem value="all">All</SelectItem>
-								<SelectItem value="worker">Worker</SelectItem>
-								<SelectItem value="admin">Admin</SelectItem>
-								<SelectItem value="maintainer">Maintainer</SelectItem>
-							</SelectContent>
-						</Select>
-					</div>
-
-					{/* Column-Specific Filters */}
-					<div className="grid grid-cols-4 gap-2 mb-4">
-						{columns.map(
-							(col) =>
-								col.accessorKey &&
-								col.accessorKey !== 'actions' && (
-									<Input
-										key={col.accessorKey}
-										type="text"
-										placeholder={`Filter ${col.header}...`}
-										value={columnFilters[col.accessorKey] ?? ''}
-										onChange={(e) =>
-											updateColumnFilter(col.accessorKey, e.target.value)
-										}
-										className="w-full"
-									/>
-								)
-						)}
-					</div>
-
-					{/* User Table */}
-					<Table>
-						<TableHeader>
-							{table.getHeaderGroups().map((headerGroup) => (
-								<TableRow key={headerGroup.id}>
-									{headerGroup.headers.map((header) => {
-										const isSorted = header.column.getIsSorted();
-										return (
-											<TableHead
-												key={header.id}
-												className="cursor-pointer"
-												onClick={header.column.getToggleSortingHandler()}>
-												{header.isPlaceholder
-													? null
-													: flexRender(
-															header.column.columnDef.header,
-															header.getContext()
-													  )}
-												{isSorted === 'asc' && (
-													<ArrowUp className="inline-block w-4 h-4 ml-1" />
-												)}
-												{isSorted === 'desc' && (
-													<ArrowDown className="inline-block w-4 h-4 ml-1" />
-												)}
-											</TableHead>
-										);
-									})}
-								</TableRow>
-							))}
-						</TableHeader>
-						<TableBody>
-							{table.getRowModel().rows.map((row) => (
-								<TableRow key={row.id}>
-									{row.getVisibleCells().map((cell) => (
-										<TableCell key={cell.id}>
-											{flexRender(
-												cell.column.columnDef.cell,
-												cell.getContext()
-											)}
-										</TableCell>
-									))}
-								</TableRow>
-							))}
-						</TableBody>
-					</Table>
+				{/* Global Search */}
+				<div className="mb-4 flex items-center gap-2">
+					<Input
+						type="text"
+						placeholder="Search all columns..."
+						value={searchQuery}
+						onChange={(e) => setSearchQuery(e.target.value)}
+						className="w-full"
+					/>
+					<Button
+						onClick={() => setSearchQuery('')}
+						variant="outline">
+						Clear
+					</Button>
 				</div>
-			)}
+
+				{/* Role Selection */}
+				<div className="mb-6">
+					<Label htmlFor="role">Filter by Role</Label>
+					<Select
+						onValueChange={handleRoleChange}
+						value={role}>
+						<SelectTrigger>
+							<SelectValue placeholder="Select role" />
+						</SelectTrigger>
+						<SelectContent>
+							<SelectItem value="all">All</SelectItem>
+							<SelectItem value="worker">Worker</SelectItem>
+							<SelectItem value="admin">Admin</SelectItem>
+							<SelectItem value="maintainer">Maintainer</SelectItem>
+						</SelectContent>
+					</Select>
+				</div>
+
+				{/* Column-Specific Filters */}
+				<div className="grid grid-cols-4 gap-2 mb-4">
+					{columns.map(
+						(col) =>
+							col.accessorKey &&
+							col.accessorKey !== 'actions' && (
+								<Input
+									key={col.accessorKey}
+									type="text"
+									placeholder={`Filter ${col.header}...`}
+									value={columnFilters[col.accessorKey] ?? ''}
+									onChange={(e) =>
+										updateColumnFilter(col.accessorKey, e.target.value)
+									}
+									className="w-full"
+								/>
+							)
+					)}
+				</div>
+
+				{/* User Table */}
+				<Table>
+					<TableHeader>
+						{table.getHeaderGroups().map((headerGroup) => (
+							<TableRow key={headerGroup.id}>
+								{headerGroup.headers.map((header) => {
+									const isSorted = header.column.getIsSorted();
+									return (
+										<TableHead
+											key={header.id}
+											className="cursor-pointer">
+											{flexRender(
+												header.column.columnDef.header,
+												header.getContext()
+											)}
+											{isSorted === 'asc' && (
+												<ArrowUp className="inline-block w-4 h-4 ml-1" />
+											)}
+											{isSorted === 'desc' && (
+												<ArrowDown className="inline-block w-4 h-4 ml-1" />
+											)}
+										</TableHead>
+									);
+								})}
+							</TableRow>
+						))}
+					</TableHeader>
+					<TableBody>
+						{loading
+							? [...Array(5)].map((_, i) => (
+									<TableRow key={i}>
+										{columns.map((col, j) => (
+											<TableCell key={j}>
+												<Skeleton className="h-6 w-full" />
+											</TableCell>
+										))}
+									</TableRow>
+							  ))
+							: table.getRowModel().rows.map((row) => (
+									<TableRow key={row.id}>
+										{row.getVisibleCells().map((cell) => (
+											<TableCell key={cell.id}>
+												{flexRender(
+													cell.column.columnDef.cell,
+													cell.getContext()
+												)}
+											</TableCell>
+										))}
+									</TableRow>
+							  ))}
+					</TableBody>
+				</Table>
+
+				{/* Pagination Buttons */}
+				<div className="flex justify-between items-center mt-4">
+					<Button
+						disabled={loading || !table.getCanPreviousPage()}
+						onClick={() => table.previousPage()}>
+						Previous
+					</Button>
+					<span>Page {table.getState().pagination.pageIndex + 1}</span>
+					<Button
+						disabled={loading || !table.getCanNextPage()}
+						onClick={() => table.nextPage()}>
+						Next
+					</Button>
+				</div>
+			</div>
 		</Layout>
 	);
 };
