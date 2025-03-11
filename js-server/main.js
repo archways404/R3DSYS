@@ -74,6 +74,7 @@ app.register(cors, {
 	credentials: true,
 	allowedHeaders: ['Content-Type', 'Authorization'],
 	methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+	maxAge: 86400,
 });
 
 app.addHook('preParsing', async (request, reply, payload) => {
