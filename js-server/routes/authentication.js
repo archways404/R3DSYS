@@ -18,6 +18,9 @@ const argon2 = require('argon2');
 async function routes(fastify, options) {
 	fastify.addHook('onRequest', (request, reply, done) => {
 		startRequest(request);
+		if (!request.startTime) {
+			request.startTime = process.hrtime();
+		}
 		done();
 	});
 
