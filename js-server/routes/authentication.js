@@ -133,7 +133,9 @@ async function routes(fastify, options) {
 		},
 		async (request, reply) => {
 			const { email, password, deviceId } = request.body;
-			const ip = request.ip;
+			// ✅ Get Real Client IP Address
+			const forwardedIp = request.headers['x-forwarded-for'];
+			const ip = forwardedIp ? forwardedIp.split(',')[0].trim() : request.ip; // Take the first IP if multiple are present
 
 			if (!deviceId) {
 				return reply.status(400).send({ message: 'Device ID is required' });

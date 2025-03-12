@@ -10,8 +10,7 @@ const promClient = require('prom-client');
 const metrics = require('fastify-metrics');
 const fs = require('fs');
 const path = require('path');
-const os = require('os'); // Import OS module for system stats
-
+const os = require('os');
 const fastifyRedis = require('@fastify/redis');
 
 const { getAffectedUsers } = require('./functions/ical-creation');
@@ -41,6 +40,7 @@ const cert = fs.readFileSync('../certificates/server-cert.pem');
 
 const app = fastify({
 	logger: false,
+	trustProxy: true, // ✅ Enables X-Forwarded-For support
 	https: {
 		key,
 		cert,
