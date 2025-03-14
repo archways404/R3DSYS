@@ -122,6 +122,12 @@ const items = [
 		roles: ['admin', 'maintainer'],
 	},
 	{
+		title: 'System',
+		url: '/system',
+		icon: GrServerCluster,
+		roles: ['admin', 'maintainer'],
+	},
+	{
 		title: 'Tables',
 		url: '/tables',
 		icon: FiDatabase,

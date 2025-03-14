@@ -63,6 +63,8 @@ import ContactRenderer from './views/contact/renderer';
 
 import MyShiftsRenderer from './views/myshifts/renderer';
 
+import SystemRenderer from './views/system/renderer';
+
 import './global.css';
 
 createRoot(document.getElementById('root')).render(
@@ -158,6 +160,14 @@ createRoot(document.getElementById('root')).render(
 									element={
 										<AuthWrapper allowedUserRoles={['admin', 'maintainer']}>
 											<TableRenderer />
+										</AuthWrapper>
+									}
+								/>
+								<Route
+									path="/system"
+									element={
+										<AuthWrapper allowedUserRoles={['admin', 'maintainer']}>
+											<SystemRenderer />
 										</AuthWrapper>
 									}
 								/>
