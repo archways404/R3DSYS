@@ -7,7 +7,7 @@ const LoadingScreen = ({ isVisible }) => {
 	if (!isVisible) return null; // If not visible, return nothing
 
 	return (
-		<div className="fixed inset-0 flex items-center justify-center bg-[#09090b] z-50">
+		<div className="fixed inset-0 flex items-center justify-center bg-[#09090b] z-[999]">
 			<Mosaic
 				color={rainbowColors}
 				size="large"
