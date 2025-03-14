@@ -1,6 +1,6 @@
 async function updateServerStatus(fastify, updates) {
 	try {
-		// Dynamically generate the update query
+		// Generate dynamic query
 		const fields = Object.keys(updates)
 			.filter((key) => updates[key] !== undefined)
 			.map((key, index) => `${key} = $${index + 1}`);
@@ -11,12 +11,21 @@ async function updateServerStatus(fastify, updates) {
 
 		const values = Object.values(updates);
 
-		// Update the existing row and return the updated data
+		// Ensure an entry exists before updating
+		const { rowCount } = await fastify.pg.query(
+			`SELECT 1 FROM server_status LIMIT 1`
+		);
+
+		if (rowCount === 0) {
+			await fastify.pg.query(`INSERT INTO server_status DEFAULT VALUES`);
+		}
+
+		// Update existing row
 		const { rows } = await fastify.pg.query(
 			`
 			UPDATE server_status
 			SET ${fields.join(', ')}, last_updated = NOW()
-			WHERE id = (SELECT id FROM server_status LIMIT 1)
+			WHERE id = (SELECT id FROM server_status ORDER BY last_updated DESC LIMIT 1)
 			RETURNING *;
 			`,
 			values
@@ -26,7 +35,7 @@ async function updateServerStatus(fastify, updates) {
 			return { error: 'No existing server status entry found' };
 		}
 
-		return rows[0]; // Return updated row
+		return rows[0];
 	} catch (error) {
 		console.error('Error updating server status:', error);
 		return { error: 'Internal Server Error' };

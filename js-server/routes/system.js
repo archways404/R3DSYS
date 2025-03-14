@@ -7,10 +7,6 @@ async function routes(fastify, options) {
 	fastify.get('/', async (request, reply) => {
 		const status = await getServerStatus(fastify);
 
-		if (status.error === 'Server status not found') {
-			return reply.status(404).send(status);
-		}
-
 		if (status.error) {
 			return reply.status(500).send(status);
 		}
@@ -19,7 +15,7 @@ async function routes(fastify, options) {
 	});
 
 	fastify.put('/status/maintenance', async (request, reply) => {
-		const { is_maintenance } = request.body; // Expect `{ "is_maintenance": true }`
+		const { is_maintenance } = request.body;
 
 		if (typeof is_maintenance !== 'boolean') {
 			return reply
@@ -32,7 +28,7 @@ async function routes(fastify, options) {
 	});
 
 	fastify.put('/status/display-survey', async (request, reply) => {
-		const { display_survey } = request.body; // Expect `{ "display_survey": true }`
+		const { display_survey } = request.body;
 
 		if (typeof display_survey !== 'boolean') {
 			return reply
@@ -47,7 +43,7 @@ async function routes(fastify, options) {
 	fastify.put('/status/times', async (request, reply) => {
 		const { start_time, end_time } = request.body;
 
-		// Validate timestamp format
+		// Validate timestamps
 		if (start_time && isNaN(Date.parse(start_time))) {
 			return reply.status(400).send({ error: 'Invalid start_time format' });
 		}
