@@ -516,7 +516,7 @@ ORDER BY a.date, a.start_time;
 		try {
 			// Fetch all groups the admin is part of
 			const groupQuery = `
-        SELECT group_id FROM account_schedule_groups WHERE user_id = $1;
+            SELECT group_id FROM account_schedule_groups WHERE user_id = $1;
         `;
 			const groupResult = await client.query(groupQuery, [user_id]);
 
@@ -528,14 +528,18 @@ ORDER BY a.date, a.start_time;
 
 			const groupIds = groupResult.rows.map((row) => row.group_id);
 
-			// Fetch all removal requests for users in the same groups as the admin
+			// Fetch all removal requests for users in the same groups as the admin with more details
 			const requestQuery = `
-        SELECT sr.request_id, sr.shift_id, sr.user_id, a.first_name, a.last_name, sr.request_time, sr.status
-        FROM shift_removal_requests sr
-        JOIN active_shifts ash ON sr.shift_id = ash.shift_id
-        JOIN account a ON sr.user_id = a.user_id
-        WHERE ash.schedule_group_id = ANY($1) AND sr.status = 'pending'
-        ORDER BY sr.request_time DESC;
+            SELECT sr.request_id, sr.shift_id, sr.user_id, a.first_name, a.last_name, sr.request_time, sr.status,
+                   st.name_long AS shift_type, ash.start_time, ash.end_time, ash.date, sg.name AS schedule_group
+            FROM shift_removal_requests sr
+            JOIN active_shifts ash ON sr.shift_id = ash.shift_id
+            JOIN account a ON sr.user_id = a.user_id
+            JOIN shift_types st ON ash.shift_type_id = st.shift_type_id
+            JOIN schedule_groups sg ON ash.schedule_group_id = sg.group_id
+            WHERE ash.schedule_group_id = ANY($1) 
+            AND sr.status = 'pending'
+            ORDER BY sr.request_time DESC;
         `;
 
 			const requestResult = await client.query(requestQuery, [groupIds]);
