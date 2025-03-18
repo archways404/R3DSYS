@@ -65,6 +65,8 @@ import MyShiftsRenderer from './views/myshifts/renderer';
 
 import SystemRenderer from './views/system/renderer';
 
+import RequestRenderer from './views/requests/renderer';
+
 import './global.css';
 
 createRoot(document.getElementById('root')).render(
@@ -144,6 +146,14 @@ createRoot(document.getElementById('root')).render(
 									element={
 										<AuthWrapper allowedUserRoles={['admin', 'maintainer']}>
 											<ServerInfo />
+										</AuthWrapper>
+									}
+								/>
+								<Route
+									path="/requests"
+									element={
+										<AuthWrapper allowedUserRoles={['admin', 'maintainer']}>
+											<RequestRenderer />
 										</AuthWrapper>
 									}
 								/>

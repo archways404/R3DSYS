@@ -86,6 +86,12 @@ const items = [
 		roles: ['admin', 'maintainer'],
 	},
 	{
+		title: 'Requests',
+		url: '/Requests',
+		icon: GrSchedules,
+		roles: ['admin', 'maintainer'],
+	},
+	{
 		title: 'Reports',
 		url: '/assign-shifts',
 		icon: TbReport,
