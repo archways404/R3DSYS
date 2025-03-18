@@ -463,6 +463,47 @@ ORDER BY a.date, a.start_time;
 		}
 	});
 
+	// Fetch Shift Removal Requests (user specific)
+	fastify.get('/getUserShiftRemovalRequests', async (request, reply) => {
+		const { user_id } = request.query;
+
+		if (!user_id) {
+			return reply.status(400).send({ error: 'user_id is required' });
+		}
+
+		const client = await fastify.pg.connect();
+		try {
+			// Fetch shift removal requests for the user within the last two months
+			const query = `
+            SELECT sr.request_id, sr.shift_id, sr.status, sr.request_time, sr.approval_time,
+                   a.first_name, a.last_name, 
+                   st.name_long as shift_type,
+                   ash.start_time, ash.end_time, ash.date  -- Add shift start, end, and date
+            FROM shift_removal_requests sr
+            JOIN active_shifts ash ON sr.shift_id = ash.shift_id
+            JOIN account a ON sr.user_id = a.user_id
+            JOIN shift_types st ON ash.shift_type_id = st.shift_type_id
+            WHERE sr.user_id = $1
+            AND sr.request_time >= NOW() - INTERVAL '2 months'
+            ORDER BY sr.request_time DESC;
+        `;
+
+			const result = await client.query(query, [user_id]);
+
+			return reply.status(200).send({
+				message: 'Shift removal requests retrieved successfully',
+				removal_requests: result.rows,
+			});
+		} catch (error) {
+			console.error('Error retrieving user shift removal requests:', error);
+			return reply
+				.status(500)
+				.send({ error: 'Failed to retrieve shift removal requests' });
+		} finally {
+			client.release();
+		}
+	});
+
 	// Fetch Shift Removal Requests (group specific)
 	fastify.get('/getShiftRemovalRequests', async (request, reply) => {
 		const { user_id } = request.query;
