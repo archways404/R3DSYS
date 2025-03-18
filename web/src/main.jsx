@@ -67,6 +67,8 @@ import SystemRenderer from './views/system/renderer';
 
 import RequestRenderer from './views/requests/renderer';
 
+import SettingsRenderer from './views/settings/renderer';
+
 import './global.css';
 
 createRoot(document.getElementById('root')).render(
@@ -203,6 +205,15 @@ createRoot(document.getElementById('root')).render(
 										<AuthWrapper
 											allowedUserRoles={['admin', 'worker', 'maintainer']}>
 											<Schedule />
+										</AuthWrapper>
+									}
+								/>
+								<Route
+									path="/settings"
+									element={
+										<AuthWrapper
+											allowedUserRoles={['admin', 'worker', 'maintainer']}>
+											<SettingsRenderer />
 										</AuthWrapper>
 									}
 								/>

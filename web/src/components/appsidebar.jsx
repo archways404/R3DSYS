@@ -87,7 +87,7 @@ const items = [
 	},
 	{
 		title: 'Requests',
-		url: '/Requests',
+		url: '/requests',
 		icon: GrSchedules,
 		roles: ['admin', 'maintainer'],
 	},
@@ -143,8 +143,8 @@ const items = [
 		title: 'Settings',
 		url: '/settings',
 		icon: Settings,
-		disabled: true,
-		showBadge: true,
+		disabled: false,
+		showBadge: false,
 	}, // Everyone
 ];
 
