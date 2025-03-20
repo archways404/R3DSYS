@@ -64,21 +64,15 @@ async function routes(fastify, options) {
             FROM auth_logs 
             WHERE user_id = $1
         `;
-			const ipFingerprintResult = await client.query(ipFingerprintQuery, [
-				uuid,
-			]);
+			const ipFingerprintResult = await client.query(ipFingerprintQuery, [uuid]);
 
 			if (ipFingerprintResult.rows.length === 0) {
-				return reply
-					.status(404)
-					.send({ error: 'No authentication logs found' });
+				return reply.status(404).send({ error: 'No authentication logs found' });
 			}
 
 			// Extract unique IPs and fingerprints
 			const ips = ipFingerprintResult.rows.map((row) => row.ip_address);
-			const fingerprints = ipFingerprintResult.rows.map(
-				(row) => row.fingerprint
-			);
+			const fingerprints = ipFingerprintResult.rows.map((row) => row.fingerprint);
 
 			// 🔹 Step 2: Fetch all matching logs
 			const authLogsQuery = `
@@ -89,18 +83,12 @@ async function routes(fastify, options) {
                 AND (ip_address = ANY($2) OR fingerprint = ANY($3))
             ORDER BY created_at DESC
         `;
-			const authLogsResult = await client.query(authLogsQuery, [
-				uuid,
-				ips,
-				fingerprints,
-			]);
+			const authLogsResult = await client.query(authLogsQuery, [uuid, ips, fingerprints]);
 
 			return reply.send(authLogsResult.rows);
 		} catch (error) {
 			console.error('Error fetching authentication logs:', error.message);
-			return reply
-				.status(500)
-				.send({ error: 'Failed to fetch authentication logs' });
+			return reply.status(500).send({ error: 'Failed to fetch authentication logs' });
 		} finally {
 			client.release();
 		}
@@ -110,9 +98,7 @@ async function routes(fastify, options) {
 		try {
 			const { user_id, group_id } = request.body;
 			if (!user_id || !group_id) {
-				return reply
-					.status(400)
-					.send({ error: 'user_id and group_id are required' });
+				return reply.status(400).send({ error: 'user_id and group_id are required' });
 			}
 
 			// Optionally, check if this relationship already exists to avoid duplicates.
@@ -120,14 +106,9 @@ async function routes(fastify, options) {
       SELECT * FROM account_schedule_groups
       WHERE user_id = $1 AND group_id = $2
     `;
-			const checkResult = await fastify.pg.query(checkQuery, [
-				user_id,
-				group_id,
-			]);
+			const checkResult = await fastify.pg.query(checkQuery, [user_id, group_id]);
 			if (checkResult.rows.length > 0) {
-				return reply
-					.status(409)
-					.send({ error: 'Schedule group already assigned to the user' });
+				return reply.status(409).send({ error: 'Schedule group already assigned to the user' });
 			}
 
 			const query = `
@@ -139,19 +120,15 @@ async function routes(fastify, options) {
 			return reply.status(201).send(rows[0]);
 		} catch (error) {
 			console.error('Error assigning schedule group:', error.message);
-			return reply
-				.status(500)
-				.send({ error: 'Failed to assign schedule group' });
+			return reply.status(500).send({ error: 'Failed to assign schedule group' });
 		}
-	});	
+	});
 
 	fastify.delete('/removeScheduleGroup', async (request, reply) => {
 		try {
 			const { user_id, group_id } = request.query;
 			if (!user_id || !group_id) {
-				return reply
-					.status(400)
-					.send({ error: 'user_id and group_id are required' });
+				return reply.status(400).send({ error: 'user_id and group_id are required' });
 			}
 
 			const query = `
@@ -161,16 +138,12 @@ async function routes(fastify, options) {
     `;
 			const { rows } = await fastify.pg.query(query, [user_id, group_id]);
 			if (rows.length === 0) {
-				return reply
-					.status(404)
-					.send({ error: 'Schedule group assignment not found' });
+				return reply.status(404).send({ error: 'Schedule group assignment not found' });
 			}
 			return reply.send({ message: 'Schedule group removed successfully' });
 		} catch (error) {
 			console.error('Error removing schedule group:', error.message);
-			return reply
-				.status(500)
-				.send({ error: 'Failed to remove schedule group' });
+			return reply.status(500).send({ error: 'Failed to remove schedule group' });
 		}
 	});
 
@@ -229,9 +202,7 @@ async function routes(fastify, options) {
 		try {
 			const { user_id, role } = request.body;
 			if (!user_id || !role) {
-				return reply
-					.status(400)
-					.send({ error: 'User ID and role are required' });
+				return reply.status(400).send({ error: 'User ID and role are required' });
 			}
 
 			// Validate that the role is one of the allowed options.
@@ -254,6 +225,122 @@ async function routes(fastify, options) {
 		} catch (error) {
 			console.error('Error updating user role:', error.message);
 			return reply.status(500).send({ error: 'Failed to update user role' });
+		}
+	});
+
+	// WORKER - Update account information in settings
+	/*
+	fastify.post('/updateUserInfo', async (request, reply) => {
+		const { user_id, first_name, last_name, email, notification_email, teams_email } = request.body;
+
+		if (!user_id) {
+			return reply.status(400).send({ error: 'User ID is required' });
+		}
+
+		const client = await fastify.pg.connect();
+		try {
+			// ✅ Update the user's info in the database
+			await client.query(
+				`UPDATE account 
+             SET first_name = $2, last_name = $3, email = $4, 
+                 notification_email = $5, teams_email = $6 
+             WHERE user_id = $1`,
+				[user_id, first_name, last_name, email, notification_email, teams_email]
+			);
+
+			// ✅ Delete Redis cache for this user (so fresh data will be fetched later)
+			const userInfoCacheKey = `${user_id}:userinfo`;
+			await fastify.redis.del(userInfoCacheKey);
+
+			// ✅ Send success response
+			return reply.send({
+				message: 'User information updated successfully. Cache reset.',
+			});
+		} catch (err) {
+			console.error('Error updating user info:', err);
+			return reply.status(500).send({ error: 'Failed to update user information' });
+		} finally {
+			client.release();
+		}
+	});
+	*/
+
+	// WORKER - Update account information in settings
+	fastify.post('/updateUserInfo', async (request, reply) => {
+		const { user_id, first_name, last_name, email, notification_email, teams_email } = request.body;
+
+		if (!user_id) {
+			return reply.status(400).send({ error: 'User ID is required' });
+		}
+
+		const client = await fastify.pg.connect();
+		try {
+			// ✅ Update user information in the database
+			await client.query(
+				`UPDATE account 
+             SET first_name = $2, last_name = $3, email = $4, 
+                 notification_email = $5, teams_email = $6 
+             WHERE user_id = $1`,
+				[user_id, first_name, last_name, email, notification_email, teams_email]
+			);
+
+			// ✅ Fetch the updated user data
+			const userResult = await client.query(
+				`SELECT user_id, first_name, last_name, email, notification_email, teams_email, role 
+             FROM account WHERE user_id = $1`,
+				[user_id]
+			);
+
+			if (userResult.rows.length === 0) {
+				return reply.status(404).send({ error: 'User not found' });
+			}
+
+			const updatedUser = userResult.rows[0];
+
+			// ✅ Fetch user groups
+			const userGroups = await getUserGroups(client, updatedUser.user_id);
+
+			// ✅ Format the user object correctly
+			const userData = {
+				uuid: updatedUser.user_id,
+				email: updatedUser.email,
+				role: updatedUser.role,
+				first: updatedUser.first_name, // ✅ Map `first_name` to `first`
+				last: updatedUser.last_name, // ✅ Map `last_name` to `last`
+				notification_email: updatedUser.notification_email,
+				teams_email: updatedUser.teams_email,
+				groups: userGroups,
+			};
+
+			// ✅ Delete Redis cache for this user (forcing a refresh on next fetch)
+			const userInfoCacheKey = `${user_id}:userinfo`;
+			await fastify.redis.del(userInfoCacheKey);
+
+			// ✅ Generate a new JWT token with the correctly formatted user data
+			const newAuthToken = fastify.jwt.sign(userData, { expiresIn: '45m' });
+
+			// ✅ Set the new `authToken` cookie
+			reply.setCookie('authToken', newAuthToken, {
+				httpOnly: true,
+				sameSite: 'None',
+				secure: true,
+				path: '/',
+			});
+
+			// 🔹 Store the fresh user data in Redis
+			await fastify.redis.setex(userInfoCacheKey, 900, JSON.stringify(userData)); // 15 min TTL
+			cacheRefreshed = true;
+
+			// ✅ Send success response with updated user info
+			return reply.send({
+				message: 'User information updated successfully. Cache reset.',
+				user: userData,
+			});
+		} catch (err) {
+			console.error('Error updating user info:', err);
+			return reply.status(500).send({ error: 'Failed to update user information' });
+		} finally {
+			client.release();
 		}
 	});
 
@@ -311,6 +398,26 @@ async function routes(fastify, options) {
     `;
 		const result = await client.query(query, [uuid]);
 		return result.rows; // Return all associated schedule groups
+	}
+
+	async function getUserGroups(client, userId) {
+		try {
+			const { rows: groups } = await client.query(
+				`SELECT sg.group_id, sg.name 
+			 FROM account_schedule_groups AS asg
+			 JOIN schedule_groups AS sg ON asg.group_id = sg.group_id
+			 WHERE asg.user_id = $1`,
+				[userId]
+			);
+
+			return groups.map((group) => ({
+				id: group.group_id,
+				name: group.name,
+			}));
+		} catch (err) {
+			console.error('Error fetching user groups:', err);
+			throw new Error('Database query failed');
+		}
 	}
 }
 

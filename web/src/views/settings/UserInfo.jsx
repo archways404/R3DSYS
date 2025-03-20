@@ -21,9 +21,8 @@ const UserInfo = ({ userInfo, onUpdate, loading, message, error }) => {
 				onSubmit={handleSubmit}
 				className="space-y-4">
 				<div>
-					<Label>First</Label>
+					<Label>First Name</Label>
 					<Input
-						label="First Name"
 						name="first_name"
 						value={formData.first_name}
 						onChange={handleChange}
@@ -32,9 +31,8 @@ const UserInfo = ({ userInfo, onUpdate, loading, message, error }) => {
 					/>
 				</div>
 				<div>
-					<Label>Last</Label>
+					<Label>Last Name</Label>
 					<Input
-						label="Last Name"
 						name="last_name"
 						value={formData.last_name}
 						onChange={handleChange}
@@ -45,12 +43,31 @@ const UserInfo = ({ userInfo, onUpdate, loading, message, error }) => {
 				<div>
 					<Label>Email</Label>
 					<Input
-						label="Email"
 						type="email"
 						name="email"
 						value={formData.email}
 						onChange={handleChange}
 						required
+						className="w-full"
+					/>
+				</div>
+				<div>
+					<Label>Notification Email</Label>
+					<Input
+						type="email"
+						name="notification_email"
+						value={formData.notification_email}
+						onChange={handleChange}
+						className="w-full"
+					/>
+				</div>
+				<div>
+					<Label>Teams Email</Label>
+					<Input
+						type="email"
+						name="teams_email"
+						value={formData.teams_email}
+						onChange={handleChange}
 						className="w-full"
 					/>
 				</div>

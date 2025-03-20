@@ -11,10 +11,6 @@ const { calculateRequest } = require('../functions/processingTime');
 const { fetchDataStart } = require('../functions/processingTime');
 const { fetchDataEnd } = require('../functions/processingTime');
 
-const { createAuthLog } = require('../functions/db_logs');
-
-const argon2 = require('argon2');
-
 async function routes(fastify, options) {
 	fastify.addHook('onRequest', (request, reply, done) => {
 		startRequest(request);
@@ -31,94 +27,6 @@ async function routes(fastify, options) {
 		console.log(`Request stats: ${JSON.stringify(times)}`);
 		done();
 	});
-
-	/*
-	fastify.post(
-		'/login',
-		{
-			config: {
-				rateLimit: {
-					max: 15000000,
-					timeWindow: '15 minutes',
-					keyGenerator: (req) => req.body?.deviceId || req.ip,
-				},
-			},
-		},
-		async (request, reply) => {
-			const { email, password, deviceId } = request.body;
-			const ip = request.ip;
-
-			if (!deviceId) {
-				return reply.status(400).send({ message: 'Device ID is required' });
-			}
-
-			const client = await fastify.pg.connect();
-
-			fetchDataStart(request);
-
-			const user = await login(client, email, password, ip, deviceId);
-
-			if (!user.error) {
-				try {
-					// 🔹 Fetch user groups before generating the token
-					const userGroups = await getUserGroups(client, user.user_id);
-
-					// 🔹 Generate a JWT token with user groups included
-					const authToken = fastify.jwt.sign(
-						{
-							uuid: user.user_id,
-							email: user.email,
-							role: user.role,
-							first: user.first_name,
-							last: user.last_name,
-							groups: userGroups, // ✅ User groups are now included
-						},
-						{ expiresIn: '15m' }
-					);
-
-					// 🔹 Set the authToken in a cookie
-					reply.setCookie('authToken', authToken, {
-						httpOnly: true,
-						sameSite: 'None',
-						secure: true,
-						path: '/',
-					});
-
-					// 🔹 Log successful authentication
-					await createAuthLog(client, user.user_id, ip, deviceId, true, null);
-
-					fetchDataEnd(request);
-
-					// 🔹 Send back the token and user data (including groups)
-					return reply.send({
-						message: 'Login successful',
-						user: {
-							uuid: user.user_id,
-							email: user.email,
-							role: user.role,
-							first: user.first_name,
-							last: user.last_name,
-							groups: userGroups, // ✅ Sending back user groups for frontend state
-						},
-					});
-				} catch (err) {
-					console.error('Error fetching user groups:', err);
-					return reply.status(500).send({ message: 'Internal Server Error' });
-				}
-			} else {
-				// 🔹 Handle login failures
-				fetchDataEnd(request);
-				const errorMessage =
-					user.error === 'Invalid password' ||
-					user.error === 'Account with email does not exist'
-						? 'Account does not exist or invalid password.'
-						: user.error;
-
-				return reply.send({ message: errorMessage });
-			}
-		}
-	);
-	*/
 
 	fastify.post(
 		'/login',
@@ -146,14 +54,7 @@ async function routes(fastify, options) {
 
 			try {
 				// 🔹 Call the login function
-				const loginResult = await login(
-					fastify,
-					client,
-					email,
-					password,
-					ip,
-					deviceId
-				);
+				const loginResult = await login(fastify, client, email, password, ip, deviceId);
 
 				// ✅ If login fails, return the structured error response
 				if (loginResult.error) {
@@ -197,23 +98,16 @@ async function routes(fastify, options) {
 		const client = await fastify.pg.connect();
 		try {
 			// Create new user
-			const status = await createNewUser(
-				client,
-				email,
-				first_name,
-				last_name,
-				role
-			);
+			const status = await createNewUser(client, email, first_name, last_name, role);
 
 			if (status !== 'success') {
 				return reply.send({ message: 'User creation failed' });
 			}
 
 			// Get the created user's ID
-			const userResult = await client.query(
-				'SELECT user_id FROM account WHERE email = $1',
-				[email]
-			);
+			const userResult = await client.query('SELECT user_id FROM account WHERE email = $1', [
+				email,
+			]);
 			const userId = userResult.rows[0].user_id;
 
 			// Assign groups
@@ -360,189 +254,75 @@ async function routes(fastify, options) {
 		}
 	});
 
-	/*
-	fastify.get(
-		'/protected',
-		{ preValidation: fastify.verifyJWT },
-		async (request, reply) => {
-			const user = request.user;
-			const userInfoCacheKey = `${user.uuid}:userinfo`;
-			let userData = user; // Default to JWT payload
-			let newAuthToken = null;
+	fastify.get('/protected', { preValidation: fastify.verifyJWT }, async (request, reply) => {
+		const user = request.user;
+		const userInfoCacheKey = `${user.uuid}:userinfo`;
+		let userData = user; // Default to JWT payload
+		let newAuthToken = null;
 
-			try {
-				// 🔹 Check if JWT token needs to be refreshed
-				const tokenExpTime = user.exp * 1000 - Date.now();
+		try {
+			// 🔹 Check if JWT token needs to be refreshed
+			const tokenExpTime = user.exp * 1000 - Date.now();
+			let cachedUserData = await fastify.redis.get(userInfoCacheKey);
+			let cacheRefreshed = false;
 
-				if (tokenExpTime < 5 * 60 * 1000) {
-					// ✅ Token is about to expire → refresh it
+			if (cachedUserData) {
+				cachedUserData = JSON.parse(cachedUserData);
 
-					// 🔹 Try to get user data from Redis
-					const cachedUserData = await fastify.redis.get(userInfoCacheKey);
+				// 🔹 Check if groups in cache differ from groups in JWT
+				const groupsChanged = JSON.stringify(user.groups) !== JSON.stringify(cachedUserData.groups);
 
-					if (cachedUserData) {
-						// ✅ Cache hit: Use cached user data & refresh TTL
-						userData = JSON.parse(cachedUserData);
-						await fastify.redis.expire(userInfoCacheKey, 900); // Extend TTL
-					} else {
-						// ❌ Cache miss: Fetch user data from DB
-						const userGroups = await getUserGroups(fastify.pg, user.uuid);
-						userData = {
-							uuid: user.uuid,
-							email: user.email,
-							role: user.role,
-							first: user.first,
-							last: user.last,
-							groups: userGroups,
-						};
-
-						// 🔹 Store the fresh user data in Redis only if it doesn't exist
-						const cacheExists = await fastify.redis.setnx(
-							userInfoCacheKey,
-							JSON.stringify(userData)
-						);
-						if (cacheExists) {
-							await fastify.redis.expire(userInfoCacheKey, 900); // 15 min TTL
-						}
-					}
-
-					// 🔹 Always generate a fresh token
-					newAuthToken = fastify.jwt.sign(userData, { expiresIn: '45m' });
-
-					// 🔹 Update Cookie with new token
-					reply.setCookie('authToken', newAuthToken, {
-						httpOnly: true,
-						sameSite: 'None',
-						secure: true,
-						path: '/',
-					});
-				}
-
-				// ✅ Return user info (without hitting Redis or DB unless needed)
-				return reply.send({
-					message: 'You are authenticated',
-					user: userData,
-					tokenRefreshed: !!newAuthToken,
-				});
-			} catch (err) {
-				console.error('❌ Redis or Database Error:', err);
-				return reply.status(500).send({ error: 'Internal Server Error' });
-			}
-		}
-	);
-	*/
-	fastify.get(
-		'/protected',
-		{ preValidation: fastify.verifyJWT },
-		async (request, reply) => {
-			const user = request.user;
-			const userInfoCacheKey = `${user.uuid}:userinfo`;
-			let userData = user; // Default to JWT payload
-			let newAuthToken = null;
-
-			try {
-				// 🔹 Check if JWT token needs to be refreshed
-				const tokenExpTime = user.exp * 1000 - Date.now();
-				let cachedUserData = await fastify.redis.get(userInfoCacheKey);
-				let cacheRefreshed = false;
-
-				if (cachedUserData) {
-					cachedUserData = JSON.parse(cachedUserData);
-
-					// 🔹 Check if groups in cache differ from groups in JWT
-					const groupsChanged =
-						JSON.stringify(user.groups) !==
-						JSON.stringify(cachedUserData.groups);
-
-					if (groupsChanged) {
-						console.log(
-							`🔄 User groups changed for ${user.uuid}, refreshing JWT...`
-						);
-						userData = cachedUserData;
-						cacheRefreshed = true;
-					}
-
-					// ✅ Refresh cache TTL regardless
-					await fastify.redis.expire(userInfoCacheKey, 900); // Extend TTL
-				} else {
-					// ❌ Cache miss: Fetch from DB
-					const userGroups = await getUserGroups(fastify.pg, user.uuid);
-					userData = {
-						uuid: user.uuid,
-						email: user.email,
-						role: user.role,
-						first: user.first,
-						last: user.last,
-						groups: userGroups,
-					};
-
-					// 🔹 Store the fresh user data in Redis
-					await fastify.redis.setex(
-						userInfoCacheKey,
-						900,
-						JSON.stringify(userData)
-					); // 15 min TTL
+				if (groupsChanged) {
+					console.log(`🔄 User groups changed for ${user.uuid}, refreshing JWT...`);
+					userData = cachedUserData;
 					cacheRefreshed = true;
 				}
 
-				// 🔹 If token is about to expire OR group changed, refresh JWT
-				if (tokenExpTime < 5 * 60 * 1000 || cacheRefreshed) {
-					newAuthToken = fastify.jwt.sign(userData, { expiresIn: '45m' });
-
-					// 🔹 Update Cookie with new token
-					reply.setCookie('authToken', newAuthToken, {
-						httpOnly: true,
-						sameSite: 'None',
-						secure: true,
-						path: '/',
-					});
-				}
-
-				// ✅ Return user info
-				return reply.send({
-					message: 'You are authenticated',
-					user: userData,
-					tokenRefreshed: !!newAuthToken,
-				});
-			} catch (err) {
-				console.error('❌ Redis or Database Error:', err);
-				return reply.status(500).send({ error: 'Internal Server Error' });
-			}
-		}
-	);
-
-	/*
-	fastify.get(
-		'/protected',
-		{ preValidation: fastify.verifyJWT },
-		async (request, reply) => {
-			const user = request.user;
-			console.log('user: ', user);
-			const authToken = fastify.jwt.sign(
-				{
+				// ✅ Refresh cache TTL regardless
+				await fastify.redis.expire(userInfoCacheKey, 900); // Extend TTL
+			} else {
+				// ❌ Cache miss: Fetch from DB
+				const userGroups = await getUserGroups(fastify.pg, user.uuid);
+				userData = {
 					uuid: user.uuid,
 					email: user.email,
 					role: user.role,
 					first: user.first,
 					last: user.last,
-				},
-				{ expiresIn: '15m' }
-			);
+					notification_email: user.notification_email, // Add this
+					teams_email: user.teams_email, // Add this
+					groups: userGroups,
+				};
 
-			reply.setCookie('authToken', authToken, {
-				httpOnly: true,
-				sameSite: 'None',
-				secure: true,
-				path: '/',
-			});
+				// 🔹 Store the fresh user data in Redis
+				await fastify.redis.setex(userInfoCacheKey, 900, JSON.stringify(userData)); // 15 min TTL
+				cacheRefreshed = true;
+			}
 
+			// 🔹 If token is about to expire OR group changed, refresh JWT
+			if (tokenExpTime < 5 * 60 * 1000 || cacheRefreshed) {
+				newAuthToken = fastify.jwt.sign(userData, { expiresIn: '45m' });
+
+				// 🔹 Update Cookie with new token
+				reply.setCookie('authToken', newAuthToken, {
+					httpOnly: true,
+					sameSite: 'None',
+					secure: true,
+					path: '/',
+				});
+			}
+
+			// ✅ Return user info
 			return reply.send({
-				message: 'You are authenticated and token has been refreshed',
-				user: user,
+				message: 'You are authenticated',
+				user: userData,
+				tokenRefreshed: !!newAuthToken,
 			});
+		} catch (err) {
+			console.error('❌ Redis or Database Error:', err);
+			return reply.status(500).send({ error: 'Internal Server Error' });
 		}
-	);
-	*/
+	});
 
 	fastify.post('/logout', async (request, reply) => {
 		reply.clearCookie('authToken', {

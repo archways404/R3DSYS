@@ -1,42 +1,47 @@
 import { useState, useContext } from 'react';
 import { AuthContext } from '../../context/AuthContext';
+import axios from 'axios'; // ✅ Import axios
 import Layout from '../../components/Layout';
 import UserInfo from './UserInfo';
 import UserGroups from './UserGroups';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 
 const SettingsRenderer = () => {
-	const { user, updateUser } = useContext(AuthContext);
+	const { user, updateUser, setUser } = useContext(AuthContext);
 	const [userInfo, setUserInfo] = useState({
 		first_name: user.first || '',
 		last_name: user.last || '',
 		email: user.email || '',
+		notification_email: user.notification_email || '',
+		teams_email: user.teams_email || '',
 	});
 	const [loading, setLoading] = useState(false);
 	const [message, setMessage] = useState(null);
 	const [error, setError] = useState(null);
 
-	// Function to update user information
 	const handleUpdate = async (updatedData) => {
 		setLoading(true);
 		setMessage(null);
 		setError(null);
 
 		try {
-			const response = await fetch(
-				`${import.meta.env.VITE_BASE_ADDR}/updateUserInfo`,
-				{
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({ ...updatedData, user_id: user.uuid }),
-				}
-			);
+			// ✅ Step 1: Send update request
+			const response = await fetch(`${import.meta.env.VITE_BASE_ADDR}/updateUserInfo`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				credentials: 'include', // ✅ Ensure cookies are handled
+				body: JSON.stringify({ ...updatedData, user_id: user.uuid }),
+			});
 
 			const data = await response.json();
 			if (response.ok) {
 				setMessage('Profile updated successfully.');
-				updateUser({ ...user, ...updatedData });
-				setUserInfo(updatedData);
+				setUserInfo(updatedData); // ✅ Update local UI immediately
+
+				// ✅ Step 2: Update `AuthContext` with new user info from response
+				if (data.user) {
+					setUser(data.user); // ✅ This updates the global state with fresh info
+				}
 			} else {
 				setError(data.error || 'Failed to update profile.');
 			}
