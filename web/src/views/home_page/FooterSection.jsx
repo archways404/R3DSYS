@@ -43,11 +43,6 @@ const FooterSection = () => {
 							className="transition text-gray-400 hover:text-red-500">
 							<BiDonateHeart className="w-5 h-5" />
 						</a>
-						<Link
-							to="/bug-report"
-							className="transition text-gray-400 hover:text-red-500">
-							<FaBug className="w-5 h-5" />
-						</Link>
 					</div>
 				</div>
 
@@ -56,24 +51,29 @@ const FooterSection = () => {
 					{/* Navigation Links */}
 					<nav className="flex space-x-6 text-sm">
 						<Link
-							to="/"
+							to="/about"
 							className="transition text-gray-400 hover:text-red-500">
 							About
 						</Link>
 						<Link
-							to="/"
+							to="/contact"
 							className="transition text-gray-400 hover:text-red-500">
 							Contact
 						</Link>
 						<Link
-							to="/"
+							to="/ToS"
 							className="transition text-gray-400 hover:text-red-500">
 							Terms of Service
 						</Link>
 						<Link
-							to="/"
+							to="/privacy"
 							className="transition text-gray-400 hover:text-red-500">
 							Privacy
+						</Link>
+						<Link
+							to="/bug-report"
+							className="transition text-gray-400 hover:text-red-500">
+							Report a bug
 						</Link>
 					</nav>
 				</div>

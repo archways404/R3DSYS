@@ -11,7 +11,7 @@
 		"controller": "cd js-server && pnpm install && cross-env NODE_ENV=development pnpm run prod"
 	},
 	"devDependencies": {
-		"concurrently": "^9.0.1",
+		"concurrently": "^9.1.2",
 		"cross-env": "^7.0.3"
 	},
 	"dependencies": {

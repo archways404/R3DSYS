@@ -39,11 +39,12 @@ async function login(fastify, client, email, password, ip, deviceId) {
 			// ❌ Cache Miss - Fetch from PostgreSQL in **ONE QUERY**
 			const userResult = await client.query(
 				`SELECT 
-                    a.user_id, a.password, a.first_name, a.last_name, a.role,
-                    al.failed_attempts, al.locked, al.unlock_time
-                 FROM account a
-                 LEFT JOIN account_lockout al ON a.user_id = al.user_id
-                 WHERE a.email = $1`,
+        a.user_id, a.password, a.first_name, a.last_name, a.role,
+        a.notification_email, a.teams_email, 
+        al.failed_attempts, al.locked, al.unlock_time
+     FROM account a
+     LEFT JOIN account_lockout al ON a.user_id = al.user_id
+     WHERE a.email = $1`,
 				[email]
 			);
 
@@ -69,10 +70,9 @@ async function login(fastify, client, email, password, ip, deviceId) {
 			}
 
 			// 🔹 Check if an entry exists in `account_lockout`, if not, create one
-			const lockoutCheck = await client.query(
-				`SELECT 1 FROM account_lockout WHERE user_id = $1`,
-				[user.user_id]
-			);
+			const lockoutCheck = await client.query(`SELECT 1 FROM account_lockout WHERE user_id = $1`, [
+				user.user_id,
+			]);
 
 			if (lockoutCheck.rowCount === 0) {
 				await client.query(
@@ -197,15 +197,13 @@ async function login(fastify, client, email, password, ip, deviceId) {
 				first: user.first_name,
 				last: user.last_name,
 				role: user.role,
+				notification_email: user.notification_email, // Add this
+				teams_email: user.teams_email, // Add this
 				groups: userGroups,
 			};
 
 			// Cache user profile
-			await fastify.redis.setex(
-				userInfoCacheKey,
-				900,
-				JSON.stringify(userInfo)
-			);
+			await fastify.redis.setex(userInfoCacheKey, 900, JSON.stringify(userInfo));
 		} else {
 			userInfo = JSON.parse(userInfo);
 		}

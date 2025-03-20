@@ -17,17 +17,12 @@ const Welcome = () => {
 	const [shifts, setShifts] = useState([]);
 	const [error, setError] = useState(null);
 
-	console.log('user', user);
-	console.log('shifts', shifts);
-	console.log('Selected Render Day:', renderDay);
-
 	if (!user) {
 		return null;
 	}
 
 	// Format the user's name
-	const formattedFirstName =
-		user.first.charAt(0).toUpperCase() + user.first.slice(1);
+	const formattedFirstName = user.first.charAt(0).toUpperCase() + user.first.slice(1);
 	const formattedLastName = user.last.charAt(0).toUpperCase();
 
 	// Define all possible categories
@@ -47,20 +42,16 @@ const Welcome = () => {
 	useEffect(() => {
 		const fetchShifts = async () => {
 			try {
-				const response = await fetch(
-					`${import.meta.env.VITE_BASE_ADDR}/getActiveShiftsForUser`,
-					{
-						method: 'GET',
-						credentials: 'include', // ✅ Ensures cookies are sent
-					}
-				);
+				const response = await fetch(`${import.meta.env.VITE_BASE_ADDR}/getActiveShiftsForUser`, {
+					method: 'GET',
+					credentials: 'include', // ✅ Ensures cookies are sent
+				});
 
 				if (!response.ok) {
 					throw new Error(`Error fetching shifts: ${response.statusText}`);
 				}
 
 				const data = await response.json();
-				console.log('data', data);
 				setShifts(data); // Store shifts in state
 			} catch (err) {
 				setError(err.message);

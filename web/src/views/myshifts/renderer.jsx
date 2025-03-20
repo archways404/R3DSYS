@@ -15,10 +15,6 @@ const MyShiftsRenderer = () => {
 	const [shifts, setShifts] = useState([]);
 	const [error, setError] = useState(null);
 
-	console.log('user', user);
-	console.log('shifts', shifts);
-	console.log('Selected Render Day:', renderDay);
-
 	if (!user) {
 		return null;
 	}

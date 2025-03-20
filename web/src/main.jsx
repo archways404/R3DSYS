@@ -63,6 +63,12 @@ import ContactRenderer from './views/contact/renderer';
 
 import MyShiftsRenderer from './views/myshifts/renderer';
 
+import SystemRenderer from './views/system/renderer';
+
+import RequestRenderer from './views/requests/renderer';
+
+import SettingsRenderer from './views/settings/renderer';
+
 import './global.css';
 
 createRoot(document.getElementById('root')).render(
@@ -146,6 +152,14 @@ createRoot(document.getElementById('root')).render(
 									}
 								/>
 								<Route
+									path="/requests"
+									element={
+										<AuthWrapper allowedUserRoles={['admin', 'maintainer']}>
+											<RequestRenderer />
+										</AuthWrapper>
+									}
+								/>
+								<Route
 									path="/invite"
 									element={
 										<AuthWrapper allowedUserRoles={['admin', 'maintainer']}>
@@ -158,6 +172,14 @@ createRoot(document.getElementById('root')).render(
 									element={
 										<AuthWrapper allowedUserRoles={['admin', 'maintainer']}>
 											<TableRenderer />
+										</AuthWrapper>
+									}
+								/>
+								<Route
+									path="/system"
+									element={
+										<AuthWrapper allowedUserRoles={['admin', 'maintainer']}>
+											<SystemRenderer />
 										</AuthWrapper>
 									}
 								/>
@@ -183,6 +205,15 @@ createRoot(document.getElementById('root')).render(
 										<AuthWrapper
 											allowedUserRoles={['admin', 'worker', 'maintainer']}>
 											<Schedule />
+										</AuthWrapper>
+									}
+								/>
+								<Route
+									path="/settings"
+									element={
+										<AuthWrapper
+											allowedUserRoles={['admin', 'worker', 'maintainer']}>
+											<SettingsRenderer />
 										</AuthWrapper>
 									}
 								/>

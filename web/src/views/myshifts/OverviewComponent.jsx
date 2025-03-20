@@ -1,10 +1,13 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import { AuthContext } from '../../context/AuthContext';
 import { PiMicrosoftTeamsLogoFill } from 'react-icons/pi';
 import { ArrowRightLeft } from 'lucide-react';
+import ShiftRemovalRequests from './ShiftRemovalRequests'; // Import the new component
 
 const OverviewComponent = ({ shifts }) => {
 	const { user } = useContext(AuthContext);
+
+	const [loadingRequest, setLoadingRequest] = useState(null); // Track request loading state
 	if (!user) return null;
 
 	// Filter shifts for the current user (without restricting to the current month)
@@ -33,13 +36,44 @@ const OverviewComponent = ({ shifts }) => {
 		// Implement sick leave logic here
 	};
 
-	const handleTradeRequest = (shiftId) => {
-		console.log(`Requested trade for shift ${shiftId}.`);
-		// Implement trade request logic here
+	// Function to handle shift removal request
+	const handleShiftRemoval = async (shiftId) => {
+		if (loadingRequest) return; // Prevent multiple requests
+		setLoadingRequest(shiftId);
+
+		try {
+			const response = await fetch(
+				`${import.meta.env.VITE_BASE_ADDR}/requestShiftRemoval`,
+				{
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({
+						shift_id: shiftId,
+						user_id: user.uuid,
+					}),
+				}
+			);
+
+			const data = await response.json();
+			if (response.ok) {
+				alert('Shift removal request submitted successfully.');
+			} else {
+				alert(`Error: ${data.error}`);
+			}
+		} catch (error) {
+			console.error('Error submitting shift removal request:', error);
+			alert('Failed to request shift removal.');
+		} finally {
+			setLoadingRequest(null);
+		}
 	};
 
 	return (
 		<div className="p-4">
+			{/* Display the Shift Removal Requests Section */}
+			<div className="mt-6">
+				<ShiftRemovalRequests />
+			</div>
 			<div className="space-y-6">
 				{sortedDays.length > 0 ? (
 					sortedDays.map((day) => (
@@ -93,10 +127,15 @@ const OverviewComponent = ({ shifts }) => {
 													</button>
 
 													<button
-														onClick={() => handleTradeRequest(shift.id)}
-														className="flex items-center gap-x-2 px-4 py-2 text-sm font-medium text-white bg-green-700 rounded-lg hover:bg-green-800 transition-all">
+														onClick={() => handleShiftRemoval(shift.id)}
+														className="flex items-center gap-x-2 px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-all"
+														disabled={loadingRequest === shift.id}>
 														<ArrowRightLeft className="w-5 h-5" />
-														<span>Trade</span>
+														<span>
+															{loadingRequest === shift.id
+																? 'Requesting...'
+																: 'Remove'}
+														</span>
 													</button>
 												</div>
 											</div>

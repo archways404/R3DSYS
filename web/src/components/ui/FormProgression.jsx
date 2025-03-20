@@ -18,7 +18,7 @@ export default function FormProgression({ steps, currentStep }) {
 				<TimelineItem
 					key={step.id}
 					step={step.id}
-					className="relative ms-2 gap-24">
+					className="relative ms-2 gap-12">
 					{/* Timeline Vertical Line (Always Visible) */}
 					{index !== steps.length - 1 && (
 						<TimelineSeparator className="absolute left-3.5 top-7 bottom-0 w-1 bg-gray-500" />

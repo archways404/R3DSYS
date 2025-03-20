@@ -40,7 +40,7 @@ const cert = fs.readFileSync('../certificates/server-cert.pem');
 
 const app = fastify({
 	logger: false,
-	trustProxy: true, // ✅ Enables X-Forwarded-For support
+	trustProxy: true, // Enables X-Forwarded-For support
 	https: {
 		key,
 		cert,
@@ -98,14 +98,13 @@ app.register(rateLimit, {
 	timeWindow: '1 minute',
 });
 
-app.register(fastifyMultipart); // ✅ Register Multipart Plugin
+app.register(fastifyMultipart);
 
-// Register the Redis plugin for Fastify
 app.register(fastifyRedis, {
-	host: '127.0.0.1', // Change to your Dragonfly host if needed
+	host: '127.0.0.1',
 	port: 6379,
-	password: '', // Add if required
-	retryStrategy: (times) => Math.min(times * 50, 2000), // Retry on failure
+	password: '',
+	retryStrategy: (times) => Math.min(times * 50, 2000),
 });
 
 // DATABASE CONNECTION
@@ -138,6 +137,8 @@ app.register(require('./routes/version'));
 
 app.register(require('./routes/bugreport'));
 
+app.register(require('./routes/system'));
+
 app.register(require('./routes/ical'), {
 	hook: 'preHandler',
 	options: {
@@ -163,7 +164,7 @@ app.decorate('verifyJWT', async function (request, reply) {
 	}
 });
 
-// ✅ Register Prometheus Metrics for Request Duration
+//  Register Prometheus Metrics for Request Duration
 const requestDurationHistogram = new promClient.Histogram({
 	name: 'http_request_duration_seconds',
 	help: 'Duration of HTTP requests in seconds',
@@ -171,7 +172,7 @@ const requestDurationHistogram = new promClient.Histogram({
 	buckets: [0.1, 0.5, 1, 2, 5, 10], // Buckets for request durations
 });
 
-// ✅ Keep a Limited Array of Request Durations
+//  Keep a Limited Array of Request Durations
 const requestDurations = [];
 const MAX_DURATION_ENTRIES = 1000;
 
@@ -224,8 +225,6 @@ app.addHook('onResponse', (request, reply, done) => {
 	done();
 });
 
-
-// ✅ Serve Request Duration Data
 app.get('/request-durations', (request, reply) => {
 	const aggregatedDurations = {};
 
@@ -263,7 +262,6 @@ app.get('/request-durations', (request, reply) => {
 	reply.send(aggregatedDurations);
 });
 
-// ✅ Serve Metrics in Prometheus Format
 app.get('/metrics', async (request, reply) => {
 	try {
 		const metricsData = await promClient.register.metrics();
@@ -330,10 +328,6 @@ app.get('/system-stats', async (request, reply) => {
 		reply.code(500).send({ error: 'Failed to fetch system stats' });
 	}
 });
-
-
-
-
 
 app.listen({ port: PORT, host: HOST }, async function (err, address) {
 	if (err) {

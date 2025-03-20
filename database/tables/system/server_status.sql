@@ -1,0 +1,8 @@
+CREATE TABLE server_status (
+    id SERIAL PRIMARY KEY,
+    is_maintenance BOOLEAN NOT NULL DEFAULT FALSE,
+    display_survey BOOLEAN NOT NULL DEFAULT FALSE,
+    start_time TIMESTAMP NULL,
+    end_time TIMESTAMP NULL,
+    last_updated TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);

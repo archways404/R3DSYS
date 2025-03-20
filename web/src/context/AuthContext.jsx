@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useLocation, useNavigate } from 'react-router-dom';
 
@@ -9,9 +9,11 @@ export function AuthProvider({ children }) {
 	const [loading, setLoading] = useState(true);
 	const [justLoggedIn, setJustLoggedIn] = useState(false); // ✅ New state
 	const [justLoggedOut, setJustLoggedOut] = useState(false); // ✅ New state
+	const [lastActivity, setLastActivity] = useState(Date.now()); // Track user activity
 
 	const location = useLocation();
 	const navigate = useNavigate();
+	const activityTimeoutRef = useRef(null);
 
 	const isServerReachable = async () => {
 		try {
@@ -65,6 +67,28 @@ export function AuthProvider({ children }) {
 		}
 	};
 
+	// ✅ Function to check if the session is about to expire and refresh it
+	const refreshSessionIfNeeded = async () => {
+		if (!user || !user.exp) return;
+
+		const now = Math.floor(Date.now() / 1000);
+		const expiresIn = user.exp - now; // Time left in seconds
+
+		// If the cookie is about to expire within 2 minutes AND user is active, renew session
+		if (expiresIn < 120 && Date.now() - lastActivity < 300000) {
+			// User has been active in the last 5 minutes (300000ms)
+			console.log('Refreshing session...');
+			await checkAuth(); // This will renew the session if possible
+		}
+	};
+
+	// ✅ Function to handle user activity (Mouse/Keyboard)
+	const handleUserActivity = () => {
+		setLastActivity(Date.now()); // Update last activity timestamp
+		clearTimeout(activityTimeoutRef.current); // Reset inactivity timeout
+		activityTimeoutRef.current = setTimeout(refreshSessionIfNeeded, 60000); // Check every minute
+	};
+
 	useEffect(() => {
 		// Skip `checkAuth` if user **just** logged in and is on /welcome
 		if (justLoggedIn && location.pathname === '/welcome') {
@@ -84,6 +108,19 @@ export function AuthProvider({ children }) {
 
 		checkAuth();
 	}, [location]);
+
+	// ✅ Listen for user activity (Mouse/Keyboard) and refresh session
+	useEffect(() => {
+		window.addEventListener('mousemove', handleUserActivity);
+		window.addEventListener('keydown', handleUserActivity);
+		const interval = setInterval(refreshSessionIfNeeded, 60000); // Check every 1 minute
+
+		return () => {
+			window.removeEventListener('mousemove', handleUserActivity);
+			window.removeEventListener('keydown', handleUserActivity);
+			clearInterval(interval);
+		};
+	}, [user, lastActivity]);
 
 	return (
 		<AuthContext.Provider

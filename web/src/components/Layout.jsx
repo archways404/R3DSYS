@@ -13,7 +13,6 @@ import Footer from './Footer';
 import Background from './Background';
 import LoadingScreen from './LoadingScreen';
 
-// ✅ Create a Version Context
 export const VersionContext = createContext();
 
 function Layout({ children }) {
@@ -25,7 +24,7 @@ function Layout({ children }) {
 	// ✅ Get stored version from localStorage
 	const storedVersion = localStorage.getItem('app_version');
 	const [version, setVersion] = useState(storedVersion);
-	const [loading, setLoading] = useState(storedVersion === null); // ✅ Only show loading if no stored version
+	const [loading, setLoading] = useState(storedVersion === null);
 
 	useEffect(() => {
 		const fetchVersion = async () => {

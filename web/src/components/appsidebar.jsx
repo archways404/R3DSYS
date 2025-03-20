@@ -86,6 +86,12 @@ const items = [
 		roles: ['admin', 'maintainer'],
 	},
 	{
+		title: 'Requests',
+		url: '/requests',
+		icon: GrSchedules,
+		roles: ['admin', 'maintainer'],
+	},
+	{
 		title: 'Reports',
 		url: '/assign-shifts',
 		icon: TbReport,
@@ -122,6 +128,12 @@ const items = [
 		roles: ['admin', 'maintainer'],
 	},
 	{
+		title: 'System',
+		url: '/system',
+		icon: GrServerCluster,
+		roles: ['admin', 'maintainer'],
+	},
+	{
 		title: 'Tables',
 		url: '/tables',
 		icon: FiDatabase,
@@ -131,8 +143,8 @@ const items = [
 		title: 'Settings',
 		url: '/settings',
 		icon: Settings,
-		disabled: true,
-		showBadge: true,
+		disabled: false,
+		showBadge: false,
 	}, // Everyone
 ];
 
