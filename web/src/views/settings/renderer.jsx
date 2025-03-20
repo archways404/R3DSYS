@@ -1,6 +1,5 @@
 import { useState, useContext } from 'react';
 import { AuthContext } from '../../context/AuthContext';
-import axios from 'axios'; // ✅ Import axios
 import Layout from '../../components/Layout';
 import UserInfo from './UserInfo';
 import UserGroups from './UserGroups';
@@ -25,22 +24,22 @@ const SettingsRenderer = () => {
 		setError(null);
 
 		try {
-			// ✅ Step 1: Send update request
+			// Update request
 			const response = await fetch(`${import.meta.env.VITE_BASE_ADDR}/updateUserInfo`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				credentials: 'include', // ✅ Ensure cookies are handled
+				credentials: 'include',
 				body: JSON.stringify({ ...updatedData, user_id: user.uuid }),
 			});
 
 			const data = await response.json();
 			if (response.ok) {
 				setMessage('Profile updated successfully.');
-				setUserInfo(updatedData); // ✅ Update local UI immediately
+				setUserInfo(updatedData); // Update local UI immediately
 
-				// ✅ Step 2: Update `AuthContext` with new user info from response
+				// Update `AuthContext` with new user info from response
 				if (data.user) {
-					setUser(data.user); // ✅ This updates the global state with fresh info
+					setUser(data.user);
 				}
 			} else {
 				setError(data.error || 'Failed to update profile.');

@@ -269,9 +269,50 @@ async function routes(fastify, options) {
 	fastify.post('/updateUserInfo', async (request, reply) => {
 		const { user_id, first_name, last_name, email, notification_email, teams_email } = request.body;
 
+		// ✅ Validate that user_id is present
 		if (!user_id) {
 			return reply.status(400).send({ error: 'User ID is required' });
 		}
+
+		// ✅ Utility function to clean and validate inputs
+		const cleanAndValidate = (name, value, regex = null, toLower = false) => {
+			if (!value || typeof value !== 'string') {
+				return { error: `${name.replace('_', ' ')} is required and must be a string.` };
+			}
+
+			const trimmedValue = value.trim();
+			if (trimmedValue.length === 0) {
+				return { error: `${name.replace('_', ' ')} cannot be empty.` };
+			}
+
+			if (regex && !regex.test(trimmedValue)) {
+				return { error: `${name.replace('_', ' ')} contains invalid characters.` };
+			}
+
+			return toLower ? trimmedValue.toLowerCase() : trimmedValue;
+		};
+
+		// ✅ Validate First and Last Name (only letters `a-z åäö`)
+		const first = cleanAndValidate('first_name', first_name, /^[a-zA-ZåäöÅÄÖ]+$/);
+		const last = cleanAndValidate('last_name', last_name, /^[a-zA-ZåäöÅÄÖ]+$/);
+		if (first.error) return reply.status(400).send({ error: first.error });
+		if (last.error) return reply.status(400).send({ error: last.error });
+
+		// ✅ Validate Emails (ensure proper format, convert to lowercase)
+		const emailRegex = /^[\w.-]+@[a-zA-Z\d.-]+\.[a-zA-Z]{2,}$/;
+		const cleanEmail = cleanAndValidate('email', email, emailRegex, true);
+		const cleanNotificationEmail = cleanAndValidate(
+			'notification_email',
+			notification_email,
+			emailRegex,
+			true
+		);
+		const cleanTeamsEmail = cleanAndValidate('teams_email', teams_email, emailRegex, true);
+
+		if (cleanEmail.error) return reply.status(400).send({ error: cleanEmail.error });
+		if (cleanNotificationEmail.error)
+			return reply.status(400).send({ error: cleanNotificationEmail.error });
+		if (cleanTeamsEmail.error) return reply.status(400).send({ error: cleanTeamsEmail.error });
 
 		const client = await fastify.pg.connect();
 		try {
@@ -281,7 +322,7 @@ async function routes(fastify, options) {
              SET first_name = $2, last_name = $3, email = $4, 
                  notification_email = $5, teams_email = $6 
              WHERE user_id = $1`,
-				[user_id, first_name, last_name, email, notification_email, teams_email]
+				[user_id, first, last, cleanEmail, cleanNotificationEmail, cleanTeamsEmail]
 			);
 
 			// ✅ Fetch the updated user data
@@ -305,21 +346,21 @@ async function routes(fastify, options) {
 				uuid: updatedUser.user_id,
 				email: updatedUser.email,
 				role: updatedUser.role,
-				first: updatedUser.first_name, // ✅ Map `first_name` to `first`
-				last: updatedUser.last_name, // ✅ Map `last_name` to `last`
+				first: updatedUser.first_name,
+				last: updatedUser.last_name,
 				notification_email: updatedUser.notification_email,
 				teams_email: updatedUser.teams_email,
 				groups: userGroups,
 			};
 
-			// ✅ Delete Redis cache for this user (forcing a refresh on next fetch)
+			// Delete Redis cache for this user (forcing a refresh on next fetch)
 			const userInfoCacheKey = `${user_id}:userinfo`;
 			await fastify.redis.del(userInfoCacheKey);
 
-			// ✅ Generate a new JWT token with the correctly formatted user data
+			// Generate a new JWT token with the correctly formatted user data
 			const newAuthToken = fastify.jwt.sign(userData, { expiresIn: '45m' });
 
-			// ✅ Set the new `authToken` cookie
+			// Set the new `authToken` cookie
 			reply.setCookie('authToken', newAuthToken, {
 				httpOnly: true,
 				sameSite: 'None',
@@ -327,11 +368,10 @@ async function routes(fastify, options) {
 				path: '/',
 			});
 
-			// 🔹 Store the fresh user data in Redis
+			// Store the fresh user data in Redis
 			await fastify.redis.setex(userInfoCacheKey, 900, JSON.stringify(userData)); // 15 min TTL
-			cacheRefreshed = true;
 
-			// ✅ Send success response with updated user info
+			// Send success response with updated user info
 			return reply.send({
 				message: 'User information updated successfully. Cache reset.',
 				user: userData,

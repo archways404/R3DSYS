@@ -1,18 +1,76 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 
 const UserInfo = ({ userInfo, onUpdate, loading, message, error }) => {
 	const [formData, setFormData] = useState(userInfo);
+	const [validationError, setValidationError] = useState(null);
+	const [hasChanges, setHasChanges] = useState(false);
 
-	const handleChange = (e) => {
-		setFormData({ ...formData, [e.target.name]: e.target.value });
+	// ✅ Check if any changes are made
+	useEffect(() => {
+		const isDifferent = Object.keys(userInfo).some(
+			(key) => userInfo[key]?.trim() !== formData[key]?.trim()
+		);
+		setHasChanges(isDifferent);
+	}, [formData, userInfo]);
+
+	// ✅ Validate Input on Form Submission
+	const validateForm = () => {
+		for (const [key, value] of Object.entries(formData)) {
+			const trimmedValue = value.trim();
+
+			// ✅ Name Validation (first_name, last_name) - Only a-z, åäö
+			if (key === 'first_name' || key === 'last_name') {
+				if (!/^[a-zA-ZåäöÅÄÖ]+$/.test(trimmedValue)) {
+					setValidationError(`${key.replace('_', ' ')} must only contain letters (a-z, åäö).`);
+					return false;
+				}
+			}
+
+			// ✅ Email Validation
+			if (key.includes('email')) {
+				if (!/^[\w.-]+@[a-zA-Z\d.-]+\.[a-zA-Z]{2,}$/.test(trimmedValue)) {
+					setValidationError(`${key.replace('_', ' ')} must be a valid email address.`);
+					return false;
+				}
+			}
+
+			// ✅ Prevent Empty Fields
+			if (trimmedValue.length === 0) {
+				setValidationError(`${key.replace('_', ' ')} cannot be empty.`);
+				return false;
+			}
+		}
+
+		setValidationError(null);
+		return true;
 	};
 
+	// ✅ Handle Input Change & Detect Differences
+	const handleChange = (e) => {
+		const { name, value } = e.target;
+		setFormData((prev) => {
+			const updatedData = { ...prev, [name]: value };
+			setHasChanges(
+				Object.keys(userInfo).some((key) => userInfo[key]?.trim() !== updatedData[key]?.trim())
+			);
+			return updatedData;
+		});
+	};
+
+	// ✅ Handle Form Submission (Validate Before Submitting)
 	const handleSubmit = (e) => {
 		e.preventDefault();
-		onUpdate(formData);
+		if (!validateForm()) return; // ❌ Stop if validation fails
+
+		// ✅ Trim whitespace before sending data
+		const cleanedData = Object.fromEntries(
+			Object.entries(formData).map(([key, value]) => [key, value.trim()])
+		);
+
+		onUpdate(cleanedData);
 	};
 
 	return (
@@ -71,15 +129,18 @@ const UserInfo = ({ userInfo, onUpdate, loading, message, error }) => {
 						className="w-full"
 					/>
 				</div>
+
 				<Button
 					type="submit"
 					className="w-full"
-					disabled={loading}>
+					disabled={!hasChanges || loading} // ✅ Disabled if no changes
+				>
 					{loading ? 'Updating...' : 'Save Changes'}
 				</Button>
 			</form>
 
-			{/* Status Messages */}
+			{/* ✅ Display Validation Errors */}
+			{validationError && <p className="mt-2 text-red-500">{validationError}</p>}
 			{message && <p className="mt-2 text-green-500">{message}</p>}
 			{error && <p className="mt-2 text-red-500">{error}</p>}
 		</div>
