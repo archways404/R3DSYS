@@ -5,6 +5,7 @@ CREATE TABLE account (
     first_name VARCHAR(255) NOT NULL,
     last_name VARCHAR(255) NOT NULL,
 	notification_email VARCHAR(255) NOT NULL,
+    teams_email VARCHAR(255),
     recovery_key VARCHAR(255) UNIQUE,
     role VARCHAR(255) NOT NULL
 );

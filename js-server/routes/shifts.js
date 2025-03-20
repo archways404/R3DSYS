@@ -12,9 +12,7 @@ async function routes(fastify, options) {
 		const { name_long, name_short } = request.body;
 
 		if (!name_long || !name_short) {
-			return reply
-				.status(400)
-				.send({ error: 'name_long and name_short are required' });
+			return reply.status(400).send({ error: 'name_long and name_short are required' });
 		}
 
 		const client = await fastify.pg.connect();
@@ -25,10 +23,7 @@ async function routes(fastify, options) {
       SELECT * FROM shift_types 
       WHERE name_long = $1 OR name_short = $2;
     `;
-			const checkResult = await client.query(checkQuery, [
-				name_long,
-				name_short,
-			]);
+			const checkResult = await client.query(checkQuery, [name_long, name_short]);
 
 			if (checkResult.rows.length > 0) {
 				return reply.status(200).send({ message: 'Shift type already exists' });
@@ -40,10 +35,7 @@ async function routes(fastify, options) {
       VALUES ($1, $2) 
       RETURNING *;
     `;
-			const insertResult = await client.query(insertQuery, [
-				name_long,
-				name_short,
-			]);
+			const insertResult = await client.query(insertQuery, [name_long, name_short]);
 
 			return reply.status(201).send({
 				message: 'Shift type created successfully',
@@ -71,9 +63,7 @@ async function routes(fastify, options) {
 			});
 		} catch (error) {
 			console.error('Error retrieving shift types:', error);
-			return reply
-				.status(500)
-				.send({ error: 'Failed to retrieve shift types' });
+			return reply.status(500).send({ error: 'Failed to retrieve shift types' });
 		} finally {
 			client.release(); // Release the client back to the pool
 		}
@@ -113,9 +103,7 @@ async function routes(fastify, options) {
 			});
 		} catch (error) {
 			console.error('Error retrieving active shifts:', error);
-			return reply
-				.status(500)
-				.send({ error: 'Failed to retrieve active shifts' });
+			return reply.status(500).send({ error: 'Failed to retrieve active shifts' });
 		} finally {
 			client.release();
 		}
@@ -181,9 +169,7 @@ async function routes(fastify, options) {
 			});
 		} catch (error) {
 			console.error('Error retrieving unassigned shifts:', error);
-			return reply
-				.status(500)
-				.send({ error: 'Failed to retrieve unassigned shifts' });
+			return reply.status(500).send({ error: 'Failed to retrieve unassigned shifts' });
 		} finally {
 			client.release();
 		}
@@ -196,9 +182,7 @@ async function routes(fastify, options) {
 		// Validate that shift_ids is a non-empty array and that user_id is provided.
 		if (!Array.isArray(shift_ids) || shift_ids.length === 0) {
 			client.release();
-			return reply
-				.status(400)
-				.send({ error: 'shift_ids must be a non-empty array' });
+			return reply.status(400).send({ error: 'shift_ids must be a non-empty array' });
 		}
 		if (!user_id) {
 			client.release();
@@ -239,16 +223,12 @@ async function routes(fastify, options) {
 			// Commit the transaction.
 			await client.query('COMMIT');
 
-			return reply
-				.status(200)
-				.send({ message: 'Available shifts inserted successfully' });
+			return reply.status(200).send({ message: 'Available shifts inserted successfully' });
 		} catch (error) {
 			// If any error occurs, rollback the transaction.
 			await client.query('ROLLBACK');
 			console.error('Error inserting available shifts:', error);
-			return reply
-				.status(500)
-				.send({ error: 'Failed to insert available shifts' });
+			return reply.status(500).send({ error: 'Failed to insert available shifts' });
 		} finally {
 			// Always release the client back to the pool.
 			client.release();
@@ -354,9 +334,7 @@ ORDER BY a.date, a.start_time;
 		// Validate that assignments is a non-empty array.
 		if (!Array.isArray(assignments) || assignments.length === 0) {
 			client.release();
-			return reply
-				.status(400)
-				.send({ error: 'assignments must be a non-empty array' });
+			return reply.status(400).send({ error: 'assignments must be a non-empty array' });
 		}
 
 		try {
@@ -399,9 +377,7 @@ ORDER BY a.date, a.start_time;
 			// Commit the transaction.
 			await client.query('COMMIT');
 
-			return reply
-				.status(200)
-				.send({ message: 'Shifts assigned successfully' });
+			return reply.status(200).send({ message: 'Shifts assigned successfully' });
 		} catch (error) {
 			// Rollback the transaction if any error occurs.
 			await client.query('ROLLBACK');
@@ -412,14 +388,12 @@ ORDER BY a.date, a.start_time;
 		}
 	});
 
-	// Request Shift Removal
+	// WORKER - Request Shift Removal
 	fastify.post('/requestShiftRemoval', async (request, reply) => {
 		const { shift_id, user_id } = request.body;
 
 		if (!shift_id || !user_id) {
-			return reply
-				.status(400)
-				.send({ error: 'shift_id and user_id are required' });
+			return reply.status(400).send({ error: 'shift_id and user_id are required' });
 		}
 
 		const client = await fastify.pg.connect();
@@ -428,13 +402,8 @@ ORDER BY a.date, a.start_time;
 			const checkQuery = `SELECT assigned_to FROM active_shifts WHERE shift_id = $1`;
 			const checkResult = await client.query(checkQuery, [shift_id]);
 
-			if (
-				checkResult.rows.length === 0 ||
-				checkResult.rows[0].assigned_to !== user_id
-			) {
-				return reply
-					.status(403)
-					.send({ error: 'User is not assigned to this shift' });
+			if (checkResult.rows.length === 0 || checkResult.rows[0].assigned_to !== user_id) {
+				return reply.status(403).send({ error: 'User is not assigned to this shift' });
 			}
 
 			// Insert removal request
@@ -443,11 +412,7 @@ ORDER BY a.date, a.start_time;
         VALUES ($1, $2, $3, 'pending')
         RETURNING *;
         `;
-			const insertResult = await client.query(insertQuery, [
-				shift_id,
-				user_id,
-				user_id,
-			]);
+			const insertResult = await client.query(insertQuery, [shift_id, user_id, user_id]);
 
 			return reply.status(201).send({
 				message: 'Shift removal request submitted successfully',
@@ -455,15 +420,13 @@ ORDER BY a.date, a.start_time;
 			});
 		} catch (error) {
 			console.error('Error requesting shift removal:', error);
-			return reply
-				.status(500)
-				.send({ error: 'Failed to request shift removal' });
+			return reply.status(500).send({ error: 'Failed to request shift removal' });
 		} finally {
 			client.release();
 		}
 	});
 
-	// Fetch Shift Removal Requests (user specific)
+	// WORKER - Fetch Shift Removal Requests (user specific)
 	fastify.get('/getUserShiftRemovalRequests', async (request, reply) => {
 		const { user_id } = request.query;
 
@@ -496,15 +459,13 @@ ORDER BY a.date, a.start_time;
 			});
 		} catch (error) {
 			console.error('Error retrieving user shift removal requests:', error);
-			return reply
-				.status(500)
-				.send({ error: 'Failed to retrieve shift removal requests' });
+			return reply.status(500).send({ error: 'Failed to retrieve shift removal requests' });
 		} finally {
 			client.release();
 		}
 	});
 
-	// Fetch Shift Removal Requests (group specific)
+	// ADMIN - Fetch Shift Removal Requests (group specific)
 	fastify.get('/getShiftRemovalRequests', async (request, reply) => {
 		const { user_id } = request.query;
 
@@ -521,26 +482,24 @@ ORDER BY a.date, a.start_time;
 			const groupResult = await client.query(groupQuery, [user_id]);
 
 			if (groupResult.rows.length === 0) {
-				return reply
-					.status(403)
-					.send({ error: 'Admin is not part of any schedule group' });
+				return reply.status(403).send({ error: 'Admin is not part of any schedule group' });
 			}
 
 			const groupIds = groupResult.rows.map((row) => row.group_id);
 
 			// Fetch all removal requests for users in the same groups as the admin with more details
 			const requestQuery = `
-            SELECT sr.request_id, sr.shift_id, sr.user_id, a.first_name, a.last_name, sr.request_time, sr.status,
-                   st.name_long AS shift_type, ash.start_time, ash.end_time, ash.date, sg.name AS schedule_group
-            FROM shift_removal_requests sr
-            JOIN active_shifts ash ON sr.shift_id = ash.shift_id
-            JOIN account a ON sr.user_id = a.user_id
-            JOIN shift_types st ON ash.shift_type_id = st.shift_type_id
-            JOIN schedule_groups sg ON ash.schedule_group_id = sg.group_id
-            WHERE ash.schedule_group_id = ANY($1) 
-            AND sr.status = 'pending'
-            ORDER BY sr.request_time DESC;
-        `;
+				SELECT sr.request_id, sr.shift_id, sr.user_id, a.first_name, a.last_name, a.teams_email, sr.request_time, sr.status,
+							st.name_long AS shift_type, ash.start_time, ash.end_time, ash.date, sg.name AS schedule_group
+				FROM shift_removal_requests sr
+				JOIN active_shifts ash ON sr.shift_id = ash.shift_id
+				JOIN account a ON sr.user_id = a.user_id
+				JOIN shift_types st ON ash.shift_type_id = st.shift_type_id
+				JOIN schedule_groups sg ON ash.schedule_group_id = sg.group_id
+				WHERE ash.schedule_group_id = ANY($1) 
+				AND sr.status = 'pending'
+				ORDER BY sr.request_time DESC;
+				`;
 
 			const requestResult = await client.query(requestQuery, [groupIds]);
 
@@ -550,26 +509,19 @@ ORDER BY a.date, a.start_time;
 			});
 		} catch (error) {
 			console.error('Error retrieving shift removal requests:', error);
-			return reply
-				.status(500)
-				.send({ error: 'Failed to retrieve shift removal requests' });
+			return reply.status(500).send({ error: 'Failed to retrieve shift removal requests' });
 		} finally {
 			client.release();
 		}
 	});
 
-	// Approve or Reject a Request
+	// ADMIN - Approve or Reject a Request
 	fastify.post('/processShiftRemoval', async (request, reply) => {
 		const { request_id, admin_id, action } = request.body;
 
-		if (
-			!request_id ||
-			!admin_id ||
-			!['approved', 'rejected'].includes(action)
-		) {
+		if (!request_id || !admin_id || !['approved', 'rejected'].includes(action)) {
 			return reply.status(400).send({
-				error:
-					'request_id, admin_id, and valid action (approved/rejected) are required',
+				error: 'request_id, admin_id, and valid action (approved/rejected) are required',
 			});
 		}
 
@@ -580,9 +532,7 @@ ORDER BY a.date, a.start_time;
 			const fetchResult = await client.query(fetchQuery, [request_id]);
 
 			if (fetchResult.rows.length === 0) {
-				return reply
-					.status(404)
-					.send({ error: 'Pending removal request not found' });
+				return reply.status(404).send({ error: 'Pending removal request not found' });
 			}
 
 			const { shift_id, user_id } = fetchResult.rows[0];
@@ -613,9 +563,7 @@ ORDER BY a.date, a.start_time;
 		} catch (error) {
 			await client.query('ROLLBACK');
 			console.error('Error processing shift removal request:', error);
-			return reply
-				.status(500)
-				.send({ error: 'Failed to process shift removal request' });
+			return reply.status(500).send({ error: 'Failed to process shift removal request' });
 		} finally {
 			client.release();
 		}
