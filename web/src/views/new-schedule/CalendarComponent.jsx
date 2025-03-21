@@ -70,7 +70,7 @@ const Calendar = ({ month, year, events, redDays = [] }) => {
 					<div
 						key={day}
 						className="font-semibold p-2">
-						{day.slice(0, 3)}
+						{day}
 					</div>
 				))}
 			</div>
