@@ -52,6 +52,7 @@ function NewScheduleRenderer() {
 						shift_id: shift.shift_id,
 						shift_type_id: shift.shift_type_id,
 						shift_type_short: shift.shift_type_short,
+						shift_type_long: shift.shift_type_long,
 						assigned_to: shift.assigned_to,
 						assigned_user_id: shift.assigned_user_id,
 						start_time: shift.start_time,

@@ -1,5 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
+import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
+import { FilePenLine } from 'lucide-react';
+import EditShiftDialog from './EditShiftDialog';
 import { Temporal } from '@js-temporal/polyfill';
 
 const DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -127,18 +130,60 @@ function getShiftColorStyle(shiftType) {
 }
 
 const EventCard = ({ event }) => {
+	const [open, setOpen] = useState(false);
 	const timeRange = `${event.start_time.slice(0, 5)}–${event.end_time.slice(0, 5)}`;
 	const { borderColor } = getShiftColorStyle(event.shift_type_short);
 
 	return (
-		<Card
-			style={{ border: `1.5px solid ${borderColor}` }}
-			className="text-white text-xs rounded-md px-2 py-[2px] shadow-sm bg-transparent">
-			<CardContent className="p-0 flex justify-between items-center w-full gap-2">
-				<span className="text-[11px] opacity-80 whitespace-nowrap">{timeRange}</span>
-				<span className="truncate text-center flex-1 font-semibold">{event.shift_type_short}</span>
-			</CardContent>
-		</Card>
+		<TooltipProvider>
+			<EditShiftDialog
+				open={open}
+				onOpenChange={setOpen}
+				event={event}
+			/>
+			<Tooltip>
+				<TooltipTrigger asChild>
+					<Card
+						style={{ border: `1.5px solid ${borderColor}` }}
+						className="text-white text-xs rounded-md px-2 py-[2px] shadow-sm bg-transparent cursor-pointer">
+						<CardContent className="p-0 flex justify-between items-center w-full gap-2">
+							<span className="text-[11px] opacity-80 whitespace-nowrap">{timeRange}</span>
+							<span className="truncate text-center flex-1 font-semibold">
+								{event.shift_type_short}
+							</span>
+						</CardContent>
+					</Card>
+				</TooltipTrigger>
+				<TooltipContent
+					side="top"
+					className="text-xs w-60">
+					<div className="space-y-1 relative">
+						<div className="flex justify-between items-center">
+							<strong>{event.shift_type_long}</strong>
+							<FilePenLine
+								size={14}
+								className="cursor-pointer hover:text-red-400"
+								onClick={(e) => {
+									e.stopPropagation();
+									setOpen(true);
+								}}
+							/>
+						</div>
+						<div>{timeRange}</div>
+						<div>
+							<strong>
+								{event.assigned_user_first_name
+									? `${event.assigned_user_first_name} ${event.assigned_user_last_name}`
+									: 'Unassigned'}
+							</strong>
+						</div>
+						{event.assigned_user_email && (
+							<div className="opacity-80">{event.assigned_user_email}</div>
+						)}
+					</div>
+				</TooltipContent>
+			</Tooltip>
+		</TooltipProvider>
 	);
 };
 
