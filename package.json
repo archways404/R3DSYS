@@ -17,6 +17,7 @@
 	"dependencies": {
 		"@fastify/csrf-protection": "^7.0.2",
 		"@fastify/static": "^8.0.1",
+		"@js-temporal/polyfill": "^0.4.4",
 		"axios": "^1.7.7",
 		"chalk": "^5.4.1",
 		"date-holidays": "^3.23.12",

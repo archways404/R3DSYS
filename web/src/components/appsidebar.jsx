@@ -74,6 +74,12 @@ const items = [
 		showBadge: true,
 	},
 	{
+		title: 'NewSchedule',
+		url: '/new-schedule',
+		icon: GrSchedule,
+		roles: ['admin'],
+	},
+	{
 		title: 'Template',
 		url: '/handle-template',
 		icon: HiTemplate,
