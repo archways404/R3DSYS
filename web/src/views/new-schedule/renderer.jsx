@@ -15,6 +15,8 @@ function NewScheduleRenderer() {
 	const [rawShifts, setRawShifts] = useState([]);
 	const [transformedEvents, setTransformedEvents] = useState({});
 
+	const group_id = '6cd7a46c-ae69-4cac-9b84-e3fff7b0ca97';
+
 	useEffect(() => {
 		const fetchRedDays = async () => {
 			try {
@@ -34,14 +36,16 @@ function NewScheduleRenderer() {
 	useEffect(() => {
 		const fetchSchedule = async () => {
 			try {
-				const res = await fetch(`/schedule?group_id=${group_id}`);
+				const res = await fetch(`${import.meta.env.VITE_BASE_ADDR}/schedule?group_id=${group_id}`);
 				const data = await res.json();
 				setRawShifts(data);
 
 				const grouped = {};
 
 				data.forEach((shift) => {
-					const date = Temporal.PlainDate.from(shift.date).toString();
+					const dateOnly = shift.date.split('T')[0]; // Remove time and timezone
+					const date = Temporal.PlainDate.from(dateOnly).toString();
+
 					if (!grouped[date]) grouped[date] = [];
 
 					grouped[date].push({
@@ -79,16 +83,7 @@ function NewScheduleRenderer() {
 					month={month}
 					year={year}
 					redDays={redDays}
-					events={{
-						'2025-04-02': [{ name: 'Event 1' }],
-						'2025-04-05': [
-							{ name: 'Event 2' },
-							{ name: 'Event 3' },
-							{ name: 'Event 3' },
-							{ name: 'Event 3' },
-							{ name: 'Event 3' },
-						],
-					}}
+					events={transformedEvents}
 				/>
 			</div>
 		</Layout>

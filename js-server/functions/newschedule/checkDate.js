@@ -6,8 +6,6 @@ function checkDate(temporalDate) {
 	const dateString = temporalDate.toString();
 	const holiday = hd.isHoliday(dateString);
 
-	console.log(hd.getHolidays(2025));
-
 	if (!holiday) {
 		return null; // Not a holiday
 	}
