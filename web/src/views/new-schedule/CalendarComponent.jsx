@@ -132,7 +132,7 @@ function getShiftColorStyle(shiftType) {
 const EventCard = ({ event }) => {
 	const [open, setOpen] = useState(false);
 	const timeRange = `${event.start_time.slice(0, 5)}–${event.end_time.slice(0, 5)}`;
-	const { borderColor } = getShiftColorStyle(event.shift_type_short);
+  const { borderColor } = getShiftColorStyle(event.shift_type_short);
 
 	return (
 		<TooltipProvider>

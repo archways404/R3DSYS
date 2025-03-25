@@ -6,9 +6,12 @@ async function routes(fastify, options) {
 		try {
 			const { group_id } = request.query;
 
-			if (!group_id) {
-				return reply.status(400).send({ error: 'Group ID is required' });
+			if (!group_id || (Array.isArray(group_id) && group_id.length === 0)) {
+				return reply.status(400).send({ error: 'At least one Group ID is required' });
 			}
+
+			const groupIds = Array.isArray(group_id) ? group_id : [group_id];
+			const placeholders = groupIds.map((_, i) => `$${i + 1}`).join(', ');
 
 			const query = `
 			SELECT 
@@ -32,10 +35,10 @@ async function routes(fastify, options) {
 			LEFT JOIN 
 				account acc ON asf.assigned_to = acc.user_id
 			WHERE 
-				asf.schedule_group_id = $1
+				asf.schedule_group_id IN (${placeholders})
 		`;
 
-			const { rows } = await fastify.pg.query(query, [group_id]);
+			const { rows } = await fastify.pg.query(query, groupIds);
 
 			return reply.send(rows);
 		} catch (error) {

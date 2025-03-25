@@ -3,6 +3,7 @@ import { AuthContext } from '../../context/AuthContext';
 import Layout from '../../components/Layout';
 import Calendar from './CalendarComponent';
 import CalDateComponent from './CalDateComponent';
+import FilterComponent from './FilterComponent';
 import { Temporal } from '@js-temporal/polyfill';
 
 function NewScheduleRenderer() {
@@ -14,8 +15,36 @@ function NewScheduleRenderer() {
 	const [redDays, setRedDays] = useState([]);
 	const [rawShifts, setRawShifts] = useState([]);
 	const [transformedEvents, setTransformedEvents] = useState({});
+	const [activeGroups, setActiveGroups] = useState(new Set());
+	const [showOnlyMine, setShowOnlyMine] = useState(false);
+	const [selectedShiftTypes, setSelectedShiftTypes] = useState(new Set());
 
-	const group_id = '6cd7a46c-ae69-4cac-9b84-e3fff7b0ca97';
+	const availableShiftTypes = Array.from(
+		new Map(
+			rawShifts.map((s) => [s.shift_type_id, { id: s.shift_type_id, name: s.shift_type_short }])
+		).values()
+	);
+
+	const filteredEvents = {};
+
+	Object.entries(transformedEvents).forEach(([date, shifts]) => {
+		const visibleShifts = shifts.filter((s) => {
+			const groupMatch = activeGroups.has(s.schedule_group_id);
+			const shiftTypeMatch =
+				selectedShiftTypes.size === 0 || selectedShiftTypes.has(s.shift_type_id);
+			const mineMatch = !showOnlyMine || s.assigned_user_id === user?.uuid;
+			return groupMatch && shiftTypeMatch && mineMatch;
+		});
+		if (visibleShifts.length > 0) {
+			filteredEvents[date] = visibleShifts;
+		}
+	});
+
+	useEffect(() => {
+		if (user?.groups) {
+			setActiveGroups(new Set(user.groups.map((g) => g.id)));
+		}
+	}, [user?.groups]);
 
 	useEffect(() => {
 		const fetchRedDays = async () => {
@@ -32,18 +61,23 @@ function NewScheduleRenderer() {
 		fetchRedDays();
 	}, [month, year]);
 
-	// Fetch shifts
 	useEffect(() => {
 		const fetchSchedule = async () => {
+			if (!user?.groups || user.groups.length === 0) return;
+
 			try {
-				const res = await fetch(`${import.meta.env.VITE_BASE_ADDR}/schedule?group_id=${group_id}`);
+				const queryParams = user.groups
+					.map((g) => `group_id=${encodeURIComponent(g.id)}`)
+					.join('&');
+
+				const res = await fetch(`${import.meta.env.VITE_BASE_ADDR}/schedule?${queryParams}`);
 				const data = await res.json();
 				setRawShifts(data);
 
 				const grouped = {};
 
 				data.forEach((shift) => {
-					const dateOnly = shift.date.split('T')[0]; // Remove time and timezone
+					const dateOnly = shift.date.split('T')[0];
 					const date = Temporal.PlainDate.from(dateOnly).toString();
 
 					if (!grouped[date]) grouped[date] = [];
@@ -55,6 +89,9 @@ function NewScheduleRenderer() {
 						shift_type_long: shift.shift_type_long,
 						assigned_to: shift.assigned_to,
 						assigned_user_id: shift.assigned_user_id,
+						assigned_user_first_name: shift.assigned_user_first_name,
+						assigned_user_last_name: shift.assigned_user_last_name,
+						assigned_user_email: shift.assigned_user_email,
 						start_time: shift.start_time,
 						end_time: shift.end_time,
 						date: shift.date,
@@ -69,7 +106,7 @@ function NewScheduleRenderer() {
 		};
 
 		fetchSchedule();
-	}, [group_id]);
+	}, [user?.groups]);
 
 	return (
 		<Layout>
@@ -80,11 +117,21 @@ function NewScheduleRenderer() {
 					setMonth={setMonth}
 					setYear={setYear}
 				/>
+				<FilterComponent
+					user={user}
+					activeGroups={activeGroups}
+					setActiveGroups={setActiveGroups}
+					showOnlyMine={showOnlyMine}
+					setShowOnlyMine={setShowOnlyMine}
+					availableShiftTypes={availableShiftTypes}
+					selectedShiftTypes={selectedShiftTypes}
+					setSelectedShiftTypes={setSelectedShiftTypes}
+				/>
 				<Calendar
 					month={month}
 					year={year}
 					redDays={redDays}
-					events={transformedEvents}
+					events={filteredEvents}
 				/>
 			</div>
 		</Layout>
