@@ -54,8 +54,10 @@ function NewScheduleRenderer() {
 			const grouped = {};
 
 			data.forEach((shift) => {
-				const dateOnly = shift.date.split('T')[0];
-				const date = Temporal.PlainDate.from(dateOnly).toString();
+				const date = Temporal.Instant.from(shift.date)
+					.toZonedDateTimeISO('Europe/Stockholm') // change to your timezone if needed
+					.toPlainDate()
+					.toString();
 
 				if (!grouped[date]) grouped[date] = [];
 

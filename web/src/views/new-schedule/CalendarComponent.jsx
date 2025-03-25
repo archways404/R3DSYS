@@ -1,9 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { FilePenLine } from 'lucide-react';
 import EditShiftDialog from './EditShiftDialog';
 import { Temporal } from '@js-temporal/polyfill';
+import { Plus } from 'lucide-react';
+import NewEntryComponent from './NewEntryComponent';
+import { useContext } from 'react';
+import { AuthContext } from '../../context/AuthContext';
 
 const DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
@@ -58,8 +62,11 @@ function fillCalendarGrid(year, month) {
 	return [...prevMonth, ...currMonth, ...nextMonth];
 }
 
-const Calendar = ({ month, year, events, redDays = [], onScheduleUpdated }) => {
+const Calendar = ({ month, year, events = {}, redDays = [], onScheduleUpdated }) => {
+	const { user } = useContext(AuthContext);
 	const days = fillCalendarGrid(year, month);
+	const [newEntryOpen, setNewEntryOpen] = useState(false);
+	const [selectedDate, setSelectedDate] = useState(null);
 
 	const isRedDay = (date) => redDays.includes(date.toString());
 
@@ -74,10 +81,12 @@ const Calendar = ({ month, year, events, redDays = [], onScheduleUpdated }) => {
 					</div>
 				))}
 			</div>
+
 			<div className="grid grid-cols-7 gap-1 border-t border-gray-700">
 				{days.map((day) => {
 					const isCurrentMonth = day.month === month;
 					const red = isRedDay(day);
+					const isOpen = newEntryOpen && selectedDate === day.toString();
 
 					return (
 						<div
@@ -89,7 +98,31 @@ const Calendar = ({ month, year, events, redDays = [], onScheduleUpdated }) => {
 									? ''
 									: 'text-gray-500'
 							}`}>
+							{/* Day number */}
 							<div className="text-xs absolute top-1 left-1">{day.day}</div>
+
+							{/* ➕ Plus button */}
+							<button
+								className="absolute top-1 right-1 p-0.5 hover:text-green-400"
+								onClick={() => {
+									setSelectedDate(day.toString());
+									setNewEntryOpen(true);
+								}}>
+								<Plus size={14} />
+							</button>
+
+							{/* Mount NewEntryComponent ONLY when clicked */}
+							{isOpen && (
+								<NewEntryComponent
+									open={newEntryOpen}
+									onOpenChange={setNewEntryOpen}
+									date={day.toString()}
+									onCreated={onScheduleUpdated}
+									groups={user?.groups || []}
+								/>
+							)}
+
+							{/* Events */}
 							<div className="mt-5 space-y-1 flex-1 overflow-hidden">
 								{(events[day.toString()] || []).map((event, index) => (
 									<EventCard

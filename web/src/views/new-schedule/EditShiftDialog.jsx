@@ -1,5 +1,12 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { useEffect, useState, useMemo } from 'react';
+import {
+	Dialog,
+	DialogContent,
+	DialogHeader,
+	DialogTitle,
+	DialogDescription,
+	DialogFooter,
+	DialogTrigger,
+} from '@/components/ui/dialog';
 import {
 	Select,
 	SelectTrigger,
@@ -11,6 +18,7 @@ import {
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { useEffect, useState, useMemo } from 'react';
 
 const EditShiftDialog = ({ open, onOpenChange, event, onUpdated }) => {
 	const [users, setUsers] = useState([]);
@@ -19,6 +27,7 @@ const EditShiftDialog = ({ open, onOpenChange, event, onUpdated }) => {
 	const [endTime, setEndTime] = useState('');
 	const [initialData, setInitialData] = useState(null);
 	const [saving, setSaving] = useState(false);
+	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
 	useEffect(() => {
 		if (open && event?.shift_id) {
@@ -42,8 +51,6 @@ const EditShiftDialog = ({ open, onOpenChange, event, onUpdated }) => {
 		}
 	}, [open, event?.shift_id]);
 
-	if (!event) return null;
-
 	const availableUsers = useMemo(
 		() => users.filter((u) => u.available).sort((a, b) => a.first_name.localeCompare(b.first_name)),
 		[users]
@@ -65,26 +72,18 @@ const EditShiftDialog = ({ open, onOpenChange, event, onUpdated }) => {
 		if (!hasChanges || saving) return;
 
 		setSaving(true);
-
 		try {
 			const res = await fetch(`${import.meta.env.VITE_BASE_ADDR}/shift/${event.shift_id}/update`, {
 				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-				},
+				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
 					assigned_to: selectedUser || null,
 					start_time: startTime,
 					end_time: endTime,
 				}),
 			});
-
 			if (!res.ok) throw new Error('Failed to update shift');
-
-			// 🔁 Tell parent to refresh
 			onUpdated?.();
-
-			// ✅ Close dialog
 			onOpenChange(false);
 		} catch (err) {
 			console.error('Update failed:', err);
@@ -93,83 +92,136 @@ const EditShiftDialog = ({ open, onOpenChange, event, onUpdated }) => {
 		}
 	};
 
+	const handleDelete = async () => {
+		try {
+			const res = await fetch(`${import.meta.env.VITE_BASE_ADDR}/shift/${event.shift_id}/delete`, {
+				method: 'DELETE',
+			});
+			if (!res.ok) throw new Error('Failed to delete shift');
+			onUpdated?.();
+			setDeleteDialogOpen(false);
+			onOpenChange(false);
+		} catch (err) {
+			console.error('Delete failed:', err);
+		}
+	};
+
+	if (!event) return null;
+
 	return (
-		<Dialog
-			open={open}
-			onOpenChange={onOpenChange}>
-			<DialogContent className="text-sm">
-				<DialogHeader>
-					<DialogTitle>{event.shift_type_long}</DialogTitle>
-				</DialogHeader>
+		<>
+			<Dialog
+				open={open}
+				onOpenChange={onOpenChange}>
+				<DialogContent className="text-sm">
+					<DialogHeader>
+						<DialogTitle>{event.shift_type_long}</DialogTitle>
+					</DialogHeader>
 
-				<div className="space-y-4">
-					<div className="flex gap-4">
-						<div className="flex-1">
-							<label className="block text-sm font-medium mb-1">Start Time</label>
-							<Input
-								type="time"
-								value={startTime}
-								onChange={(e) => setStartTime(e.target.value)}
-							/>
+					<div className="space-y-4">
+						<div className="flex gap-4">
+							<div className="flex-1">
+								<label className="block text-sm font-medium mb-1">Start Time</label>
+								<Input
+									type="time"
+									value={startTime}
+									onChange={(e) => setStartTime(e.target.value)}
+								/>
+							</div>
+							<div className="flex-1">
+								<label className="block text-sm font-medium mb-1">End Time</label>
+								<Input
+									type="time"
+									value={endTime}
+									onChange={(e) => setEndTime(e.target.value)}
+								/>
+							</div>
 						</div>
-						<div className="flex-1">
-							<label className="block text-sm font-medium mb-1">End Time</label>
-							<Input
-								type="time"
-								value={endTime}
-								onChange={(e) => setEndTime(e.target.value)}
-							/>
+
+						<div>
+							<label className="block text-sm font-medium mb-1">Assigned to</label>
+							<Select
+								value={selectedUser}
+								onValueChange={setSelectedUser}>
+								<SelectTrigger>
+									<SelectValue placeholder="Select a user" />
+								</SelectTrigger>
+								<SelectContent>
+									{availableUsers.length > 0 && (
+										<SelectGroup>
+											<SelectLabel>Available Users</SelectLabel>
+											{availableUsers.map((user) => (
+												<SelectItem
+													key={user.user_id}
+													value={user.user_id}>
+													{user.first_name} {user.last_name} ✅
+												</SelectItem>
+											))}
+										</SelectGroup>
+									)}
+									{unavailableUsers.length > 0 && (
+										<SelectGroup>
+											<SelectLabel>Other Users</SelectLabel>
+											{unavailableUsers.map((user) => (
+												<SelectItem
+													key={user.user_id}
+													value={user.user_id}>
+													{user.first_name} {user.last_name}
+												</SelectItem>
+											))}
+										</SelectGroup>
+									)}
+								</SelectContent>
+							</Select>
+						</div>
+
+						<div className="pt-2 flex justify-between">
+							<DialogTrigger asChild>
+								<Button
+									variant="destructive"
+									onClick={() => setDeleteDialogOpen(true)}>
+									Delete
+								</Button>
+							</DialogTrigger>
+
+							<Button
+								variant="default"
+								onClick={handleUpdate}
+								disabled={!hasChanges || saving}>
+								{saving ? 'Saving...' : 'Save Changes'}
+							</Button>
 						</div>
 					</div>
+				</DialogContent>
+			</Dialog>
 
-					<div>
-						<label className="block text-sm font-medium mb-1">Assigned to</label>
-						<Select
-							value={selectedUser}
-							onValueChange={setSelectedUser}>
-							<SelectTrigger>
-								<SelectValue placeholder="Select a user" />
-							</SelectTrigger>
-							<SelectContent>
-								{availableUsers.length > 0 && (
-									<SelectGroup>
-										<SelectLabel>Available Users</SelectLabel>
-										{availableUsers.map((user) => (
-											<SelectItem
-												key={user.user_id}
-												value={user.user_id}>
-												{user.first_name} {user.last_name} ✅
-											</SelectItem>
-										))}
-									</SelectGroup>
-								)}
-								{unavailableUsers.length > 0 && (
-									<SelectGroup>
-										<SelectLabel>Other Users</SelectLabel>
-										{unavailableUsers.map((user) => (
-											<SelectItem
-												key={user.user_id}
-												value={user.user_id}>
-												{user.first_name} {user.last_name}
-											</SelectItem>
-										))}
-									</SelectGroup>
-								)}
-							</SelectContent>
-						</Select>
-					</div>
-
-					<div className="pt-2 text-right">
+			{/* Confirmation Dialog */}
+			<Dialog
+				open={deleteDialogOpen}
+				onOpenChange={setDeleteDialogOpen}>
+				<DialogContent>
+					<DialogHeader>
+						<DialogTitle>Are you absolutely sure?</DialogTitle>
+						<DialogDescription>
+							This action cannot be undone. This will permanently delete the shift from the
+							schedule.
+						</DialogDescription>
+					</DialogHeader>
+					<DialogFooter>
 						<Button
-							variant="default"
-							onClick={handleUpdate}
-							disabled={!hasChanges || saving}>
-							{saving ? 'Saving...' : 'Save Changes'}
+							variant="secondary"
+							onClick={() => setDeleteDialogOpen(false)}>
+							Cancel
 						</Button>
-					</div>
-				</div>
-			</DialogContent>
-		</Dialog>
+						<Button
+							variant="destructive"
+							onClick={handleDelete}>
+							Confirm Delete
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
+		</>
 	);
 };
 

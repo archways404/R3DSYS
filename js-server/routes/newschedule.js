@@ -131,6 +131,109 @@ async function routes(fastify, options) {
 			reply.status(500).send({ error: 'Failed to update shift' });
 		}
 	});
+  
+  fastify.delete('/shift/:id/delete', async (request, reply) => {
+		const { id } = request.params;
+
+		try {
+			const result = await fastify.pg.query('DELETE FROM active_shifts WHERE shift_id = $1', [id]);
+
+			if (result.rowCount === 0) {
+				return reply.status(404).send({ error: 'Shift not found' });
+			}
+
+			return reply.send({ success: true });
+		} catch (err) {
+			console.error(err);
+			return reply.status(500).send({ error: 'Failed to delete shift' });
+		}
+	});
+
+	fastify.get('/grp_users', async (request, reply) => {
+		const { group_id } = request.query;
+
+		if (!group_id) {
+			return reply.status(400).send({ error: 'Missing group_id' });
+		}
+
+		const groupIds = Array.isArray(group_id) ? group_id : [group_id];
+		const placeholders = groupIds.map((_, i) => `$${i + 1}`).join(', ');
+
+		try {
+			const query = `
+			SELECT u.user_id, u.first_name, u.last_name
+			FROM account u
+			INNER JOIN account_schedule_groups sg ON u.user_id = sg.user_id
+			WHERE sg.group_id IN (${placeholders})
+			GROUP BY u.user_id
+		`;
+			const result = await fastify.pg.query(query, groupIds);
+			return reply.send(result.rows);
+		} catch (err) {
+			console.error(err);
+			return reply.status(500).send({ error: 'Failed to fetch users' });
+		}
+	});
+
+	fastify.get('/shift-types', async (request, reply) => {
+		try {
+			const { rows } = await fastify.pg.query(`
+			SELECT shift_type_id AS id, name_short AS name
+			FROM shift_types
+			ORDER BY name_short
+		`);
+			return reply.send(rows);
+		} catch (err) {
+			console.error('Failed to fetch shift types:', err);
+			return reply.status(500).send({ error: 'Failed to fetch shift types' });
+		}
+	});
+
+	fastify.post('/shift/create', async (request, reply) => {
+		const { date, start_time, end_time, shift_type_id, assigned_to, schedule_group_id } =
+			request.body;
+
+		if (!date || !start_time || !end_time || !shift_type_id || !schedule_group_id) {
+			return reply.status(400).send({ error: 'Missing required fields' });
+		}
+
+		try {
+			console.log('Received raw date:', date);
+			const parsed = Temporal.PlainDate.from(date);
+			const formattedDate = parsed.toString(); // ensures YYYY-MM-DD
+
+			console.log('Using formatted date:', formattedDate);
+
+			const query = `
+			INSERT INTO active_shifts (
+				date,
+				start_time,
+				end_time,
+				shift_type_id,
+				assigned_to,
+				schedule_group_id
+			)
+			VALUES ($1, $2, $3, $4, $5, $6)
+			RETURNING shift_id
+		`;
+
+			const values = [
+				formattedDate,
+				start_time,
+				end_time,
+				shift_type_id,
+				assigned_to || null,
+				schedule_group_id,
+			];
+
+			const result = await fastify.pg.query(query, values);
+
+			return reply.send({ success: true, shift_id: result.rows[0].shift_id });
+		} catch (err) {
+			console.error('Error creating shift:', err.message);
+			return reply.status(500).send({ error: 'Failed to create shift' });
+		}
+	});
 }
 
 module.exports = routes;
