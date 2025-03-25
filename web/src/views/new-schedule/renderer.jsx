@@ -40,6 +40,48 @@ function NewScheduleRenderer() {
 		}
 	});
 
+	// Add this to NewScheduleRenderer
+	const fetchSchedule = async () => {
+		if (!user?.groups || user.groups.length === 0) return;
+
+		try {
+			const queryParams = user.groups.map((g) => `group_id=${encodeURIComponent(g.id)}`).join('&');
+
+			const res = await fetch(`${import.meta.env.VITE_BASE_ADDR}/schedule?${queryParams}`);
+			const data = await res.json();
+			setRawShifts(data);
+
+			const grouped = {};
+
+			data.forEach((shift) => {
+				const dateOnly = shift.date.split('T')[0];
+				const date = Temporal.PlainDate.from(dateOnly).toString();
+
+				if (!grouped[date]) grouped[date] = [];
+
+				grouped[date].push({
+					shift_id: shift.shift_id,
+					shift_type_id: shift.shift_type_id,
+					shift_type_short: shift.shift_type_short,
+					shift_type_long: shift.shift_type_long,
+					assigned_to: shift.assigned_to,
+					assigned_user_id: shift.assigned_user_id,
+					assigned_user_first_name: shift.assigned_user_first_name,
+					assigned_user_last_name: shift.assigned_user_last_name,
+					assigned_user_email: shift.assigned_user_email,
+					start_time: shift.start_time,
+					end_time: shift.end_time,
+					date: shift.date,
+					schedule_group_id: shift.schedule_group_id,
+				});
+			});
+
+			setTransformedEvents(grouped);
+		} catch (error) {
+			console.error('Failed to fetch schedule:', error);
+		}
+	};
+
 	useEffect(() => {
 		if (user?.groups) {
 			setActiveGroups(new Set(user.groups.map((g) => g.id)));
@@ -62,49 +104,6 @@ function NewScheduleRenderer() {
 	}, [month, year]);
 
 	useEffect(() => {
-		const fetchSchedule = async () => {
-			if (!user?.groups || user.groups.length === 0) return;
-
-			try {
-				const queryParams = user.groups
-					.map((g) => `group_id=${encodeURIComponent(g.id)}`)
-					.join('&');
-
-				const res = await fetch(`${import.meta.env.VITE_BASE_ADDR}/schedule?${queryParams}`);
-				const data = await res.json();
-				setRawShifts(data);
-
-				const grouped = {};
-
-				data.forEach((shift) => {
-					const dateOnly = shift.date.split('T')[0];
-					const date = Temporal.PlainDate.from(dateOnly).toString();
-
-					if (!grouped[date]) grouped[date] = [];
-
-					grouped[date].push({
-						shift_id: shift.shift_id,
-						shift_type_id: shift.shift_type_id,
-						shift_type_short: shift.shift_type_short,
-						shift_type_long: shift.shift_type_long,
-						assigned_to: shift.assigned_to,
-						assigned_user_id: shift.assigned_user_id,
-						assigned_user_first_name: shift.assigned_user_first_name,
-						assigned_user_last_name: shift.assigned_user_last_name,
-						assigned_user_email: shift.assigned_user_email,
-						start_time: shift.start_time,
-						end_time: shift.end_time,
-						date: shift.date,
-						schedule_group_id: shift.schedule_group_id,
-					});
-				});
-
-				setTransformedEvents(grouped);
-			} catch (error) {
-				console.error('Failed to fetch schedule:', error);
-			}
-		};
-
 		fetchSchedule();
 	}, [user?.groups]);
 
@@ -132,6 +131,7 @@ function NewScheduleRenderer() {
 					year={year}
 					redDays={redDays}
 					events={filteredEvents}
+					onScheduleUpdated={fetchSchedule}
 				/>
 			</div>
 		</Layout>

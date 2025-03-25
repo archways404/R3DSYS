@@ -58,7 +58,7 @@ function fillCalendarGrid(year, month) {
 	return [...prevMonth, ...currMonth, ...nextMonth];
 }
 
-const Calendar = ({ month, year, events, redDays = [] }) => {
+const Calendar = ({ month, year, events, redDays = [], onScheduleUpdated }) => {
 	const days = fillCalendarGrid(year, month);
 
 	const isRedDay = (date) => redDays.includes(date.toString());
@@ -95,6 +95,7 @@ const Calendar = ({ month, year, events, redDays = [] }) => {
 									<EventCard
 										key={index}
 										event={event}
+										onUpdated={onScheduleUpdated}
 									/>
 								))}
 							</div>
@@ -129,10 +130,10 @@ function getShiftColorStyle(shiftType) {
 	return { borderColor };
 }
 
-const EventCard = ({ event }) => {
+const EventCard = ({ event, onUpdated }) => {
 	const [open, setOpen] = useState(false);
 	const timeRange = `${event.start_time.slice(0, 5)}–${event.end_time.slice(0, 5)}`;
-  const { borderColor } = getShiftColorStyle(event.shift_type_short);
+	const { borderColor } = getShiftColorStyle(event.shift_type_short);
 
 	return (
 		<TooltipProvider>
@@ -140,6 +141,7 @@ const EventCard = ({ event }) => {
 				open={open}
 				onOpenChange={setOpen}
 				event={event}
+				onUpdated={onUpdated}
 			/>
 			<Tooltip>
 				<TooltipTrigger asChild>

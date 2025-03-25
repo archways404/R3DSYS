@@ -70,6 +70,67 @@ async function routes(fastify, options) {
 			return reply.status(500).send({ error: 'Failed' });
 		}
 	});
+  
+  fastify.get('/shift/:id/edit-info', async (request, reply) => {
+		const { id } = request.params;
+
+		try {
+			const shiftQuery = `
+			SELECT s.*, a.first_name AS assigned_user_first_name, a.last_name AS assigned_user_last_name
+			FROM active_shifts s
+			LEFT JOIN account a ON s.assigned_to = a.user_id
+			WHERE s.shift_id = $1
+		`;
+
+			const shiftResult = await fastify.pg.query(shiftQuery, [id]);
+			if (shiftResult.rowCount === 0) return reply.status(404).send({ error: 'Shift not found' });
+			const shift = shiftResult.rows[0];
+
+			const groupUsersQuery = `
+			SELECT u.user_id, u.first_name, u.last_name
+			FROM account u
+			INNER JOIN account_schedule_groups sg ON u.user_id = sg.user_id
+			WHERE sg.group_id = $1
+		`;
+
+			const availableUsersQuery = `
+			SELECT user_id FROM available_for_shift WHERE shift_id = $1
+		`;
+
+			const [groupUsersRes, availableRes] = await Promise.all([
+				fastify.pg.query(groupUsersQuery, [shift.schedule_group_id]),
+				fastify.pg.query(availableUsersQuery, [id]),
+			]);
+
+			const availableUserIds = new Set(availableRes.rows.map((r) => r.user_id));
+			const users = groupUsersRes.rows.map((user) => ({
+				...user,
+				available: availableUserIds.has(user.user_id),
+			}));
+
+			return reply.send({ shift, users });
+		} catch (err) {
+			console.error(err);
+			return reply.status(500).send({ error: 'Failed to fetch shift edit data' });
+		}
+	});
+
+	fastify.post('/shift/:id/update', async (request, reply) => {
+		const { id } = request.params;
+		const { assigned_to, start_time, end_time } = request.body;
+
+		try {
+			await fastify.pg.query(
+				`UPDATE active_shifts SET assigned_to = $1, start_time = $2, end_time = $3 WHERE shift_id = $4`,
+				[assigned_to, start_time, end_time, id]
+			);
+
+			reply.send({ success: true });
+		} catch (err) {
+			console.error(err);
+			reply.status(500).send({ error: 'Failed to update shift' });
+		}
+	});
 }
 
 module.exports = routes;
