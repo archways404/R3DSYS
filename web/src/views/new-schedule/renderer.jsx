@@ -146,7 +146,11 @@ function NewScheduleRenderer() {
 						onScheduleUpdated={fetchSchedule}
 					/>
 				) : (
-					<ListView events={filteredEvents} />
+					<ListView
+						year={year}
+						month={month}
+						events={filteredEvents}
+					/>
 				)}
 			</div>
 		</Layout>
