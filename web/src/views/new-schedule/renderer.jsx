@@ -1,10 +1,14 @@
+import { Temporal } from '@js-temporal/polyfill';
+
 import { useState, useContext, useEffect } from 'react';
 import { AuthContext } from '../../context/AuthContext';
+
 import Layout from '../../components/Layout';
 import Calendar from './CalendarComponent';
 import CalDateComponent from './CalDateComponent';
 import FilterComponent from './FilterComponent';
-import { Temporal } from '@js-temporal/polyfill';
+import ViewModeSwitcher from './ViewModeSwitcher';
+import ListView from './ListView';
 
 function NewScheduleRenderer() {
 	const { user } = useContext(AuthContext);
@@ -18,6 +22,7 @@ function NewScheduleRenderer() {
 	const [activeGroups, setActiveGroups] = useState(new Set());
 	const [showOnlyMine, setShowOnlyMine] = useState(false);
 	const [selectedShiftTypes, setSelectedShiftTypes] = useState(new Set());
+	const [viewMode, setViewMode] = useState('calendar');
 
 	const availableShiftTypes = Array.from(
 		new Map(
@@ -112,6 +117,10 @@ function NewScheduleRenderer() {
 	return (
 		<Layout>
 			<div className="flex flex-col justify-center items-center min-h-screen space-y-6 pb-8">
+				<ViewModeSwitcher
+					viewMode={viewMode}
+					setViewMode={setViewMode}
+				/>
 				<CalDateComponent
 					month={month}
 					year={year}
@@ -128,13 +137,17 @@ function NewScheduleRenderer() {
 					selectedShiftTypes={selectedShiftTypes}
 					setSelectedShiftTypes={setSelectedShiftTypes}
 				/>
-				<Calendar
-					month={month}
-					year={year}
-					redDays={redDays}
-					events={filteredEvents}
-					onScheduleUpdated={fetchSchedule}
-				/>
+				{viewMode === 'calendar' ? (
+					<Calendar
+						month={month}
+						year={year}
+						redDays={redDays}
+						events={filteredEvents}
+						onScheduleUpdated={fetchSchedule}
+					/>
+				) : (
+					<ListView events={filteredEvents} />
+				)}
 			</div>
 		</Layout>
 	);
