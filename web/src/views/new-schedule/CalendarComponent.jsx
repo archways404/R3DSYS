@@ -100,26 +100,27 @@ const Calendar = ({ month, year, events = {}, redDays = [], onScheduleUpdated })
 							}`}>
 							{/* Day number */}
 							<div className="text-xs absolute top-1 left-1">{day.day}</div>
+							{(user?.role === 'admin' || user?.role === 'maintainer') && (
+								<>
+									<button
+										className="absolute top-1 right-1 p-0.5 hover:text-green-400"
+										onClick={() => {
+											setSelectedDate(day.toString());
+											setNewEntryOpen(true);
+										}}>
+										<Plus size={14} />
+									</button>
 
-							{/* ➕ Plus button */}
-							<button
-								className="absolute top-1 right-1 p-0.5 hover:text-green-400"
-								onClick={() => {
-									setSelectedDate(day.toString());
-									setNewEntryOpen(true);
-								}}>
-								<Plus size={14} />
-							</button>
-
-							{/* Mount NewEntryComponent ONLY when clicked */}
-							{isOpen && (
-								<NewEntryComponent
-									open={newEntryOpen}
-									onOpenChange={setNewEntryOpen}
-									date={day.toString()}
-									onCreated={onScheduleUpdated}
-									groups={user?.groups || []}
-								/>
+									{isOpen && (
+										<NewEntryComponent
+											open={newEntryOpen}
+											onOpenChange={setNewEntryOpen}
+											date={day.toString()}
+											onCreated={onScheduleUpdated}
+											groups={user?.groups || []}
+										/>
+									)}
+								</>
 							)}
 
 							{/* Events */}
@@ -176,6 +177,7 @@ function getShiftColorStyle(shiftType) {
 }
 
 const EventCard = ({ event, onUpdated }) => {
+	const { user } = useContext(AuthContext);
 	const [open, setOpen] = useState(false);
 	const timeRange = `${event.start_time.slice(0, 5)}–${event.end_time.slice(0, 5)}`;
 	const { borderColor } = getShiftColorStyle(event.shift_type_short);
@@ -207,14 +209,16 @@ const EventCard = ({ event, onUpdated }) => {
 					<div className="space-y-1 relative">
 						<div className="flex justify-between items-center">
 							<strong>{event.shift_type_long}</strong>
-							<FilePenLine
-								size={14}
-								className="cursor-pointer hover:text-red-400"
-								onClick={(e) => {
-									e.stopPropagation();
-									setOpen(true);
-								}}
-							/>
+							{(user?.role === 'admin' || user?.role === 'maintainer') && (
+								<FilePenLine
+									size={14}
+									className="cursor-pointer hover:text-red-400"
+									onClick={(e) => {
+										e.stopPropagation();
+										setOpen(true);
+									}}
+								/>
+							)}
 						</div>
 						<div>{timeRange}</div>
 						<div>

@@ -77,7 +77,7 @@ const items = [
 		title: 'NewSchedule',
 		url: '/new-schedule',
 		icon: GrSchedule,
-		roles: ['admin'],
+		roles: ['admin', 'maintainer', 'worker'],
 	},
 	{
 		title: 'Template',

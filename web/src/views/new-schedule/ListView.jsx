@@ -137,26 +137,30 @@ const ListView = ({ events, month, year, redDays, onScheduleUpdated }) => {
 									<span>{formatted}</span>
 									<span className="text-sm text-gray-400">({iso})</span>
 								</h2>
-								<button
-									className="text-green-400 hover:text-green-300"
-									onClick={() => {
-										setOpenDate(iso);
-										setNewEntryOpen(true);
-									}}>
-									<Plus size={18} />
-								</button>
-							</div>
+								{(user?.role === 'admin' || user?.role === 'maintainer') && (
+									<>
+										<button
+											className="text-green-400 hover:text-green-300"
+											onClick={() => {
+												setOpenDate(iso);
+												setNewEntryOpen(true);
+											}}>
+											<Plus size={18} />
+										</button>
 
-							{/* New entry dialog */}
-							{isOpen && (
-								<NewEntryComponent
-									open={newEntryOpen}
-									onOpenChange={setNewEntryOpen}
-									date={iso}
-									onCreated={onScheduleUpdated}
-									groups={user?.groups || []}
-								/>
-							)}
+										{/* New entry dialog */}
+										{isOpen && (
+											<NewEntryComponent
+												open={newEntryOpen}
+												onOpenChange={setNewEntryOpen}
+												date={iso}
+												onCreated={onScheduleUpdated}
+												groups={user?.groups || []}
+											/>
+										)}
+									</>
+								)}
+							</div>
 
 							{/* Event cards */}
 							{dayEvents.length > 0 ? (
@@ -188,8 +192,10 @@ const ListView = ({ events, month, year, redDays, onScheduleUpdated }) => {
 													style={{ border: `1.5px solid ${borderColor}` }}
 													className="bg-transparent text-white p-2 shadow-sm cursor-pointer"
 													onClick={() => {
-														setEditingEvent(event);
-														setEditDialogOpen(true);
+														if (user?.role === 'admin' || user?.role === 'maintainer') {
+															setEditingEvent(event);
+															setEditDialogOpen(true);
+														}
 													}}>
 													<CardContent className="p-2 text-sm flex items-center gap-2 flex-wrap">
 														<span className="opacity-80">{timeRange}</span>

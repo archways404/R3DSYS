@@ -180,7 +180,7 @@ createRoot(document.getElementById('root')).render(
 								<Route
 									path="/new-schedule"
 									element={
-										<AuthWrapper allowedUserRoles={['admin', 'maintainer']}>
+										<AuthWrapper allowedUserRoles={['admin', 'maintainer', 'worker']}>
 											<NewScheduleRenderer />
 										</AuthWrapper>
 									}

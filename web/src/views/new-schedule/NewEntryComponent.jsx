@@ -104,7 +104,7 @@ const NewEntryComponent = ({ open, onOpenChange, date, onCreated, groups = [] })
 			onOpenChange={onOpenChange}>
 			<DialogContent>
 				<DialogHeader>
-					<DialogTitle>Create New Shift - {date}</DialogTitle>
+					<DialogTitle>New {date}</DialogTitle>
 				</DialogHeader>
 
 				<div className="space-y-4">
