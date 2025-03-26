@@ -33,7 +33,7 @@ async function routes(fastify, options) {
 		{
 			config: {
 				rateLimit: {
-					max: 15000000,
+					max: 15,
 					timeWindow: '15 minutes',
 					keyGenerator: (req) => req.body?.deviceId || req.ip,
 				},
@@ -69,7 +69,10 @@ async function routes(fastify, options) {
 					expiresIn: '15m',
 				});
 
-				// 🔹 Set authToken in Cookie
+				const decoded = fastify.jwt.decode(authToken);
+				loginResult.user.exp = decoded.exp; // Add exp field for frontend
+
+				// Set authToken in Cookie
 				reply.setCookie('authToken', authToken, {
 					httpOnly: true,
 					sameSite: 'None',
@@ -312,10 +315,15 @@ async function routes(fastify, options) {
 				});
 			}
 
-			// ✅ Return user info
+			let exp = user.exp;
+			if (newAuthToken) {
+				const decoded = fastify.jwt.decode(newAuthToken);
+				exp = decoded.exp;
+			}
+
 			return reply.send({
 				message: 'You are authenticated',
-				user: userData,
+				user: { ...userData, exp },
 				tokenRefreshed: !!newAuthToken,
 			});
 		} catch (err) {

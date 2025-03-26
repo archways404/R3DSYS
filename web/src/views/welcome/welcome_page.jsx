@@ -34,10 +34,6 @@ const Welcome = () => {
 		return acc;
 	}, {});
 
-	useEffect(() => {
-		//setRenderLoading(false); // ✅ Now it updates AFTER render
-	}, []);
-
 	// Fetch active shifts for the user
 	useEffect(() => {
 		const fetchShifts = async () => {

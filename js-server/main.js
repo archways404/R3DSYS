@@ -125,6 +125,8 @@ app.register(require('./routes/statistics'));
 
 app.register(require('./routes/schedule'));
 
+app.register(require('./routes/newschedule'));
+
 app.register(require('./routes/status'));
 
 app.register(require('./routes/groups'));

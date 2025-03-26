@@ -7,9 +7,9 @@ export const AuthContext = createContext();
 export function AuthProvider({ children }) {
 	const [user, setUser] = useState(null);
 	const [loading, setLoading] = useState(true);
-	const [justLoggedIn, setJustLoggedIn] = useState(false); // ✅ New state
-	const [justLoggedOut, setJustLoggedOut] = useState(false); // ✅ New state
-	const [lastActivity, setLastActivity] = useState(Date.now()); // Track user activity
+	const [justLoggedIn, setJustLoggedIn] = useState(false);
+	const [justLoggedOut, setJustLoggedOut] = useState(false);
+	const [lastActivity, setLastActivity] = useState(Date.now());
 
 	const location = useLocation();
 	const navigate = useNavigate();

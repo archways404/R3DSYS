@@ -69,6 +69,8 @@ import RequestRenderer from './views/requests/renderer';
 
 import SettingsRenderer from './views/settings/renderer';
 
+import NewScheduleRenderer from './views/new-schedule/renderer';
+
 import './global.css';
 
 createRoot(document.getElementById('root')).render(
@@ -176,6 +178,14 @@ createRoot(document.getElementById('root')).render(
 									}
 								/>
 								<Route
+									path="/new-schedule"
+									element={
+										<AuthWrapper allowedUserRoles={['admin', 'maintainer', 'worker']}>
+											<NewScheduleRenderer />
+										</AuthWrapper>
+									}
+								/>
+								<Route
 									path="/system"
 									element={
 										<AuthWrapper allowedUserRoles={['admin', 'maintainer']}>
@@ -202,8 +212,7 @@ createRoot(document.getElementById('root')).render(
 								<Route
 									path="/schedule"
 									element={
-										<AuthWrapper
-											allowedUserRoles={['admin', 'worker', 'maintainer']}>
+										<AuthWrapper allowedUserRoles={['admin', 'worker', 'maintainer']}>
 											<Schedule />
 										</AuthWrapper>
 									}
@@ -211,8 +220,7 @@ createRoot(document.getElementById('root')).render(
 								<Route
 									path="/settings"
 									element={
-										<AuthWrapper
-											allowedUserRoles={['admin', 'worker', 'maintainer']}>
+										<AuthWrapper allowedUserRoles={['admin', 'worker', 'maintainer']}>
 											<SettingsRenderer />
 										</AuthWrapper>
 									}
@@ -292,8 +300,7 @@ createRoot(document.getElementById('root')).render(
 								<Route
 									path="/welcome"
 									element={
-										<AuthWrapper
-											allowedUserRoles={['admin', 'worker', 'maintainer']}>
+										<AuthWrapper allowedUserRoles={['admin', 'worker', 'maintainer']}>
 											<Welcome />
 										</AuthWrapper>
 									}
@@ -317,8 +324,7 @@ createRoot(document.getElementById('root')).render(
 								<Route
 									path="/calendarlink"
 									element={
-										<AuthWrapper
-											allowedUserRoles={['admin', 'worker', 'maintainer']}>
+										<AuthWrapper allowedUserRoles={['admin', 'worker', 'maintainer']}>
 											<CalendarLink />
 										</AuthWrapper>
 									}
