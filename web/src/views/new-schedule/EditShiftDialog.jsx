@@ -16,6 +16,7 @@ import {
 	SelectItem,
 	SelectLabel,
 } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useEffect, useState, useMemo } from 'react';
@@ -153,12 +154,18 @@ const EditShiftDialog = ({ open, onOpenChange, event, onUpdated }) => {
 											{availableUsers.map((user) => (
 												<SelectItem
 													key={user.user_id}
-													value={user.user_id}>
-													{user.first_name} {user.last_name} ✅
+													value={user.user_id}
+													className="text-green-500 hover:text-green-400">
+													{user.first_name} {user.last_name}
 												</SelectItem>
 											))}
 										</SelectGroup>
 									)}
+									{/* Stylish separator */}
+									{availableUsers.length > 0 && unavailableUsers.length > 0 && (
+										<Separator className="my-2 mx-auto bg-gray-500 h-px w-[75%]" />
+									)}
+
 									{unavailableUsers.length > 0 && (
 										<SelectGroup>
 											<SelectLabel>Other Users</SelectLabel>

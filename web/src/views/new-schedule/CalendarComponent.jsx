@@ -124,13 +124,25 @@ const Calendar = ({ month, year, events = {}, redDays = [], onScheduleUpdated })
 
 							{/* Events */}
 							<div className="mt-5 space-y-1 flex-1 overflow-hidden">
-								{(events[day.toString()] || []).map((event, index) => (
-									<EventCard
-										key={index}
-										event={event}
-										onUpdated={onScheduleUpdated}
-									/>
-								))}
+								{[...(events[day.toString()] || [])]
+									.sort((a, b) => {
+										// First, compare start_time
+										if (a.start_time < b.start_time) return -1;
+										if (a.start_time > b.start_time) return 1;
+
+										// If start times are equal, put the longer one last (i.e., shorter one first)
+										if (a.end_time < b.end_time) return -1;
+										if (a.end_time > b.end_time) return 1;
+
+										return 0;
+									})
+									.map((event, index) => (
+										<EventCard
+											key={index}
+											event={event}
+											onUpdated={onScheduleUpdated}
+										/>
+									))}
 							</div>
 						</div>
 					);
