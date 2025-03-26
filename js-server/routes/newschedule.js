@@ -1,4 +1,6 @@
 const { Temporal } = require('@js-temporal/polyfill');
+
+const { isAdminOrMaintainer } = require('../middleware/VerifyRole');
 const createRedDays = require('../functions/newschedule/createRedDays');
 
 async function routes(fastify, options) {
@@ -70,8 +72,8 @@ async function routes(fastify, options) {
 			return reply.status(500).send({ error: 'Failed' });
 		}
 	});
-  
-  fastify.get('/shift/:id/edit-info', async (request, reply) => {
+
+	fastify.get('/shift/:id/edit-info', async (request, reply) => {
 		const { id } = request.params;
 
 		try {
@@ -115,39 +117,53 @@ async function routes(fastify, options) {
 		}
 	});
 
-	fastify.post('/shift/:id/update', async (request, reply) => {
-		const { id } = request.params;
-		const { assigned_to, start_time, end_time } = request.body;
+	fastify.post(
+		'/shift/:id/update',
+		{
+			preValidation: [fastify.verifyJWT, isAdminOrMaintainer],
+		},
+		async (request, reply) => {
+			const { id } = request.params;
+			const { assigned_to, start_time, end_time } = request.body;
 
-		try {
-			await fastify.pg.query(
-				`UPDATE active_shifts SET assigned_to = $1, start_time = $2, end_time = $3 WHERE shift_id = $4`,
-				[assigned_to, start_time, end_time, id]
-			);
+			try {
+				await fastify.pg.query(
+					`UPDATE active_shifts SET assigned_to = $1, start_time = $2, end_time = $3 WHERE shift_id = $4`,
+					[assigned_to, start_time, end_time, id]
+				);
 
-			reply.send({ success: true });
-		} catch (err) {
-			console.error(err);
-			reply.status(500).send({ error: 'Failed to update shift' });
-		}
-	});
-  
-  fastify.delete('/shift/:id/delete', async (request, reply) => {
-		const { id } = request.params;
-
-		try {
-			const result = await fastify.pg.query('DELETE FROM active_shifts WHERE shift_id = $1', [id]);
-
-			if (result.rowCount === 0) {
-				return reply.status(404).send({ error: 'Shift not found' });
+				reply.send({ success: true });
+			} catch (err) {
+				console.error(err);
+				reply.status(500).send({ error: 'Failed to update shift' });
 			}
-
-			return reply.send({ success: true });
-		} catch (err) {
-			console.error(err);
-			return reply.status(500).send({ error: 'Failed to delete shift' });
 		}
-	});
+	);
+
+	fastify.delete(
+		'/shift/:id/delete',
+		{
+			preValidation: [fastify.verifyJWT, isAdminOrMaintainer],
+		},
+		async (request, reply) => {
+			const { id } = request.params;
+
+			try {
+				const result = await fastify.pg.query('DELETE FROM active_shifts WHERE shift_id = $1', [
+					id,
+				]);
+
+				if (result.rowCount === 0) {
+					return reply.status(404).send({ error: 'Shift not found' });
+				}
+
+				return reply.send({ success: true });
+			} catch (err) {
+				console.error(err);
+				return reply.status(500).send({ error: 'Failed to delete shift' });
+			}
+		}
+	);
 
 	fastify.get('/grp_users', async (request, reply) => {
 		const { group_id } = request.query;
@@ -189,22 +205,27 @@ async function routes(fastify, options) {
 		}
 	});
 
-	fastify.post('/shift/create', async (request, reply) => {
-		const { date, start_time, end_time, shift_type_id, assigned_to, schedule_group_id } =
-			request.body;
+	fastify.post(
+		'/shift/create',
+		{
+			preValidation: [fastify.verifyJWT, isAdminOrMaintainer],
+		},
+		async (request, reply) => {
+			const { date, start_time, end_time, shift_type_id, assigned_to, schedule_group_id } =
+				request.body;
 
-		if (!date || !start_time || !end_time || !shift_type_id || !schedule_group_id) {
-			return reply.status(400).send({ error: 'Missing required fields' });
-		}
+			if (!date || !start_time || !end_time || !shift_type_id || !schedule_group_id) {
+				return reply.status(400).send({ error: 'Missing required fields' });
+			}
 
-		try {
-			console.log('Received raw date:', date);
-			const parsed = Temporal.PlainDate.from(date);
-			const formattedDate = parsed.toString(); // ensures YYYY-MM-DD
+			try {
+				console.log('Received raw date:', date);
+				const parsed = Temporal.PlainDate.from(date);
+				const formattedDate = parsed.toString(); // ensures YYYY-MM-DD
 
-			console.log('Using formatted date:', formattedDate);
+				console.log('Using formatted date:', formattedDate);
 
-			const query = `
+				const query = `
 			INSERT INTO active_shifts (
 				date,
 				start_time,
@@ -217,23 +238,24 @@ async function routes(fastify, options) {
 			RETURNING shift_id
 		`;
 
-			const values = [
-				formattedDate,
-				start_time,
-				end_time,
-				shift_type_id,
-				assigned_to || null,
-				schedule_group_id,
-			];
+				const values = [
+					formattedDate,
+					start_time,
+					end_time,
+					shift_type_id,
+					assigned_to || null,
+					schedule_group_id,
+				];
 
-			const result = await fastify.pg.query(query, values);
+				const result = await fastify.pg.query(query, values);
 
-			return reply.send({ success: true, shift_id: result.rows[0].shift_id });
-		} catch (err) {
-			console.error('Error creating shift:', err.message);
-			return reply.status(500).send({ error: 'Failed to create shift' });
+				return reply.send({ success: true, shift_id: result.rows[0].shift_id });
+			} catch (err) {
+				console.error('Error creating shift:', err.message);
+				return reply.status(500).send({ error: 'Failed to create shift' });
+			}
 		}
-	});
+	);
 }
 
 module.exports = routes;

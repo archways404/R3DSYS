@@ -77,6 +77,7 @@ const EditShiftDialog = ({ open, onOpenChange, event, onUpdated }) => {
 			const res = await fetch(`${import.meta.env.VITE_BASE_ADDR}/shift/${event.shift_id}/update`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
+				credentials: 'include',
 				body: JSON.stringify({
 					assigned_to: selectedUser || null,
 					start_time: startTime,
@@ -97,6 +98,7 @@ const EditShiftDialog = ({ open, onOpenChange, event, onUpdated }) => {
 		try {
 			const res = await fetch(`${import.meta.env.VITE_BASE_ADDR}/shift/${event.shift_id}/delete`, {
 				method: 'DELETE',
+				credentials: 'include',
 			});
 			if (!res.ok) throw new Error('Failed to delete shift');
 			onUpdated?.();

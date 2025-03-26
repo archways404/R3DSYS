@@ -78,6 +78,7 @@ const NewEntryComponent = ({ open, onOpenChange, date, onCreated, groups = [] })
 			const res = await fetch(`${import.meta.env.VITE_BASE_ADDR}/shift/create`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
+				credentials: 'include',
 				body: JSON.stringify({
 					date,
 					start_time: startTime,
