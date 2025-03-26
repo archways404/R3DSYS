@@ -3,11 +3,14 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Temporal } from '@js-temporal/polyfill';
 import { Plus } from 'lucide-react';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
+import { useRef, useEffect } from 'react';
 
 import { useContext, useState } from 'react';
 import { AuthContext } from '../../context/AuthContext';
+
 import NewEntryComponent from './NewEntryComponent';
 import EditShiftDialog from './EditShiftDialog';
+import MiniMap from './MiniMap';
 
 function getShiftColorStyle(shiftType) {
 	const base = shiftType.slice(0, -1);
@@ -84,6 +87,18 @@ const ListView = ({ events, month, year, redDays, onScheduleUpdated }) => {
 	const [editingEvent, setEditingEvent] = useState(null);
 	const [editDialogOpen, setEditDialogOpen] = useState(false);
 
+	const dayRefs = useRef({});
+	const [selectedMiniDate, setSelectedMiniDate] = useState(null);
+
+	useEffect(() => {
+		if (selectedMiniDate && dayRefs.current[selectedMiniDate]) {
+			dayRefs.current[selectedMiniDate].scrollIntoView({
+				behavior: 'smooth',
+				block: 'start',
+			});
+		}
+	}, [selectedMiniDate]);
+
 	const formatter = new Intl.DateTimeFormat('en-US', {
 		weekday: 'long',
 		month: 'long',
@@ -95,127 +110,153 @@ const ListView = ({ events, month, year, redDays, onScheduleUpdated }) => {
 	const isRedDay = (date) => redDays.includes(date.toString());
 
 	return (
-		<div className="w-full max-w-[800px] space-y-6">
-			{days.map((temporalDate) => {
-				const iso = temporalDate.toString();
-				const jsDate = new Date(`${iso}T00:00:00`);
-				const formatted = formatter.format(jsDate);
-				const dayEvents = events[iso] || [];
+		<div className="w-full flex flex-row gap-6 items-start pr-[320px]">
+			{/* Left side: Shift list */}
+			<div className="flex-1 space-y-6">
+				{days.map((temporalDate) => {
+					const iso = temporalDate.toString();
+					const jsDate = new Date(`${iso}T00:00:00`);
+					const formatted = formatter.format(jsDate);
+					const dayEvents = events[iso] || [];
 
-				const isOpen = newEntryOpen && openDate === iso;
+					const isOpen = newEntryOpen && openDate === iso;
 
-				return (
-					<div
-						key={iso}
-						className="space-y-2 bg-muted/10 p-4 rounded-xl border border-border">
-						{/* Header with date and + button */}
-						<div className="flex items-center justify-between pt-2 px-2 pb-4">
-							<h2
-								className={`text-lg font-bold flex items-baseline gap-2 ${
-									isRedDay(temporalDate) ? 'text-red-500' : 'text-white'
-								}`}>
-								<span>{formatted}</span>
-								<span className="text-sm text-gray-400">({iso})</span>
-							</h2>
-							<button
-								className="text-green-400 hover:text-green-300"
-								onClick={() => {
-									setOpenDate(iso);
-									setNewEntryOpen(true);
-								}}>
-								<Plus size={18} />
-							</button>
+					return (
+						<div
+							key={iso}
+							ref={(el) => (dayRefs.current[iso] = el)}
+							className={`space-y-2 bg-muted/10 p-4 rounded-xl border border-border ${
+								temporalDate.month !== month ? 'opacity-50' : ''
+							}`}>
+							{/* Header with date and + button */}
+							<div className="flex items-center justify-between pt-2 px-2 pb-4">
+								<h2
+									className={`text-lg font-bold flex items-baseline gap-2 ${
+										isRedDay(temporalDate) ? 'text-red-500' : 'text-white'
+									}`}>
+									<span>{formatted}</span>
+									<span className="text-sm text-gray-400">({iso})</span>
+								</h2>
+								<button
+									className="text-green-400 hover:text-green-300"
+									onClick={() => {
+										setOpenDate(iso);
+										setNewEntryOpen(true);
+									}}>
+									<Plus size={18} />
+								</button>
+							</div>
+
+							{/* New entry dialog */}
+							{isOpen && (
+								<NewEntryComponent
+									open={newEntryOpen}
+									onOpenChange={setNewEntryOpen}
+									date={iso}
+									onCreated={onScheduleUpdated}
+									groups={user?.groups || []}
+								/>
+							)}
+
+							{/* Event cards */}
+							{dayEvents.length > 0 ? (
+								[...dayEvents]
+									.sort((a, b) => {
+										// Compare start times first
+										if (a.start_time < b.start_time) return -1;
+										if (a.start_time > b.start_time) return 1;
+
+										// If start times are equal, place the longer one last
+										if (a.end_time < b.end_time) return -1;
+										if (a.end_time > b.end_time) return 1;
+
+										return 0;
+									})
+									.map((event, idx) => {
+										const timeRange = `${event.start_time.slice(0, 5)} – ${event.end_time.slice(
+											0,
+											5
+										)}`;
+										const { borderColor } = getShiftColorStyle(event.shift_type_short);
+										const assignedTo = event.assigned_user_first_name
+											? `${event.assigned_user_first_name} ${event.assigned_user_last_name}`
+											: '-';
+
+										return (
+											<div key={idx}>
+												<Card
+													style={{ border: `1.5px solid ${borderColor}` }}
+													className="bg-transparent text-white p-2 shadow-sm cursor-pointer"
+													onClick={() => {
+														setEditingEvent(event);
+														setEditDialogOpen(true);
+													}}>
+													<CardContent className="p-2 text-sm flex items-center gap-2 flex-wrap">
+														<span className="opacity-80">{timeRange}</span>
+														<span className="font-semibold">{event.shift_type_short}</span>
+														<TooltipProvider>
+															<Tooltip>
+																<TooltipTrigger asChild>
+																	<span className="ml-auto opacity-90">
+																		{event.assigned_user_first_name
+																			? `${
+																					event.assigned_user_first_name
+																			  } ${event.assigned_user_last_name.charAt(0)}`
+																			: '-'}
+																	</span>
+																</TooltipTrigger>
+																{event.assigned_user_first_name && (
+																	<TooltipContent className="text-xs">
+																		<div className="font-semibold">
+																			{event.assigned_user_first_name}{' '}
+																			{event.assigned_user_last_name}
+																		</div>
+																		<div className="text-gray-400">{event.assigned_user_email}</div>
+																	</TooltipContent>
+																)}
+															</Tooltip>
+														</TooltipProvider>
+													</CardContent>
+												</Card>
+
+												{/* Render dialog for this event */}
+												{editingEvent?.shift_id === event.shift_id && (
+													<EditShiftDialog
+														open={editDialogOpen}
+														onOpenChange={setEditDialogOpen}
+														event={editingEvent}
+														onUpdated={onScheduleUpdated}
+													/>
+												)}
+											</div>
+										);
+									})
+							) : (
+								<p className="text-sm px-2 text-gray-500 italic">No events</p>
+							)}
 						</div>
+					);
+				})}
+			</div>
 
-						{/* New entry dialog */}
-						{isOpen && (
-							<NewEntryComponent
-								open={newEntryOpen}
-								onOpenChange={setNewEntryOpen}
-								date={iso}
-								onCreated={onScheduleUpdated}
-								groups={user?.groups || []}
-							/>
-						)}
-
-						{/* Event cards */}
-						{dayEvents.length > 0 ? (
-							[...dayEvents]
-								.sort((a, b) => {
-									// Compare start times first
-									if (a.start_time < b.start_time) return -1;
-									if (a.start_time > b.start_time) return 1;
-
-									// If start times are equal, place the longer one last
-									if (a.end_time < b.end_time) return -1;
-									if (a.end_time > b.end_time) return 1;
-
-									return 0;
-								})
-								.map((event, idx) => {
-									const timeRange = `${event.start_time.slice(0, 5)} – ${event.end_time.slice(
-										0,
-										5
-									)}`;
-									const { borderColor } = getShiftColorStyle(event.shift_type_short);
-									const assignedTo = event.assigned_user_first_name
-										? `${event.assigned_user_first_name} ${event.assigned_user_last_name}`
-										: '-';
-
-									return (
-										<div key={idx}>
-											<Card
-												style={{ border: `1.5px solid ${borderColor}` }}
-												className="bg-transparent text-white p-2 shadow-sm cursor-pointer"
-												onClick={() => {
-													setEditingEvent(event);
-													setEditDialogOpen(true);
-												}}>
-												<CardContent className="p-2 text-sm flex items-center gap-2 flex-wrap">
-													<span className="opacity-80">{timeRange}</span>
-													<span className="font-semibold">{event.shift_type_short}</span>
-													<TooltipProvider>
-														<Tooltip>
-															<TooltipTrigger asChild>
-																<span className="ml-auto opacity-90">
-																	{event.assigned_user_first_name
-																		? `${
-																				event.assigned_user_first_name
-																		  } ${event.assigned_user_last_name.charAt(0)}`
-																		: '-'}
-																</span>
-															</TooltipTrigger>
-															{event.assigned_user_first_name && (
-																<TooltipContent className="text-xs">
-																	<div className="font-semibold">
-																		{event.assigned_user_first_name} {event.assigned_user_last_name}
-																	</div>
-																	<div className="text-gray-400">{event.assigned_user_email}</div>
-																</TooltipContent>
-															)}
-														</Tooltip>
-													</TooltipProvider>
-												</CardContent>
-											</Card>
-
-											{/* Render dialog for this event */}
-											{editingEvent?.shift_id === event.shift_id && (
-												<EditShiftDialog
-													open={editDialogOpen}
-													onOpenChange={setEditDialogOpen}
-													event={editingEvent}
-													onUpdated={onScheduleUpdated}
-												/>
-											)}
-										</div>
-									);
-								})
-						) : (
-							<p className="text-sm text-gray-500 italic">No events</p>
-						)}
-					</div>
-				);
-			})}
+			{/* Right side: MiniMap */}
+			<div className="hidden lg:block fixed right-4 top-50 w-[280px] z-10">
+				<MiniMap
+					selectedDate={selectedMiniDate}
+					onSelect={(date) => {
+						if (date) {
+							const temporalDate = Temporal.PlainDate.from({
+								year: date.getFullYear(),
+								month: date.getMonth() + 1,
+								day: date.getDate(),
+							});
+							setSelectedMiniDate(temporalDate.toString());
+						}
+					}}
+					month={month}
+					year={year}
+				/>
+			</div>
 		</div>
 	);
 };
