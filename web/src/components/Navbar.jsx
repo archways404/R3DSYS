@@ -167,14 +167,7 @@ const Navbar = () => {
 	*/
 
 	const calendarLinks = [
-		{
-			title: 'NewSchedule',
-			to: '/new-schedule',
-			icon: GrSchedule,
-			roles: ['admin', 'maintainer', 'worker'],
-		},
 		{ title: 'Schedule', to: '/schedule', icon: GrSchedule },
-		{ title: 'My Shifts', to: '/myshifts', icon: GrSchedule, roles: ['worker'] },
 		{ title: 'Calendar Link', to: '/calendarlink', icon: SiGooglecalendar },
 	];
 
@@ -197,23 +190,6 @@ const Navbar = () => {
 			icon: BiGroup,
 			roles: ['admin', 'maintainer'],
 		},
-	];
-
-	const adminLinks = [
-		{ title: 'Template', to: '/handle-template', icon: HiTemplate, roles: ['admin'] },
-		{ title: 'Shifts', to: '/handle-shifts', icon: GrSchedules, roles: ['admin', 'maintainer'] },
-		{
-			title: 'Requests',
-			to: '/requests',
-			icon: GrSchedules,
-			roles: ['admin', 'maintainer'],
-		},
-		{
-			title: 'Create',
-			to: '/create-schedule',
-			icon: FaRegCalendarPlus,
-			roles: ['admin'],
-		},
 		{
 			title: 'Server',
 			to: '/serverinfo',
@@ -226,13 +202,17 @@ const Navbar = () => {
 			icon: GrServerCluster,
 			roles: ['admin', 'maintainer'],
 		},
-		{ title: 'Logout', to: '/logout', icon: GrSchedules, roles: ['admin', 'maintainer', 'worker'] },
 		{
 			title: 'Tables',
 			to: '/tables',
 			icon: FiDatabase,
 			roles: ['admin', 'maintainer'],
 		},
+	];
+
+	const adminLinks = [
+		{ title: 'Template', to: '/handle-template', icon: HiTemplate, roles: ['admin'] },
+		{ title: 'Shifts', to: '/handle-shifts', icon: GrSchedules, roles: ['admin', 'maintainer'] },
 	];
 
 	const glowVariants = {
@@ -278,6 +258,14 @@ const Navbar = () => {
 
 	const navLinks = [
 		{ title: 'Home', to: '/welcome', icon: Home },
+		{
+			title: 'NewSchedule',
+			to: '/new-schedule',
+			icon: GrSchedule,
+			roles: ['admin', 'maintainer', 'worker'],
+		},
+
+		{ title: 'My Shifts', to: '/myshifts', icon: GrSchedule, roles: ['worker'] },
 
 		// Single links
 		{
@@ -292,6 +280,18 @@ const Navbar = () => {
 			to: '/assign-shifts',
 			icon: TbReport,
 			roles: ['admin', 'maintainer'],
+		},
+		{
+			title: 'Requests',
+			to: '/requests',
+			icon: GrSchedules,
+			roles: ['admin', 'maintainer'],
+		},
+		{
+			title: 'Create',
+			to: '/create-schedule',
+			icon: FaRegCalendarPlus,
+			roles: ['admin'],
 		},
 
 		// Grouped Dropdowns (new!)
