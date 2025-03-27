@@ -4,6 +4,7 @@ import { ThemeContext } from '../context/ThemeContext';
 import { AuthContext } from '../context/AuthContext';
 
 import { motion } from 'framer-motion';
+
 import {
 	Home,
 	Settings,
@@ -20,6 +21,24 @@ import {
 	Rss,
 } from 'lucide-react';
 
+import { GrSchedule } from 'react-icons/gr';
+import { TbReport } from 'react-icons/tb';
+import { HiTemplate } from 'react-icons/hi';
+import { GrSchedules } from 'react-icons/gr';
+import { LuMailPlus } from 'react-icons/lu';
+import { FaUsers } from 'react-icons/fa';
+import { SiGooglecalendar } from 'react-icons/si';
+import { FaRegCalendarPlus } from 'react-icons/fa6';
+import { GrServerCluster } from 'react-icons/gr';
+import { FiDatabase } from 'react-icons/fi';
+import { MdOutlinePrivacyTip } from 'react-icons/md';
+import { LuCircleUserRound } from 'react-icons/lu';
+import { FaChevronUp } from 'react-icons/fa';
+import { TbLogout } from 'react-icons/tb';
+import { BiGroup } from 'react-icons/bi';
+
+import { CgProfile } from 'react-icons/cg';
+
 const Navbar = () => {
 	const { theme } = useContext(ThemeContext);
 	const { user } = useContext(AuthContext);
@@ -29,47 +48,90 @@ const Navbar = () => {
 	const isDarkTheme = theme === 'dark';
 
 	// Navbar menu items
-	const menuItems = [
+	const publicNavLinks = [
+		{ title: 'Home', to: '/', icon: Home },
+		{ title: 'About', to: '/about', icon: Info },
+		{ title: 'Contact', to: '/contact', icon: Send },
+		{ title: 'ToS', to: '/tos', icon: Handshake },
+		{ title: 'Privacy', to: '/privacy', icon: GlobeLock },
+	];
+
+	const navLinks = [
+		{ title: 'Home', to: '/welcome', icon: Home },
+		{ title: 'Schedule', to: '/schedule', icon: GrSchedule },
+		{ title: 'My Shifts', to: '/myshifts', icon: GrSchedule, roles: ['worker'] },
+		{ title: 'Calendar Link', to: '/calendarlink', icon: SiGooglecalendar },
 		{
-			icon: <Home className="h-5 w-5" />,
-			label: 'Home',
-			to: '/',
-			gradient:
-				'radial-gradient(circle, rgba(59,130,246,0.20) 0%, rgba(37,99,235,0.06) 50%, rgba(29,78,216,0) 100%)',
-			activeColor: 'text-blue-500',
+			title: 'Report',
+			to: '/apply-unassigned',
+			icon: TbReport,
+			roles: ['worker'],
+			showBadge: true,
 		},
 		{
-			icon: <Info className="h-5 w-5" />,
-			label: 'About',
-			to: '/about',
-			gradient:
-				'radial-gradient(circle, rgba(249,115,22,0.20) 0%, rgba(234,88,12,0.06) 50%, rgba(194,65,12,0) 100%)',
-			activeColor: 'text-orange-500',
+			title: 'Reports',
+			url: '/assign-shifts',
+			icon: TbReport,
+			roles: ['admin', 'maintainer'],
 		},
 		{
-			icon: <Send className="h-5 w-5" />,
-			label: 'Contact',
-			to: '/contact',
-			gradient:
-				'radial-gradient(circle, rgba(34,197,94,0.20) 0%, rgba(22,163,74,0.06) 50%, rgba(21,128,61,0) 100%)',
-			activeColor: 'text-green-500',
+			title: 'Invite',
+			url: '/invite',
+			icon: LuMailPlus,
+			roles: ['admin', 'maintainer'],
 		},
 		{
-			icon: <Handshake className="h-5 w-5" />,
-			label: 'ToS',
-			to: '/ToS',
-			gradient:
-				'radial-gradient(circle, rgba(239,68,68,0.20) 0%, rgba(220,38,38,0.06) 50%, rgba(185,28,28,0) 100%)',
-			activeColor: 'text-red-500',
+			title: 'Accounts',
+			url: '/manage-users',
+			icon: FaUsers,
+			roles: ['admin', 'maintainer'],
 		},
 		{
-			icon: <GlobeLock className="h-5 w-5" />,
-			label: 'Privacy',
-			to: '/privacy',
-			gradient:
-				'radial-gradient(circle, rgba(239,68,68,0.20) 0%, rgba(220,38,38,0.06) 50%, rgba(185,28,28,0) 100%)',
-			activeColor: 'text-red-500',
+			title: 'Groups',
+			url: '/handle-groups',
+			icon: BiGroup,
+			roles: ['admin', 'maintainer'],
 		},
+		{
+			title: 'NewSchedule',
+			to: '/new-schedule',
+			icon: GrSchedule,
+			roles: ['admin', 'maintainer', 'worker'],
+		},
+		{ title: 'Template', to: '/handle-template', icon: HiTemplate, roles: ['admin'] },
+		{ title: 'Shifts', to: '/handle-shifts', icon: GrSchedules, roles: ['admin', 'maintainer'] },
+		{
+			title: 'Requests',
+			url: '/requests',
+			icon: GrSchedules,
+			roles: ['admin', 'maintainer'],
+		},
+		{
+			title: 'Create',
+			url: '/create-schedule',
+			icon: FaRegCalendarPlus,
+			roles: ['admin'],
+		},
+		{
+			title: 'Server',
+			url: '/serverinfo',
+			icon: GrServerCluster,
+			roles: ['admin', 'maintainer'],
+		},
+		{
+			title: 'System',
+			url: '/system',
+			icon: GrServerCluster,
+			roles: ['admin', 'maintainer'],
+		},
+		{ title: 'Logout', to: '/logout', icon: GrSchedules, roles: ['admin', 'maintainer', 'worker'] },
+		{
+			title: 'Tables',
+			url: '/tables',
+			icon: FiDatabase,
+			roles: ['admin', 'maintainer'],
+		},
+		{ title: 'Settings', to: '/settings', icon: Settings },
 	];
 
 	const glowVariants = {
@@ -95,6 +157,28 @@ const Navbar = () => {
 		},
 	};
 
+	const gradients = [
+		{
+			gradient:
+				'radial-gradient(circle, rgba(59,130,246,0.20) 0%, rgba(37,99,235,0.06) 50%, rgba(29,78,216,0) 100%)',
+			activeColor: 'text-blue-500',
+		},
+		{
+			gradient:
+				'radial-gradient(circle, rgba(249,115,22,0.20) 0%, rgba(234,88,12,0.06) 50%, rgba(194,65,12,0) 100%)',
+			activeColor: 'text-orange-500',
+		},
+		{
+			gradient:
+				'radial-gradient(circle, rgba(34,197,94,0.20) 0%, rgba(22,163,74,0.06) 50%, rgba(21,128,61,0) 100%)',
+			activeColor: 'text-green-500',
+		},
+	];
+
+	const filteredLinks = user
+		? navLinks.filter((link) => !link.roles || link.roles.includes(user.role))
+		: publicNavLinks; // fallback list for public nav
+
 	return (
 		<motion.nav
 			className="fixed top-4 left-1/2 transform -translate-x-1/2 inline-flex gap-4 p-3 rounded-2xl border border-border/40 shadow-lg overflow-hidden z-50 bg-transparent backdrop-blur-lg"
@@ -109,11 +193,13 @@ const Navbar = () => {
 				variants={navGlowVariants}
 			/>
 			<ul className="flex items-center gap-4 relative z-10">
-				{menuItems.map((item) => {
+				{filteredLinks.map((item, i) => {
 					const isActive = location.pathname === item.to;
+					const gradientStyle = gradients[i % gradients.length]; // Cycle through
+
 					return (
 						<motion.li
-							key={item.label}
+							key={item.title}
 							className="relative">
 							<motion.div
 								className="block rounded-xl overflow-visible group relative"
@@ -124,7 +210,7 @@ const Navbar = () => {
 									className="absolute inset-0 z-0 pointer-events-none"
 									variants={glowVariants}
 									style={{
-										background: item.gradient,
+										background: gradientStyle.gradient,
 										opacity: 0,
 										borderRadius: '16px',
 									}}
@@ -136,18 +222,14 @@ const Navbar = () => {
 										transformOrigin: 'center bottom',
 									}}
 									className="flex items-center gap-2 px-4 py-2 relative z-10 transition-colors rounded-xl">
-									<span
-										className={`transition-colors duration-300 ${
-											isActive ? item.activeColor : 'text-white'
-										}`}>
-										{item.icon}
+									<span className={isActive ? gradientStyle.activeColor : 'text-white'}>
+										<item.icon className="w-5 h-5" />
 									</span>
-									<span
-										className={`transition-colors duration-300 ${
-											isActive ? item.activeColor : 'text-white'
-										}`}>
-										{item.label}
+									<span className={isActive ? gradientStyle.activeColor : 'text-white'}>
+										{item.title}
 									</span>
+									{/* Optionally show a badge */}
+									{item.showBadge && <span className="ml-2 text-xs text-green-500">NEW</span>}
 								</Link>
 							</motion.div>
 						</motion.li>

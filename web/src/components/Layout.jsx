@@ -65,19 +65,13 @@ function Layout({ children }) {
 				<LoadingScreen isVisible={renderLoading} />
 
 				{user ? (
-					<div className="grid grid-cols-[15rem_auto] gap-2 flex-1 relative">
-						{/* Sidebar */}
-						<div className="w-60 relative z-10">
-							<AppSidebar
-								user={user}
-								consent={consent}
-							/>
-						</div>
-
+					<div className="flex flex-col flex-1 min-h-screen relative">
 						{/* Main Content */}
 						<div className="flex flex-col flex-1 relative z-10">
 							{/* Navbar */}
-							<div className="h-16 flex items-center">{/* <Navbar /> */}</div>
+							<div className="min-h-[4rem] flex items-center overflow-visible relative z-50">
+								<Navbar />
+							</div>
 
 							{/* Main Content */}
 							<main className="flex-1 overflow-auto">{children}</main>
