@@ -6,7 +6,7 @@ import VersionComponent from '../../components/VersionComponent';
 
 const HeroSection = () => {
 	return (
-		<section className="relative flex flex-col items-center justify-center min-h-screen w-full py-12 md:py-24 text-center">
+		<section className="relative flex flex-col items-center justify-center pt-28 pb-20 w-full text-center">
 			{/* Background Glow Effect */}
 			<div className="absolute inset-0 flex items-center justify-center">
 				<div className="w-[60vw] h-[40vw] max-w-3xl max-h-2xl bg-red-600/30 blur-[140px] rounded-full"></div>
@@ -49,8 +49,8 @@ const HeroSection = () => {
 					animate={{ opacity: 1, y: 0 }}
 					transition={{ delay: 0.7, duration: 1 }}
 					className="!mt-12 bg-yellow-500 text-black font-medium text-xs sm:text-sm md:text-base px-8 py-3 rounded-md shadow-lg text-center">
-					🚧 Application is under development. Features may change, and some
-					functionalities are not finalized yet.
+					🚧 Application is under development. Features may change, and some functionalities are not
+					finalized yet.
 				</motion.div>
 
 				{/* Call to Action Button */}

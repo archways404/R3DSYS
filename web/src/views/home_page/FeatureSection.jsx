@@ -49,7 +49,7 @@ const features = [
 
 const FeatureSection = () => {
 	return (
-		<section className="relative w-full py-20 text-white bg-transparent">
+		<section className="relative w-full pt-20 pb-28 text-white bg-transparent">
 			<div className="relative z-10 mx-auto max-w-6xl px-6">
 				<motion.h2
 					initial={{ opacity: 0, y: 20 }}
@@ -72,8 +72,8 @@ const FeatureSection = () => {
 					animate={{ opacity: 1, y: 0 }}
 					transition={{ delay: 0.4, duration: 1 }}
 					className="mt-4 text-lg text-gray-300 max-w-2xl">
-					Manage shift availability, trades, and schedules with ease. An
-					all-in-one solution designed for both employees and administrators.
+					Manage shift availability, trades, and schedules with ease. An all-in-one solution
+					designed for both employees and administrators.
 				</motion.p>
 
 				{/* Features Grid */}
@@ -97,9 +97,7 @@ const FeatureSection = () => {
 							</div>
 
 							{/* Feature Description Below */}
-							<p className="mt-3 text-sm text-gray-400">
-								{feature.description}
-							</p>
+							<p className="mt-3 text-sm text-gray-400">{feature.description}</p>
 						</motion.div>
 					))}
 				</div>
