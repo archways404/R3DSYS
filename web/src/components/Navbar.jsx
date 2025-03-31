@@ -21,6 +21,8 @@ import {
 	Rss,
 } from 'lucide-react';
 
+import { FaUserShield } from 'react-icons/fa';
+
 import {
 	NavigationMenu,
 	NavigationMenuContent,
@@ -47,6 +49,7 @@ import { LuCircleUserRound } from 'react-icons/lu';
 import { FaChevronUp } from 'react-icons/fa';
 import { TbLogout } from 'react-icons/tb';
 import { BiGroup } from 'react-icons/bi';
+import { LogOut } from 'lucide-react';
 
 import { CgProfile } from 'react-icons/cg';
 
@@ -293,26 +296,15 @@ const Navbar = () => {
 			icon: FaRegCalendarPlus,
 			roles: ['admin'],
 		},
-
-		// Grouped Dropdowns (new!)
-		{
-			title: 'Calendar',
-			type: 'group',
-			links: calendarLinks,
-		},
 		{
 			title: 'Management',
-			type: 'group',
-			links: managementLinks,
-		},
-		{
-			title: 'Admin',
-			type: 'group',
-			links: adminLinks,
+			to: '/management',
+			icon: FaUserShield,
+			roles: ['admin', 'maintainer'],
 		},
 
 		{ title: 'Settings', to: '/settings', icon: Settings },
-		{ title: 'Logout', to: '/logout', icon: GrSchedules, roles: ['admin', 'maintainer', 'worker'] },
+		{ title: 'Logout', to: '/logout', icon: LogOut, roles: ['admin', 'maintainer', 'worker'] },
 	];
 
 	const filteredLinks = user
@@ -320,18 +312,13 @@ const Navbar = () => {
 				// Show regular links by role
 				if (!link.type && (!link.roles || link.roles.includes(user.role))) return true;
 
-				// Show dropdowns if at least one child link is accessible
-				if (link.type === 'group') {
-					return link.links.some((sub) => !sub.roles || sub.roles.includes(user.role));
-				}
-
 				return false;
 		  })
 		: publicNavLinks;
 
 	return (
 		<motion.nav
-			className="fixed top-4 left-1/2 transform -translate-x-1/2 inline-flex gap-4 p-3 rounded-2xl border border-border/40 shadow-lg overflow-visible z-50 bg-transparent backdrop-blur-lg"
+			className="fixed top-4 left-1/2 transform -translate-x-1/2 inline-flex gap-4 p-3 rounded-2xl border border-border/40 shadow-lg overflow-hidden z-50 bg-transparent backdrop-blur-lg"
 			initial="initial"
 			whileHover="hover">
 			<motion.div
