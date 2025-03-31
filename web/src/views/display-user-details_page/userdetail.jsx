@@ -27,6 +27,8 @@ import { useParams } from 'react-router-dom';
 import Layout from '../../components/Layout';
 import LoadingScreen from '../../components/LoadingScreen';
 import { useToast } from '@/hooks/use-toast';
+import { Navigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 const UserDetail = () => {
 	const { uuid } = useParams();
@@ -43,12 +45,12 @@ const UserDetail = () => {
 	const [globalFilter, setGlobalFilter] = useState('');
 	const { toast } = useToast();
 
+	const navigate = useNavigate(); // Get the navigate function
+
 	useEffect(() => {
 		const fetchUser = async () => {
 			try {
-				const response = await fetch(
-					`${import.meta.env.VITE_BASE_ADDR}/get-user?uuid=${uuid}`
-				);
+				const response = await fetch(`${import.meta.env.VITE_BASE_ADDR}/get-user?uuid=${uuid}`);
 				if (!response.ok) {
 					throw new Error('Failed to fetch user details');
 				}
@@ -120,17 +122,14 @@ const UserDetail = () => {
 	const handleRoleChange = async (e) => {
 		e.preventDefault();
 		try {
-			const response = await fetch(
-				`${import.meta.env.VITE_BASE_ADDR}/updateUserRole`,
-				{
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({
-						user_id: user.userDetails.user_id,
-						role: role,
-					}),
-				}
-			);
+			const response = await fetch(`${import.meta.env.VITE_BASE_ADDR}/updateUserRole`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					user_id: user.userDetails.user_id,
+					role: role,
+				}),
+			});
 			if (!response.ok) {
 				const errorData = await response.json();
 				throw new Error(errorData.error || 'Failed to update role');
@@ -161,14 +160,11 @@ const UserDetail = () => {
 	// Handler for unlocking account
 	const handleUnlockAccount = async () => {
 		try {
-			const response = await fetch(
-				`${import.meta.env.VITE_BASE_ADDR}/unlockAccount`,
-				{
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({ user_id: user.userDetails.user_id }),
-				}
-			);
+			const response = await fetch(`${import.meta.env.VITE_BASE_ADDR}/unlockAccount`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ user_id: user.userDetails.user_id }),
+			});
 			if (!response.ok) {
 				const errorData = await response.json();
 				throw new Error(errorData.error || 'Failed to unlock account');
@@ -200,14 +196,11 @@ const UserDetail = () => {
 	// Handler for locking account
 	const handleLockAccount = async () => {
 		try {
-			const response = await fetch(
-				`${import.meta.env.VITE_BASE_ADDR}/lockAccount`,
-				{
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({ user_id: user.userDetails.user_id }),
-				}
-			);
+			const response = await fetch(`${import.meta.env.VITE_BASE_ADDR}/lockAccount`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ user_id: user.userDetails.user_id }),
+			});
 			if (!response.ok) {
 				const errorData = await response.json();
 				throw new Error(errorData.error || 'Failed to lock account');
@@ -247,17 +240,14 @@ const UserDetail = () => {
 		}
 
 		try {
-			const response = await fetch(
-				import.meta.env.VITE_BASE_ADDR + '/forgotPassword',
-				{
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-					},
-					credentials: 'include',
-					body: JSON.stringify({ email }),
-				}
-			);
+			const response = await fetch(import.meta.env.VITE_BASE_ADDR + '/forgotPassword', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				credentials: 'include',
+				body: JSON.stringify({ email }),
+			});
 
 			if (!response.ok) {
 				throw new Error('Failed to send reset link. Please check your email.');
@@ -292,19 +282,16 @@ const UserDetail = () => {
 		}
 
 		try {
-			const response = await fetch(
-				import.meta.env.VITE_BASE_ADDR + '/assignScheduleGroup',
-				{
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-					},
-					body: JSON.stringify({
-						user_id: user.userDetails.user_id,
-						group_id: selectedGroup,
-					}),
-				}
-			);
+			const response = await fetch(import.meta.env.VITE_BASE_ADDR + '/assignScheduleGroup', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({
+					user_id: user.userDetails.user_id,
+					group_id: selectedGroup,
+				}),
+			});
 			if (!response.ok) {
 				const errorData = await response.json();
 				throw new Error(errorData.error || 'Failed to assign schedule group');
@@ -355,9 +342,7 @@ const UserDetail = () => {
 			// Remove the group from the local state
 			setUser((prevUser) => ({
 				...prevUser,
-				scheduleGroups: prevUser.scheduleGroups.filter(
-					(group) => group.group_id !== groupId
-				),
+				scheduleGroups: prevUser.scheduleGroups.filter((group) => group.group_id !== groupId),
 			}));
 		} catch (error) {
 			toast({
@@ -419,6 +404,11 @@ const UserDetail = () => {
 				<LoadingScreen />
 			) : (
 				<div className="user-detail p-8 mx-auto rounded-lg shadow-lg">
+					<Button
+						className="text-gray-600 dark:text-gray-300 bg-transparent hover:bg-transparent hover:text-gray-900 dark:hover:text-white transition-colors duration-200"
+						onClick={() => navigate('/manage-users')}>
+						← Back
+					</Button>
 					{error ? (
 						<p className="text-center text-red-500 font-semibold">{error}</p>
 					) : user ? (
@@ -432,17 +422,13 @@ const UserDetail = () => {
 									{user.userDetails.first_name} {user.userDetails.last_name}
 								</h2>
 								<p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-									<span className="font-semibold">UUID:</span>{' '}
-									{user.userDetails.user_id}
+									<span className="font-semibold">UUID:</span> {user.userDetails.user_id}
 								</p>
 								<div className="space-y-4 text-left">
 									<div className="flex items-center space-x-2">
 										<EnvelopeIcon className="w-5 h-5 text-blue-500" />
 										<p className="text-lg font-medium text-gray-800 dark:text-gray-300">
-											Email:{' '}
-											<span className="font-normal">
-												{user.userDetails.email}
-											</span>
+											Email: <span className="font-normal">{user.userDetails.email}</span>
 										</p>
 									</div>
 									<div className="flex items-center space-x-2">
@@ -453,9 +439,7 @@ const UserDetail = () => {
 												value={role}
 												onChange={(e) => setRole(e.target.value)}
 												className="p-2 border rounded">
-												{role === '' ? (
-													<option value="">Select a role</option>
-												) : null}
+												{role === '' ? <option value="">Select a role</option> : null}
 												<option value="admin">Admin</option>
 												<option value="worker">Worker</option>
 												<option value="maintainer">Maintainer</option>
@@ -471,15 +455,9 @@ const UserDetail = () => {
 								<div className="mt-4 flex items-center justify-center space-x-2">
 									<Button onClick={handleResetPassword}>Reset Password</Button>
 									<Button
-										onClick={
-											user.lockoutDetails?.locked
-												? handleUnlockAccount
-												: handleLockAccount
-										}
+										onClick={user.lockoutDetails?.locked ? handleUnlockAccount : handleLockAccount}
 										variant="secondary">
-										{user.lockoutDetails?.locked
-											? 'Unlock Account'
-											: 'Lock Account'}
+										{user.lockoutDetails?.locked ? 'Unlock Account' : 'Lock Account'}
 									</Button>
 								</div>
 							</div>
@@ -509,9 +487,7 @@ const UserDetail = () => {
 									<li>
 										<span className="font-medium">Last Failed Time:</span>{' '}
 										{user.lockoutDetails?.last_failed_time
-											? new Date(
-													user.lockoutDetails.last_failed_time
-											  ).toLocaleString()
+											? new Date(user.lockoutDetails.last_failed_time).toLocaleString()
 											: 'N/A'}
 									</li>
 								</ul>
@@ -566,9 +542,7 @@ const UserDetail = () => {
 							</div>
 						</div>
 					) : (
-						<p className="text-center text-lg text-gray-600 dark:text-gray-300">
-							User not found.
-						</p>
+						<p className="text-center text-lg text-gray-600 dark:text-gray-300">User not found.</p>
 					)}
 					{/* Authentication Logs Section */}
 					<h3 className="text-2xl font-semibold mb-4">Authentication Logs</h3>
@@ -612,10 +586,7 @@ const UserDetail = () => {
 														onClick={header.column.getToggleSortingHandler()}>
 														{header.isPlaceholder
 															? null
-															: flexRender(
-																	header.column.columnDef.header,
-																	header.getContext()
-															  )}
+															: flexRender(header.column.columnDef.header, header.getContext())}
 														{isSorted === 'asc' && (
 															<ArrowUp className="inline-block w-4 h-4 ml-1" />
 														)}
@@ -634,10 +605,7 @@ const UserDetail = () => {
 											<TableRow key={row.id}>
 												{row.getVisibleCells().map((cell) => (
 													<TableCell key={cell.id}>
-														{flexRender(
-															cell.column.columnDef.cell,
-															cell.getContext()
-														)}
+														{flexRender(cell.column.columnDef.cell, cell.getContext())}
 													</TableCell>
 												))}
 											</TableRow>
@@ -662,8 +630,7 @@ const UserDetail = () => {
 									Previous
 								</Button>
 								<span>
-									Page {table.getState().pagination.pageIndex + 1} of{' '}
-									{table.getPageCount()}
+									Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
 								</span>
 								<Button
 									onClick={() => table.nextPage()}
