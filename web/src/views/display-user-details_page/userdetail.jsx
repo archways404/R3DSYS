@@ -403,7 +403,7 @@ const UserDetail = () => {
 			{loading ? (
 				<LoadingScreen />
 			) : (
-				<div className="user-detail p-8 mx-auto rounded-lg shadow-lg">
+				<div className="max-w-5xl mx-auto p-6 space-y-10">
 					<Button
 						className="text-gray-600 dark:text-gray-300 bg-transparent hover:bg-transparent hover:text-gray-900 dark:hover:text-white transition-colors duration-200"
 						onClick={() => navigate('/manage-users')}>
@@ -422,32 +422,40 @@ const UserDetail = () => {
 									{user.userDetails.first_name} {user.userDetails.last_name}
 								</h2>
 								<p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-									<span className="font-semibold">UUID:</span> {user.userDetails.user_id}
+									<span className="font-semibold"></span> {user.userDetails.user_id}
 								</p>
-								<div className="space-y-4 text-left">
-									<div className="flex items-center space-x-2">
+								{/* Email Row */}
+								<div className="space-y-4 text-center">
+									<div className="flex justify-center items-center gap-2">
 										<EnvelopeIcon className="w-5 h-5 text-blue-500" />
 										<p className="text-lg font-medium text-gray-800 dark:text-gray-300">
 											Email: <span className="font-normal">{user.userDetails.email}</span>
 										</p>
 									</div>
-									<div className="flex items-center space-x-2">
-										<CheckBadgeIcon className="w-5 h-5 text-yellow-500" />
+									<div className="flex justify-center items-center gap-2">
+										<EnvelopeIcon className="w-5 h-5 text-blue-500" />
 										<p className="text-lg font-medium text-gray-800 dark:text-gray-300">
-											Role:{' '}
-											<select
-												value={role}
-												onChange={(e) => setRole(e.target.value)}
-												className="p-2 border rounded">
-												{role === '' ? <option value="">Select a role</option> : null}
-												<option value="admin">Admin</option>
-												<option value="worker">Worker</option>
-												<option value="maintainer">Maintainer</option>
-											</select>
+											Notification:{' '}
+											<span className="font-normal">{user.userDetails.notification_email}</span>
 										</p>
+									</div>
+									{/* Role Row */}
+									<div className="flex flex-wrap justify-center items-center gap-2">
+										<CheckBadgeIcon className="w-5 h-5 text-yellow-500" />
+										<p className="text-lg font-medium text-gray-800 dark:text-gray-300">Role:</p>
+										<select
+											value={role}
+											onChange={(e) => setRole(e.target.value)}
+											className="p-2 border rounded text-sm">
+											<option value="">Select a role</option>
+											<option value="admin">Admin</option>
+											<option value="worker">Worker</option>
+											<option value="maintainer">Maintainer</option>
+										</select>
 										<Button
 											onClick={handleRoleChange}
-											disabled={role === user.userDetails.role}>
+											disabled={role === user.userDetails.role}
+											className="text-sm">
 											Update Role
 										</Button>
 									</div>
@@ -462,82 +470,84 @@ const UserDetail = () => {
 								</div>
 							</div>
 
-							{/* Lockout Details Section */}
-							<div className=" p-4 rounded-lg">
-								<h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
-									Account Lockout Details
-								</h3>
-								<ul className="space-y-2">
-									<li>
-										<span className="font-medium">Failed Attempts:</span>{' '}
-										{user.lockoutDetails?.failed_attempts || 0}
-									</li>
-									<li>
-										<span className="font-medium">Last Failed IP:</span>{' '}
-										{user.lockoutDetails?.last_failed_ip || 'N/A'}
-									</li>
-									<li>
-										<span className="font-medium">Locked:</span>{' '}
-										{user.lockoutDetails?.locked ? 'Yes' : 'No'}
-									</li>
-									<li>
-										<span className="font-medium">Unlock Time:</span>{' '}
-										{user.lockoutDetails?.unlock_time || 'N/A'}
-									</li>
-									<li>
-										<span className="font-medium">Last Failed Time:</span>{' '}
-										{user.lockoutDetails?.last_failed_time
-											? new Date(user.lockoutDetails.last_failed_time).toLocaleString()
-											: 'N/A'}
-									</li>
-								</ul>
-							</div>
+							<div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+								{/* Lockout Details Section */}
+								<div className=" p-4 rounded-lg">
+									<h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+										Account Lockout Details
+									</h3>
+									<ul className="space-y-2">
+										<li>
+											<span className="font-medium">Failed Attempts:</span>{' '}
+											{user.lockoutDetails?.failed_attempts || 0}
+										</li>
+										<li>
+											<span className="font-medium">Last Failed IP:</span>{' '}
+											{user.lockoutDetails?.last_failed_ip || 'N/A'}
+										</li>
+										<li>
+											<span className="font-medium">Locked:</span>{' '}
+											{user.lockoutDetails?.locked ? 'Yes' : 'No'}
+										</li>
+										<li>
+											<span className="font-medium">Unlock Time:</span>{' '}
+											{user.lockoutDetails?.unlock_time || 'N/A'}
+										</li>
+										<li>
+											<span className="font-medium">Last Failed Time:</span>{' '}
+											{user.lockoutDetails?.last_failed_time
+												? new Date(user.lockoutDetails.last_failed_time).toLocaleString()
+												: 'N/A'}
+										</li>
+									</ul>
+								</div>
 
-							{/* Schedule Groups Section */}
-							<div className=" p-4 rounded-lg">
-								<h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
-									Schedule Groups
-								</h3>
-								<ul className="space-y-2">
-									{user.scheduleGroups?.length > 0 ? (
-										user.scheduleGroups.map((group) => (
-											<li
-												key={group.group_id}
-												className="flex items-center justify-between">
-												<span>{group.name}</span>
-												<div className="flex items-center space-x-2">
-													<span className="text-gray-500 dark:text-gray-400 text-sm">
-														{group.group_id}
-													</span>
-													<Button
-														variant="destructive"
-														size="sm"
-														onClick={() => handleRemoveGroup(group.group_id)}>
-														Remove
-													</Button>
-												</div>
-											</li>
-										))
-									) : (
-										<p>No groups assigned</p>
-									)}
-								</ul>
-								{/* Assignment Panel */}
-								<div className="mt-4 flex items-center space-x-2">
-									<select
-										value={selectedGroup}
-										onChange={(e) => setSelectedGroup(e.target.value)}
-										className="p-2 border rounded">
-										<option value="">Select a schedule group to add</option>
-										{availableGroups.map((group) => (
-											<option
-												key={group.group_id}
-												value={group.group_id}>
-												{group.name}
-											</option>
-										))}
-									</select>
-									<Button onClick={handleAssignGroup}>Add Group</Button>
+								{/* Schedule Groups Section */}
+								<div className=" p-4 rounded-lg">
+									<h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+										Schedule Groups
+									</h3>
+									<ul className="space-y-2">
+										{user.scheduleGroups?.length > 0 ? (
+											user.scheduleGroups.map((group) => (
+												<li
+													key={group.group_id}
+													className="flex items-center justify-between">
+													<span>{group.name}</span>
+													<div className="flex items-center space-x-2">
+														<span className="text-gray-500 dark:text-gray-400 text-sm">
+															{group.group_id}
+														</span>
+														<Button
+															variant="destructive"
+															size="sm"
+															onClick={() => handleRemoveGroup(group.group_id)}>
+															Remove
+														</Button>
+													</div>
+												</li>
+											))
+										) : (
+											<p>No groups assigned</p>
+										)}
+									</ul>
+									{/* Assignment Panel */}
+									<div className="mt-4 flex items-center space-x-2">
+										<select
+											value={selectedGroup}
+											onChange={(e) => setSelectedGroup(e.target.value)}
+											className="p-2 border rounded">
+											<option value="">Select a schedule group to add</option>
+											{availableGroups.map((group) => (
+												<option
+													key={group.group_id}
+													value={group.group_id}>
+													{group.name}
+												</option>
+											))}
+										</select>
+										<Button onClick={handleAssignGroup}>Add Group</Button>
+									</div>
 								</div>
 							</div>
 						</div>
