@@ -267,10 +267,7 @@ const Navbar = () => {
 			icon: GrSchedule,
 			roles: ['admin', 'maintainer', 'worker'],
 		},
-
 		{ title: 'My Shifts', to: '/myshifts', icon: GrSchedule, roles: ['worker'] },
-
-		// Single links
 		{
 			title: 'Report',
 			to: '/apply-unassigned',
@@ -302,7 +299,6 @@ const Navbar = () => {
 			icon: FaUserShield,
 			roles: ['admin', 'maintainer'],
 		},
-
 		{ title: 'Settings', to: '/settings', icon: Settings },
 		{ title: 'Logout', to: '/logout', icon: LogOut, roles: ['admin', 'maintainer', 'worker'] },
 	];
