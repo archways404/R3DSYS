@@ -11,6 +11,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useState, useEffect, useMemo } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const NewEntryComponent = ({ open, onOpenChange, date, onCreated, groups = [] }) => {
 	const [startTime, setStartTime] = useState('');
@@ -129,7 +130,7 @@ const NewEntryComponent = ({ open, onOpenChange, date, onCreated, groups = [] })
 
 					{!selectedGroup ? (
 						<p className="text-sm text-gray-400">Please select a group to continue</p>
-					) : (
+					) : hasFetched ? (
 						<>
 							{/* Shift Type Selector */}
 							<Select
@@ -148,6 +149,7 @@ const NewEntryComponent = ({ open, onOpenChange, date, onCreated, groups = [] })
 									))}
 								</SelectContent>
 							</Select>
+
 							{/* Time Inputs */}
 							<div>
 								<label
@@ -212,6 +214,14 @@ const NewEntryComponent = ({ open, onOpenChange, date, onCreated, groups = [] })
 								</SelectContent>
 							</Select>
 						</>
+					) : (
+						// 👇 Skeletons while loading
+						<div className="space-y-4">
+							<Skeleton className="h-10 w-full rounded-md" />
+							<Skeleton className="h-10 w-full rounded-md" />
+							<Skeleton className="h-10 w-full rounded-md" />
+							<Skeleton className="h-10 w-full rounded-md" />
+						</div>
 					)}
 					<Button
 						onClick={handleCreate}

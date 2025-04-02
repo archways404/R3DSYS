@@ -20,6 +20,7 @@ import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useEffect, useState, useMemo } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const EditShiftDialog = ({ open, onOpenChange, event, onUpdated }) => {
 	const [users, setUsers] = useState([]);
@@ -29,6 +30,7 @@ const EditShiftDialog = ({ open, onOpenChange, event, onUpdated }) => {
 	const [initialData, setInitialData] = useState(null);
 	const [saving, setSaving] = useState(false);
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+	const [loading, setLoading] = useState(true);
 
 	useEffect(() => {
 		if (open && event?.shift_id) {
@@ -45,6 +47,7 @@ const EditShiftDialog = ({ open, onOpenChange, event, onUpdated }) => {
 						start_time: data.shift.start_time?.slice(0, 5) || '',
 						end_time: data.shift.end_time?.slice(0, 5) || '',
 					});
+					setLoading(false); // ✅ loading is done
 				})
 				.catch((err) => {
 					console.error('Failed to load shift edit info:', err);
@@ -122,66 +125,77 @@ const EditShiftDialog = ({ open, onOpenChange, event, onUpdated }) => {
 					</DialogHeader>
 
 					<div className="space-y-4">
-						<div className="flex gap-4">
-							<div className="flex-1">
-								<label className="block text-sm font-medium mb-1">Start Time</label>
-								<Input
-									type="time"
-									value={startTime}
-									onChange={(e) => setStartTime(e.target.value)}
-								/>
+						{loading ? (
+							<div className="flex gap-4">
+								<Skeleton className="h-10 w-full rounded-md" />
+								<Skeleton className="h-10 w-full rounded-md" />
 							</div>
-							<div className="flex-1">
-								<label className="block text-sm font-medium mb-1">End Time</label>
-								<Input
-									type="time"
-									value={endTime}
-									onChange={(e) => setEndTime(e.target.value)}
-								/>
+						) : (
+							<div className="flex gap-4">
+								<div className="flex-1">
+									<label className="block text-sm font-medium mb-1">Start Time</label>
+									<Input
+										type="time"
+										value={startTime}
+										onChange={(e) => setStartTime(e.target.value)}
+									/>
+								</div>
+								<div className="flex-1">
+									<label className="block text-sm font-medium mb-1">End Time</label>
+									<Input
+										type="time"
+										value={endTime}
+										onChange={(e) => setEndTime(e.target.value)}
+									/>
+								</div>
 							</div>
-						</div>
+						)}
 
 						<div>
 							<label className="block text-sm font-medium mb-1">Assigned to</label>
-							<Select
-								value={selectedUser}
-								onValueChange={setSelectedUser}>
-								<SelectTrigger>
-									<SelectValue placeholder="Select a user" />
-								</SelectTrigger>
-								<SelectContent>
-									{availableUsers.length > 0 && (
-										<SelectGroup>
-											<SelectLabel>Available Users</SelectLabel>
-											{availableUsers.map((user) => (
-												<SelectItem
-													key={user.user_id}
-													value={user.user_id}
-													className="text-green-500 hover:text-green-400">
-													{user.first_name} {user.last_name}
-												</SelectItem>
-											))}
-										</SelectGroup>
-									)}
-									{/* Stylish separator */}
-									{availableUsers.length > 0 && unavailableUsers.length > 0 && (
-										<Separator className="my-2 mx-auto bg-gray-500 h-px w-[75%]" />
-									)}
+							{loading ? (
+								<Skeleton className="h-10 w-full rounded-md" />
+							) : (
+								<Select
+									value={selectedUser}
+									onValueChange={setSelectedUser}>
+									<SelectTrigger>
+										<SelectValue placeholder="Select a user" />
+									</SelectTrigger>
+									<SelectContent>
+										{availableUsers.length > 0 && (
+											<SelectGroup>
+												<SelectLabel>Available Users</SelectLabel>
+												{availableUsers.map((user) => (
+													<SelectItem
+														key={user.user_id}
+														value={user.user_id}
+														className="text-green-500 hover:text-green-400">
+														{user.first_name} {user.last_name}
+													</SelectItem>
+												))}
+											</SelectGroup>
+										)}
+										{/* Stylish separator */}
+										{availableUsers.length > 0 && unavailableUsers.length > 0 && (
+											<Separator className="my-2 mx-auto bg-gray-500 h-px w-[75%]" />
+										)}
 
-									{unavailableUsers.length > 0 && (
-										<SelectGroup>
-											<SelectLabel>Other Users</SelectLabel>
-											{unavailableUsers.map((user) => (
-												<SelectItem
-													key={user.user_id}
-													value={user.user_id}>
-													{user.first_name} {user.last_name}
-												</SelectItem>
-											))}
-										</SelectGroup>
-									)}
-								</SelectContent>
-							</Select>
+										{unavailableUsers.length > 0 && (
+											<SelectGroup>
+												<SelectLabel>Other Users</SelectLabel>
+												{unavailableUsers.map((user) => (
+													<SelectItem
+														key={user.user_id}
+														value={user.user_id}>
+														{user.first_name} {user.last_name}
+													</SelectItem>
+												))}
+											</SelectGroup>
+										)}
+									</SelectContent>
+								</Select>
+							)}
 						</div>
 
 						<div className="pt-2 flex justify-between">
