@@ -35,7 +35,7 @@ const terms = [
 
 const ToS = () => {
 	return (
-		<section className="relative w-full py-20 text-white bg-transparent">
+		<section className="relative w-full text-white bg-transparent">
 			<div className="relative z-10 mx-auto max-w-6xl px-6">
 				{/* Title */}
 				<motion.h2
@@ -61,9 +61,8 @@ const ToS = () => {
 					animate={{ opacity: 1, y: 0 }}
 					transition={{ delay: 0.4, duration: 1 }}
 					className="mt-4 text-lg text-gray-300 max-w-2xl">
-					Please review our Terms of Service carefully before using our
-					platform. By accessing our services, you agree to the following terms
-					and conditions.
+					Please review our Terms of Service carefully before using our platform. By accessing our
+					services, you agree to the following terms and conditions.
 				</motion.p>
 
 				{/* Terms Grid */}
@@ -76,9 +75,7 @@ const ToS = () => {
 							transition={{ delay: 0.2 * index, duration: 0.8 }}
 							className="flex flex-col p-6 bg-transparent rounded-xl border border-gray-700 transition-transform duration-300 hover:scale-[1.03]">
 							{/* Term Title */}
-							<h4 className="text-lg font-semibold text-red-500">
-								{term.title}
-							</h4>
+							<h4 className="text-lg font-semibold text-red-500">{term.title}</h4>
 
 							{/* Term Description */}
 							<p className="mt-3 text-sm text-gray-400">{term.description}</p>

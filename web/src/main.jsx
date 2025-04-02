@@ -71,6 +71,8 @@ import SettingsRenderer from './views/settings/renderer';
 
 import NewScheduleRenderer from './views/new-schedule/renderer';
 
+import ManagementRenderer from './views/admin-nav/renderer';
+
 import './global.css';
 
 createRoot(document.getElementById('root')).render(
@@ -158,6 +160,14 @@ createRoot(document.getElementById('root')).render(
 									element={
 										<AuthWrapper allowedUserRoles={['admin', 'maintainer']}>
 											<RequestRenderer />
+										</AuthWrapper>
+									}
+								/>
+								<Route
+									path="/management"
+									element={
+										<AuthWrapper allowedUserRoles={['admin', 'maintainer']}>
+											<ManagementRenderer />
 										</AuthWrapper>
 									}
 								/>

@@ -27,6 +27,8 @@ import { useParams } from 'react-router-dom';
 import Layout from '../../components/Layout';
 import LoadingScreen from '../../components/LoadingScreen';
 import { useToast } from '@/hooks/use-toast';
+import { Navigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 const UserDetail = () => {
 	const { uuid } = useParams();
@@ -43,12 +45,12 @@ const UserDetail = () => {
 	const [globalFilter, setGlobalFilter] = useState('');
 	const { toast } = useToast();
 
+	const navigate = useNavigate(); // Get the navigate function
+
 	useEffect(() => {
 		const fetchUser = async () => {
 			try {
-				const response = await fetch(
-					`${import.meta.env.VITE_BASE_ADDR}/get-user?uuid=${uuid}`
-				);
+				const response = await fetch(`${import.meta.env.VITE_BASE_ADDR}/get-user?uuid=${uuid}`);
 				if (!response.ok) {
 					throw new Error('Failed to fetch user details');
 				}
@@ -120,17 +122,14 @@ const UserDetail = () => {
 	const handleRoleChange = async (e) => {
 		e.preventDefault();
 		try {
-			const response = await fetch(
-				`${import.meta.env.VITE_BASE_ADDR}/updateUserRole`,
-				{
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({
-						user_id: user.userDetails.user_id,
-						role: role,
-					}),
-				}
-			);
+			const response = await fetch(`${import.meta.env.VITE_BASE_ADDR}/updateUserRole`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					user_id: user.userDetails.user_id,
+					role: role,
+				}),
+			});
 			if (!response.ok) {
 				const errorData = await response.json();
 				throw new Error(errorData.error || 'Failed to update role');
@@ -161,14 +160,11 @@ const UserDetail = () => {
 	// Handler for unlocking account
 	const handleUnlockAccount = async () => {
 		try {
-			const response = await fetch(
-				`${import.meta.env.VITE_BASE_ADDR}/unlockAccount`,
-				{
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({ user_id: user.userDetails.user_id }),
-				}
-			);
+			const response = await fetch(`${import.meta.env.VITE_BASE_ADDR}/unlockAccount`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ user_id: user.userDetails.user_id }),
+			});
 			if (!response.ok) {
 				const errorData = await response.json();
 				throw new Error(errorData.error || 'Failed to unlock account');
@@ -200,14 +196,11 @@ const UserDetail = () => {
 	// Handler for locking account
 	const handleLockAccount = async () => {
 		try {
-			const response = await fetch(
-				`${import.meta.env.VITE_BASE_ADDR}/lockAccount`,
-				{
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({ user_id: user.userDetails.user_id }),
-				}
-			);
+			const response = await fetch(`${import.meta.env.VITE_BASE_ADDR}/lockAccount`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ user_id: user.userDetails.user_id }),
+			});
 			if (!response.ok) {
 				const errorData = await response.json();
 				throw new Error(errorData.error || 'Failed to lock account');
@@ -247,17 +240,14 @@ const UserDetail = () => {
 		}
 
 		try {
-			const response = await fetch(
-				import.meta.env.VITE_BASE_ADDR + '/forgotPassword',
-				{
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-					},
-					credentials: 'include',
-					body: JSON.stringify({ email }),
-				}
-			);
+			const response = await fetch(import.meta.env.VITE_BASE_ADDR + '/forgotPassword', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				credentials: 'include',
+				body: JSON.stringify({ email }),
+			});
 
 			if (!response.ok) {
 				throw new Error('Failed to send reset link. Please check your email.');
@@ -292,19 +282,16 @@ const UserDetail = () => {
 		}
 
 		try {
-			const response = await fetch(
-				import.meta.env.VITE_BASE_ADDR + '/assignScheduleGroup',
-				{
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-					},
-					body: JSON.stringify({
-						user_id: user.userDetails.user_id,
-						group_id: selectedGroup,
-					}),
-				}
-			);
+			const response = await fetch(import.meta.env.VITE_BASE_ADDR + '/assignScheduleGroup', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({
+					user_id: user.userDetails.user_id,
+					group_id: selectedGroup,
+				}),
+			});
 			if (!response.ok) {
 				const errorData = await response.json();
 				throw new Error(errorData.error || 'Failed to assign schedule group');
@@ -355,9 +342,7 @@ const UserDetail = () => {
 			// Remove the group from the local state
 			setUser((prevUser) => ({
 				...prevUser,
-				scheduleGroups: prevUser.scheduleGroups.filter(
-					(group) => group.group_id !== groupId
-				),
+				scheduleGroups: prevUser.scheduleGroups.filter((group) => group.group_id !== groupId),
 			}));
 		} catch (error) {
 			toast({
@@ -418,7 +403,12 @@ const UserDetail = () => {
 			{loading ? (
 				<LoadingScreen />
 			) : (
-				<div className="user-detail p-8 mx-auto rounded-lg shadow-lg">
+				<div className="max-w-5xl mx-auto p-6 space-y-10">
+					<Button
+						className="text-gray-600 dark:text-gray-300 bg-transparent hover:bg-transparent hover:text-gray-900 dark:hover:text-white transition-colors duration-200"
+						onClick={() => navigate('/manage-users')}>
+						← Back
+					</Button>
 					{error ? (
 						<p className="text-center text-red-500 font-semibold">{error}</p>
 					) : user ? (
@@ -432,38 +422,40 @@ const UserDetail = () => {
 									{user.userDetails.first_name} {user.userDetails.last_name}
 								</h2>
 								<p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-									<span className="font-semibold">UUID:</span>{' '}
-									{user.userDetails.user_id}
+									<span className="font-semibold"></span> {user.userDetails.user_id}
 								</p>
-								<div className="space-y-4 text-left">
-									<div className="flex items-center space-x-2">
+								{/* Email Row */}
+								<div className="space-y-4 text-center">
+									<div className="flex justify-center items-center gap-2">
 										<EnvelopeIcon className="w-5 h-5 text-blue-500" />
 										<p className="text-lg font-medium text-gray-800 dark:text-gray-300">
-											Email:{' '}
-											<span className="font-normal">
-												{user.userDetails.email}
-											</span>
+											Email: <span className="font-normal">{user.userDetails.email}</span>
 										</p>
 									</div>
-									<div className="flex items-center space-x-2">
-										<CheckBadgeIcon className="w-5 h-5 text-yellow-500" />
+									<div className="flex justify-center items-center gap-2">
+										<EnvelopeIcon className="w-5 h-5 text-blue-500" />
 										<p className="text-lg font-medium text-gray-800 dark:text-gray-300">
-											Role:{' '}
-											<select
-												value={role}
-												onChange={(e) => setRole(e.target.value)}
-												className="p-2 border rounded">
-												{role === '' ? (
-													<option value="">Select a role</option>
-												) : null}
-												<option value="admin">Admin</option>
-												<option value="worker">Worker</option>
-												<option value="maintainer">Maintainer</option>
-											</select>
+											Notification:{' '}
+											<span className="font-normal">{user.userDetails.notification_email}</span>
 										</p>
+									</div>
+									{/* Role Row */}
+									<div className="flex flex-wrap justify-center items-center gap-2">
+										<CheckBadgeIcon className="w-5 h-5 text-yellow-500" />
+										<p className="text-lg font-medium text-gray-800 dark:text-gray-300">Role:</p>
+										<select
+											value={role}
+											onChange={(e) => setRole(e.target.value)}
+											className="p-2 border rounded text-sm">
+											<option value="">Select a role</option>
+											<option value="admin">Admin</option>
+											<option value="worker">Worker</option>
+											<option value="maintainer">Maintainer</option>
+										</select>
 										<Button
 											onClick={handleRoleChange}
-											disabled={role === user.userDetails.role}>
+											disabled={role === user.userDetails.role}
+											className="text-sm">
 											Update Role
 										</Button>
 									</div>
@@ -471,104 +463,96 @@ const UserDetail = () => {
 								<div className="mt-4 flex items-center justify-center space-x-2">
 									<Button onClick={handleResetPassword}>Reset Password</Button>
 									<Button
-										onClick={
-											user.lockoutDetails?.locked
-												? handleUnlockAccount
-												: handleLockAccount
-										}
+										onClick={user.lockoutDetails?.locked ? handleUnlockAccount : handleLockAccount}
 										variant="secondary">
-										{user.lockoutDetails?.locked
-											? 'Unlock Account'
-											: 'Lock Account'}
+										{user.lockoutDetails?.locked ? 'Unlock Account' : 'Lock Account'}
 									</Button>
 								</div>
 							</div>
 
-							{/* Lockout Details Section */}
-							<div className=" p-4 rounded-lg">
-								<h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
-									Account Lockout Details
-								</h3>
-								<ul className="space-y-2">
-									<li>
-										<span className="font-medium">Failed Attempts:</span>{' '}
-										{user.lockoutDetails?.failed_attempts || 0}
-									</li>
-									<li>
-										<span className="font-medium">Last Failed IP:</span>{' '}
-										{user.lockoutDetails?.last_failed_ip || 'N/A'}
-									</li>
-									<li>
-										<span className="font-medium">Locked:</span>{' '}
-										{user.lockoutDetails?.locked ? 'Yes' : 'No'}
-									</li>
-									<li>
-										<span className="font-medium">Unlock Time:</span>{' '}
-										{user.lockoutDetails?.unlock_time || 'N/A'}
-									</li>
-									<li>
-										<span className="font-medium">Last Failed Time:</span>{' '}
-										{user.lockoutDetails?.last_failed_time
-											? new Date(
-													user.lockoutDetails.last_failed_time
-											  ).toLocaleString()
-											: 'N/A'}
-									</li>
-								</ul>
-							</div>
+							<div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+								{/* Lockout Details Section */}
+								<div className=" p-4 rounded-lg">
+									<h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+										Account Lockout Details
+									</h3>
+									<ul className="space-y-2">
+										<li>
+											<span className="font-medium">Failed Attempts:</span>{' '}
+											{user.lockoutDetails?.failed_attempts || 0}
+										</li>
+										<li>
+											<span className="font-medium">Last Failed IP:</span>{' '}
+											{user.lockoutDetails?.last_failed_ip || 'N/A'}
+										</li>
+										<li>
+											<span className="font-medium">Locked:</span>{' '}
+											{user.lockoutDetails?.locked ? 'Yes' : 'No'}
+										</li>
+										<li>
+											<span className="font-medium">Unlock Time:</span>{' '}
+											{user.lockoutDetails?.unlock_time || 'N/A'}
+										</li>
+										<li>
+											<span className="font-medium">Last Failed Time:</span>{' '}
+											{user.lockoutDetails?.last_failed_time
+												? new Date(user.lockoutDetails.last_failed_time).toLocaleString()
+												: 'N/A'}
+										</li>
+									</ul>
+								</div>
 
-							{/* Schedule Groups Section */}
-							<div className=" p-4 rounded-lg">
-								<h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
-									Schedule Groups
-								</h3>
-								<ul className="space-y-2">
-									{user.scheduleGroups?.length > 0 ? (
-										user.scheduleGroups.map((group) => (
-											<li
-												key={group.group_id}
-												className="flex items-center justify-between">
-												<span>{group.name}</span>
-												<div className="flex items-center space-x-2">
-													<span className="text-gray-500 dark:text-gray-400 text-sm">
-														{group.group_id}
-													</span>
-													<Button
-														variant="destructive"
-														size="sm"
-														onClick={() => handleRemoveGroup(group.group_id)}>
-														Remove
-													</Button>
-												</div>
-											</li>
-										))
-									) : (
-										<p>No groups assigned</p>
-									)}
-								</ul>
-								{/* Assignment Panel */}
-								<div className="mt-4 flex items-center space-x-2">
-									<select
-										value={selectedGroup}
-										onChange={(e) => setSelectedGroup(e.target.value)}
-										className="p-2 border rounded">
-										<option value="">Select a schedule group to add</option>
-										{availableGroups.map((group) => (
-											<option
-												key={group.group_id}
-												value={group.group_id}>
-												{group.name}
-											</option>
-										))}
-									</select>
-									<Button onClick={handleAssignGroup}>Add Group</Button>
+								{/* Schedule Groups Section */}
+								<div className=" p-4 rounded-lg">
+									<h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+										Schedule Groups
+									</h3>
+									<ul className="space-y-2">
+										{user.scheduleGroups?.length > 0 ? (
+											user.scheduleGroups.map((group) => (
+												<li
+													key={group.group_id}
+													className="flex items-center justify-between">
+													<span>{group.name}</span>
+													<div className="flex items-center space-x-2">
+														<span className="text-gray-500 dark:text-gray-400 text-sm">
+															{group.group_id}
+														</span>
+														<Button
+															variant="destructive"
+															size="sm"
+															onClick={() => handleRemoveGroup(group.group_id)}>
+															Remove
+														</Button>
+													</div>
+												</li>
+											))
+										) : (
+											<p>No groups assigned</p>
+										)}
+									</ul>
+									{/* Assignment Panel */}
+									<div className="mt-4 flex items-center space-x-2">
+										<select
+											value={selectedGroup}
+											onChange={(e) => setSelectedGroup(e.target.value)}
+											className="p-2 border rounded">
+											<option value="">Select a schedule group to add</option>
+											{availableGroups.map((group) => (
+												<option
+													key={group.group_id}
+													value={group.group_id}>
+													{group.name}
+												</option>
+											))}
+										</select>
+										<Button onClick={handleAssignGroup}>Add Group</Button>
+									</div>
 								</div>
 							</div>
 						</div>
 					) : (
-						<p className="text-center text-lg text-gray-600 dark:text-gray-300">
-							User not found.
-						</p>
+						<p className="text-center text-lg text-gray-600 dark:text-gray-300">User not found.</p>
 					)}
 					{/* Authentication Logs Section */}
 					<h3 className="text-2xl font-semibold mb-4">Authentication Logs</h3>
@@ -612,10 +596,7 @@ const UserDetail = () => {
 														onClick={header.column.getToggleSortingHandler()}>
 														{header.isPlaceholder
 															? null
-															: flexRender(
-																	header.column.columnDef.header,
-																	header.getContext()
-															  )}
+															: flexRender(header.column.columnDef.header, header.getContext())}
 														{isSorted === 'asc' && (
 															<ArrowUp className="inline-block w-4 h-4 ml-1" />
 														)}
@@ -634,10 +615,7 @@ const UserDetail = () => {
 											<TableRow key={row.id}>
 												{row.getVisibleCells().map((cell) => (
 													<TableCell key={cell.id}>
-														{flexRender(
-															cell.column.columnDef.cell,
-															cell.getContext()
-														)}
+														{flexRender(cell.column.columnDef.cell, cell.getContext())}
 													</TableCell>
 												))}
 											</TableRow>
@@ -662,8 +640,7 @@ const UserDetail = () => {
 									Previous
 								</Button>
 								<span>
-									Page {table.getState().pagination.pageIndex + 1} of{' '}
-									{table.getPageCount()}
+									Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
 								</span>
 								<Button
 									onClick={() => table.nextPage()}

@@ -82,7 +82,7 @@ const Calendar = ({ month, year, events = {}, redDays = [], onScheduleUpdated })
 				))}
 			</div>
 
-			<div className="grid grid-cols-7 gap-1 border-t border-gray-700">
+			<div className="grid grid-cols-7 gap-2 border-gray-700">
 				{days.map((day) => {
 					const isCurrentMonth = day.month === month;
 					const red = isRedDay(day);
@@ -91,50 +91,44 @@ const Calendar = ({ month, year, events = {}, redDays = [], onScheduleUpdated })
 					return (
 						<div
 							key={day.toString()}
-							className={`flex flex-col p-2 border border-gray-700 relative min-h-[120px] ${
+							className={`flex flex-col p-3 border border-gray-700 rounded-xl transition-colors relative min-h-[180px] ${
 								red
 									? 'text-red-500 border-red-500 font-semibold'
 									: isCurrentMonth
 									? ''
 									: 'text-gray-500'
 							}`}>
-							{/* Day number */}
-							<div className="text-xs absolute top-1 left-1">{day.day}</div>
-							{(user?.role === 'admin' || user?.role === 'maintainer') && (
-								<>
+							<div className="flex justify-between items-center text-md mb-4">
+								<div>{day.day}</div>
+								{(user?.role === 'admin' || user?.role === 'maintainer') && (
 									<button
-										className="absolute top-1 right-1 p-0.5 hover:text-green-400"
+										className="hover:text-green-400"
 										onClick={() => {
 											setSelectedDate(day.toString());
 											setNewEntryOpen(true);
 										}}>
-										<Plus size={14} />
+										<Plus size={16} />
 									</button>
+								)}
+							</div>
 
-									{isOpen && (
-										<NewEntryComponent
-											open={newEntryOpen}
-											onOpenChange={setNewEntryOpen}
-											date={day.toString()}
-											onCreated={onScheduleUpdated}
-											groups={user?.groups || []}
-										/>
-									)}
-								</>
+							{isOpen && (
+								<NewEntryComponent
+									open={newEntryOpen}
+									onOpenChange={setNewEntryOpen}
+									date={day.toString()}
+									onCreated={onScheduleUpdated}
+									groups={user?.groups || []}
+								/>
 							)}
 
-							{/* Events */}
-							<div className="mt-5 space-y-1 flex-1 overflow-hidden">
+							<div className="pt-2 space-y-1 flex-1 overflow-hidden">
 								{[...(events[day.toString()] || [])]
 									.sort((a, b) => {
-										// First, compare start_time
 										if (a.start_time < b.start_time) return -1;
 										if (a.start_time > b.start_time) return 1;
-
-										// If start times are equal, put the longer one last (i.e., shorter one first)
 										if (a.end_time < b.end_time) return -1;
 										if (a.end_time > b.end_time) return 1;
-
 										return 0;
 									})
 									.map((event, index) => (

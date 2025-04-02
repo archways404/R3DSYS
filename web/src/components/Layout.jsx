@@ -29,9 +29,7 @@ function Layout({ children }) {
 	useEffect(() => {
 		const fetchVersion = async () => {
 			try {
-				const response = await fetch(
-					`${import.meta.env.VITE_BASE_ADDR}/version`
-				);
+				const response = await fetch(`${import.meta.env.VITE_BASE_ADDR}/version`);
 				const data = await response.json();
 
 				if (response.ok) {
@@ -53,7 +51,7 @@ function Layout({ children }) {
 
 		// ✅ Always fetch, but don't show loading if a stored version exists
 		fetchVersion();
-	}, []); // ✅ Run only once on mount
+	}, []);
 
 	return (
 		<VersionContext.Provider value={{ version, loading }}>
@@ -65,19 +63,15 @@ function Layout({ children }) {
 				<LoadingScreen isVisible={renderLoading} />
 
 				{user ? (
-					<div className="grid grid-cols-[15rem_auto] gap-2 flex-1 relative">
-						{/* Sidebar */}
-						<div className="w-60 relative z-10">
-							<AppSidebar
-								user={user}
-								consent={consent}
-							/>
-						</div>
-
+					<div className="flex flex-col flex-1 min-h-screen relative">
 						{/* Main Content */}
 						<div className="flex flex-col flex-1 relative z-10">
 							{/* Navbar */}
-							<div className="h-16 flex items-center">{/* <Navbar /> */}</div>
+							<div className="min-h-[4rem] flex items-center overflow-visible relative z-50">
+								<Navbar />
+								{/* Spacer div to push page content down */}
+								<div className="h-[5.5rem] sm:h-[6rem] md:h-[6.5rem]" />
+							</div>
 
 							{/* Main Content */}
 							<main className="flex-1 overflow-auto">{children}</main>
@@ -88,7 +82,11 @@ function Layout({ children }) {
 					</div>
 				) : (
 					<div className="flex flex-col flex-1 min-h-screen relative">
-						<Navbar />
+						<div className="min-h-[4rem] flex items-center overflow-visible relative z-50">
+							<Navbar />
+							{/* Spacer div to push page content down */}
+							<div className="h-[5.5rem] sm:h-[6rem] md:h-[6.5rem]" />
+						</div>
 						<main className="flex-1">{children}</main>
 						<Toaster />
 					</div>
