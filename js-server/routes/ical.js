@@ -17,10 +17,7 @@ async function routes(fastify, options) {
 			// Ensure Google Calendar fetches the latest file
 			reply.header('Content-Type', 'text/calendar; charset=utf-8');
 			reply.header('Content-Disposition', `inline; filename="${uuid}.ical"`);
-			reply.header(
-				'Cache-Control',
-				'no-store, no-cache, must-revalidate, proxy-revalidate'
-			);
+			reply.header('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
 			reply.header('Pragma', 'no-cache');
 			reply.header('Expires', '0');
 
