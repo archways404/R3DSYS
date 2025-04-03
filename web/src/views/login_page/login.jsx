@@ -11,6 +11,7 @@ import { AuthContext } from '../../context/AuthContext';
 import LoadingScreen from '../../components/LoadingScreen';
 import PasswordInput from '@/components/ui/PasswordInput';
 import EmailInput from '@/components/ui/EmailInput';
+import FooterSection from '../home_page/FooterSection';
 
 import { useStateContext } from '../../context/RenderContext';
 
@@ -51,17 +52,12 @@ function Login() {
 			const data = await response.json();
 
 			if (response.status === 403 && data.unlock_time) {
-				setError(
-					`Your account is locked until ${new Date(
-						data.unlock_time
-					).toLocaleString()}`
-				);
+				setError(`Your account is locked until ${new Date(data.unlock_time).toLocaleString()}`);
 				setRenderLoading(false);
 				return;
 			}
 
-			if (!response.ok)
-				throw new Error(data.message || 'Invalid email or password');
+			if (!response.ok) throw new Error(data.message || 'Invalid email or password');
 
 			setUser(data.user);
 			setJustLoggedIn(true);
@@ -85,54 +81,55 @@ function Login() {
 
 	return (
 		<Layout>
-			<div className="min-h-screen flex flex-col items-center justify-center">
-				<div className="w-full max-w-md p-8 space-y-6 rounded-lg">
-					<h1 className="text-5xl font-extrabold text-white tracking-wide drop-shadow-xl text-center">
-						<span className="text-white">R</span>
-						<span className="text-red-600">Ǝ</span>
-						<span className="text-white">D</span>
-						<span className="text-white">SYS</span>
-					</h1>
+			<div className="flex flex-col h-[calc(100vh-5.5rem)] sm:h-[calc(100vh-6rem)] md:h-[calc(100vh-6.5rem)]">
+				<div className="flex flex-1 items-center justify-center">
+					<div className="w-full max-w-md p-8 space-y-6 rounded-lg">
+						<h1 className="text-5xl font-extrabold text-white tracking-wide drop-shadow-xl text-center">
+							<span className="text-white">R</span>
+							<span className="text-red-600">Ǝ</span>
+							<span className="text-white">D</span>
+							<span className="text-white">SYS</span>
+						</h1>
 
-					{error && <p className="text-red-500 text-sm text-center">{error}</p>}
+						{error && <p className="text-red-500 text-sm text-center">{error}</p>}
 
-					<form
-						onSubmit={handleSubmit}
-						className="space-y-4">
-						<div>
-							<EmailInput
-								value={email} // ✅ Pass value
-								onChange={(e) => setEmail(e.target.value)} // ✅ Pass onChange handler
-							/>
-						</div>
+						<form
+							onSubmit={handleSubmit}
+							className="space-y-4">
+							<div>
+								<EmailInput
+									value={email} // ✅ Pass value
+									onChange={(e) => setEmail(e.target.value)} // ✅ Pass onChange handler
+								/>
+							</div>
 
-						<div>
-							<PasswordInput
-								value={password} // ✅ Pass value
-								onChange={(e) => setPassword(e.target.value)} // ✅ Pass onChange handler
-							/>
-						</div>
-						<Button
-							type="submit"
-							disabled={isLoggingIn}
-							className={`w-full px-4 py-2 mt-4 text-white rounded-md transition ${
-								isLoggingIn
-									? 'bg-red-300 cursor-not-allowed'
-									: 'bg-red-600 hover:bg-red-700'
-							}`}>
-							{isLoggingIn ? 'Logging in...' : 'Login'}
-						</Button>
-					</form>
+							<div>
+								<PasswordInput
+									value={password} // ✅ Pass value
+									onChange={(e) => setPassword(e.target.value)} // ✅ Pass onChange handler
+								/>
+							</div>
+							<Button
+								type="submit"
+								disabled={isLoggingIn}
+								className={`w-full px-4 py-2 mt-4 text-white rounded-md transition ${
+									isLoggingIn ? 'bg-red-300 cursor-not-allowed' : 'bg-red-600 hover:bg-red-700'
+								}`}>
+								{isLoggingIn ? 'Logging in...' : 'Login'}
+							</Button>
+						</form>
 
-					<p className="text-sm text-center text-gray-600 dark:text-gray-400">
-						Don't know your password?{' '}
-						<Link
-							to="/forgotpass"
-							className="text-red-500 hover:underline">
-							Reset it here
-						</Link>
-					</p>
+						<p className="text-sm text-center text-gray-600 dark:text-gray-400">
+							Don't know your password?{' '}
+							<Link
+								to="/forgotpass"
+								className="text-red-500 hover:underline">
+								Reset it here
+							</Link>
+						</p>
+					</div>
 				</div>
+				<FooterSection />
 			</div>
 		</Layout>
 	);
