@@ -143,6 +143,8 @@ app.register(require('./routes/system'));
 
 app.register(require('./routes/backup'));
 
+app.register(require('./routes/rootstats'));
+
 app.register(require('./routes/ical'), {
 	hook: 'preHandler',
 	options: {
