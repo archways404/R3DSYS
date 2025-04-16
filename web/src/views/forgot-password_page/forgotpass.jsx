@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import EmailInputSubmit from '@/components/ui/EmailInputSubmit';
 
+import FooterSection from '../home_page/FooterSection';
 import Layout from '../../components/Layout';
 
 function ForgotPass() {
@@ -23,19 +24,16 @@ function ForgotPass() {
 		}
 
 		try {
-			const response = await fetch(
-				import.meta.env.VITE_BASE_ADDR + '/forgotPassword',
-				{
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-					},
-					credentials: 'include',
-					body: JSON.stringify({
-						email,
-					}),
-				}
-			);
+			const response = await fetch(import.meta.env.VITE_BASE_ADDR + '/forgotPassword', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				credentials: 'include',
+				body: JSON.stringify({
+					email,
+				}),
+			});
 
 			if (!response.ok) {
 				throw new Error('Failed to send reset link. Please check your email.');
@@ -50,38 +48,39 @@ function ForgotPass() {
 
 	return (
 		<Layout>
-			<div className="min-h-screen flex flex-col items-center justify-center">
-				<div className="w-full max-w-md p-8 space-y-6 rounded-lg">
-					<h2 className="text-2xl font-semibold text-center text-gray-900 dark:text-white">
-						Reset Your Password
-					</h2>
+			<div className="flex flex-col h-[calc(100vh-5.5rem)] sm:h-[calc(100vh-6rem)] md:h-[calc(100vh-6.5rem)]">
+				<div className="flex flex-1 items-center justify-center">
+					<div className="w-full max-w-md p-8 space-y-6 rounded-lg">
+						<h2 className="text-2xl font-semibold text-center text-gray-900 dark:text-white">
+							Reset Your Password
+						</h2>
 
-					{error && <p className="text-red-500 text-sm text-center">{error}</p>}
-					{message && (
-						<p className="text-green-500 text-sm text-center">{message}</p>
-					)}
+						{error && <p className="text-red-500 text-sm text-center">{error}</p>}
+						{message && <p className="text-green-500 text-sm text-center">{message}</p>}
 
-					<form
-						onSubmit={handleSubmit}
-						className="space-y-4">
-						<div>
-							<EmailInputSubmit
-								value={email} // ✅ Pass state
-								onChange={(e) => setEmail(e.target.value)} // ✅ Update state
-								onSubmit={handleSubmit} // ✅ Handle form submission
-							/>
-						</div>
-					</form>
+						<form
+							onSubmit={handleSubmit}
+							className="space-y-4">
+							<div>
+								<EmailInputSubmit
+									value={email} // ✅ Pass state
+									onChange={(e) => setEmail(e.target.value)} // ✅ Update state
+									onSubmit={handleSubmit} // ✅ Handle form submission
+								/>
+							</div>
+						</form>
 
-					<p className="text-sm text-center text-gray-600 dark:text-gray-400">
-						Back to{' '}
-						<Link
-							to="/login"
-							className="text-green-500 hover:underline">
-							Login
-						</Link>
-					</p>
+						<p className="text-sm text-center text-gray-600 dark:text-gray-400">
+							Back to{' '}
+							<Link
+								to="/login"
+								className="text-green-500 hover:underline">
+								Login
+							</Link>
+						</p>
+					</div>
 				</div>
+				<FooterSection />
 			</div>
 		</Layout>
 	);

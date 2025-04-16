@@ -1,9 +1,11 @@
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 
-const stats = [
+const defaultStats = [
 	{
+		key: 'Accounts',
 		value: '0+',
-		label: '...',
+		label: 'Accounts',
 		icon: (
 			<path
 				strokeLinecap="round"
@@ -14,8 +16,9 @@ const stats = [
 		),
 	},
 	{
+		key: 'Shifts',
 		value: '0+',
-		label: '...',
+		label: 'Shifts',
 		icon: (
 			<path
 				strokeLinecap="round"
@@ -26,8 +29,9 @@ const stats = [
 		),
 	},
 	{
+		key: 'Logins',
 		value: '0+',
-		label: '...',
+		label: 'Logins',
 		icon: (
 			<path
 				strokeLinecap="round"
@@ -38,8 +42,9 @@ const stats = [
 		),
 	},
 	{
+		key: 'Other',
 		value: '0+',
-		label: '...',
+		label: 'Additional Info',
 		icon: (
 			<path
 				strokeLinecap="round"
@@ -52,6 +57,28 @@ const stats = [
 ];
 
 function StatsSection() {
+	const [stats, setStats] = useState(defaultStats);
+
+	useEffect(() => {
+		fetch(import.meta.env.VITE_BASE_ADDR + '/d-summary')
+			.then((res) => res.json())
+			.then((data) => {
+				setStats((prev) =>
+					prev.map((stat) =>
+						data[stat.key]
+							? {
+									...stat,
+									value: data[stat.key].toString(),
+							  }
+							: stat
+					)
+				);
+			})
+			.catch((err) => {
+				console.error('Failed to fetch stats:', err);
+			});
+	}, []);
+
 	return (
 		<section className="py-20">
 			<div className="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">

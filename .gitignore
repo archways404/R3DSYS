@@ -25,3 +25,4 @@ web/.env
 js-server/.env.development.example
 js-server/.env.development.example
 js-server/.env.production.example
+/js-server/backups/*
