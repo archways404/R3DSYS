@@ -26,3 +26,5 @@ js-server/.env.development.example
 js-server/.env.development.example
 js-server/.env.production.example
 /js-server/backups/*
+/rebuild/api/node_modules
+rebuild/api/.env.development
