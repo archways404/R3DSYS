@@ -360,7 +360,6 @@ app.addHook('onReady', async () => {
 		await app.redis.del('version:data');
 		console.log(`🗑 Cleared cache for version `);
 
-		// Start listening for changes
 		await client.query('LISTEN status_channel');
 		await client.query('LISTEN active_shifts_channel');
 		await client.query('LISTEN account_changes');
@@ -373,7 +372,7 @@ app.addHook('onReady', async () => {
 			console.log('⏳ Reconnecting to PostgreSQL...');
 
 			try {
-				client.release(); // Release the old, possibly broken client
+				client.release(); // Release the old client
 				const newClient = await app.pg.connect();
 				client = newClient;
 
@@ -383,9 +382,7 @@ app.addHook('onReady', async () => {
 				await client.query('LISTEN group_changes');
 
 				client.on('notification', handlePostgresNotification); // Re-attach listener
-				console.log(
-					'✅ Successfully reconnected to PostgreSQL LISTEN channels'
-				);
+				console.log('✅ Successfully reconnected to PostgreSQL LISTEN channels');
 			} catch (reconnectError) {
 				console.error('❌ Failed to reconnect to PostgreSQL:', reconnectError);
 				setTimeout(() => client.emit('error', reconnectError), 5000); // Retry after 5s
