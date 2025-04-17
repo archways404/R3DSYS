@@ -14,6 +14,7 @@ export default function Login() {
 			login({
 				name: 'Fake User',
 				email: 'fake@example.com',
+				role: 'admin',
 			})
 		);
 		router.push('/dashboard');
